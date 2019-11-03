@@ -5,27 +5,6 @@ defaults: &defaults
 
 version: 2
 jobs:
-  build:
-    <<: *defaults
-    steps:
-      - setup_remote_docker:
-          docker_layer_caching: true
-
-      - run:
-          name: Login to Docker Hub
-          command: |
-            docker login --username="$HUB_LOGIN" --password="$HUB_PASSWORD"
-
-      - run:
-          name: Build image
-          command: |
-            make build
-
-      - run:
-          name: Push image
-          command: |
-            make hub-push
-
   test:
     <<: *defaults
     steps:
@@ -69,14 +48,29 @@ jobs:
             . venv/bin/activate
             make unit-test
 
+  build:
+    <<: *defaults
+    steps:
+      - setup_remote_docker:
+          docker_layer_caching: true
+
+      - run:
+          name: Login to Docker Hub
+          command: |
+            docker login --username="$HUB_LOGIN" --password="$HUB_PASSWORD"
+
+      - run:
+          name: Build image
+          command: |
+            make build
+
+      - run:
+          name: Push image
+          command: |
+            make hub-push
+
 workflows:
   version: 2
   test:
     jobs:
       - test
-      - build:
-          requires:
-            - test
-          filters:
-            branches:
-              only: master
