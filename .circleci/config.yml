@@ -68,7 +68,7 @@ jobs:
           name: Push image
           command: |
             make hub-push
-            make hub-push DOCKER_TAG=$(python -c 'from mallennlp import VERSION; print(VERSION)')
+            make hub-push DOCKER_HUB_TAG=$(python -c 'from mallennlp import VERSION; print(VERSION)')
 
 workflows:
   version: 2

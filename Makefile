@@ -5,6 +5,7 @@ test = mallennlp
 
 DOCKER_IMAGE     = allennlp-manager
 DOCKER_TAG       = latest
+DOCKER_HUB_TAG  := $(DOCKER_TAG)
 DOCKER_ARGS     := --rm -p 5000:$(port) -v $(path):/opt/python/app/project
 COMMITHASH      := $(shell git rev-parse --verify HEAD)
 INSTALLED_BIN   := $(shell which mallennlp)
@@ -66,8 +67,8 @@ hub-login :
 
 .PHONY : hub-push
 hub-push :
-	docker tag $(DOCKER_IMAGE):$(DOCKER_TAG) epwalsh/$(DOCKER_IMAGE):$(DOCKER_TAG)
-	docker push epwalsh/$(DOCKER_IMAGE):$(DOCKER_TAG)
+	docker tag $(DOCKER_IMAGE):$(DOCKER_TAG) epwalsh/$(DOCKER_IMAGE):$(DOCKER_HUB_TAG)
+	docker push epwalsh/$(DOCKER_IMAGE):$(DOCKER_HUB_TAG)
 
 .PHONY : install
 install :
