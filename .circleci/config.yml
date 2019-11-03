@@ -51,13 +51,12 @@ jobs:
   build:
     <<: *defaults
     steps:
-      - setup_remote_docker:
-          docker_layer_caching: true
+      - setup_remote_docker
 
       - run:
           name: Login to Docker Hub
           command: |
-            docker login --username="$HUB_LOGIN" --password="$HUB_PASSWORD"
+            docker login --username="$HUB_USERNAME" --password="$HUB_PASSWORD"
 
       - run:
           name: Build image
@@ -68,9 +67,16 @@ jobs:
           name: Push image
           command: |
             make hub-push
+            make hub-push DOCKER_TAG=$(python -c 'from mallennlp import VERSION; print(VERSION)')
 
 workflows:
   version: 2
   test:
     jobs:
       - test
+      - build:
+          requires:
+            - test
+          filters:
+            branches:
+              only: master
