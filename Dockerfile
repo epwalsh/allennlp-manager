@@ -36,11 +36,6 @@ RUN chmod +x /entrypoint.sh
 COPY requirements.txt requirements.txt
 RUN ["/bin/bash", "-c", "pip --no-cache-dir install -r <(sed -e '/TESTING/,$d' requirements.txt)"]
 
-ARG ALLENNLP_VERSION
-ENV ALLENNLP_VERSION ${ALLENNLP_VERSION:-"stable"}
-COPY install_allennlp.sh /install_allennlp.sh
-RUN chmod +x /install_allennlp.sh && /install_allennlp.sh
-
 COPY mallennlp mallennlp/
 
 ARG COMMITHASH

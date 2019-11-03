@@ -7,13 +7,11 @@ DOCKER_IMAGE     = allennlp-manager
 DOCKER_TAG       = latest
 DOCKER_ARGS     := --rm -p 5000:$(port) -v $(path):/opt/python/app/project
 COMMITHASH      := $(shell git rev-parse --verify HEAD)
-ALLENNLP_VERSION = stable
 
 .PHONY : build
 build :
 	docker build \
 		--build-arg COMMITHASH=$(COMMITHASH) \
-		--build-arg ALLENNLP_VERSION=$(ALLENNLP_VERSION) \
 		-t $(DOCKER_IMAGE):$(DOCKER_TAG) \
 		-f Dockerfile \
 		.
