@@ -1,0 +1,82 @@
+defaults: &defaults
+  docker:
+    - image: circleci/python:3.6
+  working_directory: ~/allennlp-manager
+
+version: 2
+jobs:
+  build:
+    <<: *defaults
+    steps:
+      - setup_remote_docker:
+          docker_layer_caching: true
+
+      - run:
+          name: Login to Docker Hub
+          command: |
+            docker login --username="$HUB_LOGIN" --password="$HUB_PASSWORD"
+
+      - run:
+          name: Build image
+          command: |
+            make build
+
+      - run:
+          name: Push image
+          command: |
+            make hub-push
+
+  test:
+    <<: *defaults
+    steps:
+      - checkout
+
+      - restore_cache:
+          name: Restoring dependencies cache
+          keys:
+            - deps-v1-{{ checksum "requirements.txt" }}-{{ checksum "requirements.dev.txt" }}
+            - deps-v1-
+
+      - run:
+          name: Installing dependencies
+          command: |
+            python3 -m venv venv
+            . venv/bin/activate
+            pip install -r requirements.txt
+            pip install -r requirements.dev.txt
+
+      - save_cache:
+          name: Saving dependencies cache
+          key: deps-v1-{{ checksum "requirements.txt" }}-{{ checksum "requirements.dev.txt" }}
+          paths:
+            - venv
+
+      - run:
+          name: Running code linters
+          command: |
+            . venv/bin/activate
+            make lint
+
+      - run:
+          name: Running type checks
+          command: |
+            . venv/bin/activate
+            make typecheck
+
+      - run:
+          name: Running unit tests
+          command: |
+            . venv/bin/activate
+            make unit-test
+
+workflows:
+  version: 2
+  test:
+    jobs:
+      - test
+      - build:
+        requires:
+          - test
+        filters:
+          branches:
+            only: master

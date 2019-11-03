@@ -58,3 +58,12 @@ else ifneq ($(name),)
 else
 	$(error must supply 'issue' or 'name' parameter)
 endif
+
+.PHONY : hub-login
+hub-login :
+	docker login --username=epwalsh
+
+.PHONY : hub-push
+hub-push :
+	docker tag $(DOCKER_IMAGE):$(DOCKER_TAG) epwalsh/$(DOCKER_IMAGE):$(DOCKER_TAG)
+	docker push epwalsh/$(DOCKER_IMAGE):$(DOCKER_TAG)
