@@ -9,6 +9,9 @@ from mallennlp.config import Config, ProjectConfig, ServerConfig
 @click.command()
 @click.argument("name")
 def new(name: str):
+    """
+    Initialize a new project directory.
+    """
     os.mkdir(name)
     config = Config(ProjectConfig(name=name), ServerConfig())
     config.to_toml(Path(name))

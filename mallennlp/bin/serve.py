@@ -10,6 +10,9 @@ from mallennlp.bin.common import requires_config
 @click.command()
 @requires_config
 def serve(config):
+    """
+    Serve the dashboard locally.
+    """
     args = shlex.split(
         f"docker run "
         f"--rm "

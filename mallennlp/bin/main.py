@@ -1,3 +1,5 @@
+import os
+
 import click
 
 from mallennlp.bin.serve import serve
@@ -7,8 +9,17 @@ from mallennlp.bin.launch import launch
 
 
 @click.group()
-def main():
-    pass
+@click.option(
+    "--wd",
+    type=click.Path(exists=True, file_okay=False, dir_okay=True),
+    help="Set the working directory.",
+)
+def main(wd):
+    """
+    AllenNLP Manager
+    """
+    if wd is not None:
+        os.chdir(wd)
 
 
 main.add_command(serve)
