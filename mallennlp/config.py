@@ -1,7 +1,7 @@
 from collections import OrderedDict
 import os
 from pathlib import Path
-from typing import ClassVar
+from typing import ClassVar, Optional
 
 import attr
 import toml
@@ -13,6 +13,7 @@ from mallennlp.exceptions import NotInProjectError
 @attr.s(slots=True, auto_attribs=True)
 class ProjectConfig:
     name: str = "my-project"
+    display_name: Optional[str] = None
 
 
 @attr.s(slots=True, auto_attribs=True)
@@ -22,6 +23,9 @@ class ServerConfig:
     secret: str = attr.ib(
         default=None, converter=lambda s: s or os.urandom(24).hex()  # type: ignore
     )
+    concurrency: int = 10
+    memory: int = 1024
+    cpus: float = 0.5
 
 
 @attr.s(slots=True, auto_attribs=True)

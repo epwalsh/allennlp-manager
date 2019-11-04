@@ -27,7 +27,7 @@ build :
 
 .PHONY : serve
 serve :
-	docker run $(DOCKER_ARGS) $(DOCKER_IMAGE):$(DOCKER_TAG)
+	python -m mallennlp.bin.main --wd $(path) serve
 
 .PHONY : mallennlp
 mallennlp : build serve

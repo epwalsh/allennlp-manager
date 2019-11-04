@@ -18,6 +18,9 @@ def serve(config):
         f"--rm "
         f"-p 5000:{config.server.port} "
         f"--mount type=bind,source={os.getcwd()},target=/opt/python/app/project "
+        f"--env SERVER_CONCURRENCY={config.server.concurrency} "
+        f"--memory={config.server.memory}m "
+        f"--cpus={config.server.cpus} "
         f"{config.server.image}"
     )
     click.secho(f"Serving AllenNLP Manager for {config.project.name}", fg="green")
