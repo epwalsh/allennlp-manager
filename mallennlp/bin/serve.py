@@ -6,8 +6,6 @@ import click
 
 from mallennlp.bin.common import requires_config
 
-#  from mallennlp.version import VERSION
-
 
 @click.command()
 @requires_config
