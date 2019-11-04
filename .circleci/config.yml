@@ -49,6 +49,29 @@ jobs:
             . venv/bin/activate
             make unit-test
 
+  pip_github_install:
+    <<: *defaults
+    steps:
+      - run:
+          name: Set up environment
+          command: |
+            python3 -m venv venv
+            . venv/bin/activate
+            pip install --upgrade pip
+
+      - run:
+          name: Install directly
+          command: |
+            . venv/bin/activate
+            pip install "git+git://github.com/epwalsh/mallennlp-manager.git@$CIRCLE_SHA1"
+
+      - run:
+          name: Check installation
+          command: |
+            . venv/bin/activate
+            python -c 'import mallennlp'
+            which mallennlp
+
   build:
     <<: *defaults
     steps:
@@ -76,9 +99,11 @@ workflows:
   test_and_build:
     jobs:
       - test
+      - pip_github_install
       - build:
           requires:
             - test
+            - pip_github_install
           filters:
             branches:
               only: master
