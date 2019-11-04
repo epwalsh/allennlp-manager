@@ -99,7 +99,10 @@ workflows:
   test_and_build:
     jobs:
       - test
-      - pip_github_install
+      - pip_github_install:
+          filters:
+            branches:
+              only: master
       - build:
           requires:
             - test
