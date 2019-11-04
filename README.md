@@ -7,6 +7,10 @@
 
 Your manager for AllenNLP experiments.
 
+## Dependencies
+
+AllenNLP, Python 3.6, and Docker are required.
+
 ## Road map
 
 The goal of this project is to build a CLI and dashboard for running, queueing, tracking, and comparing experiments.
