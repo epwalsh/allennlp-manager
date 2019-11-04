@@ -25,15 +25,15 @@ build :
 		-f Dockerfile \
 		.
 
-.PHONY : run
-run :
+.PHONY : serve
+serve :
 	docker run $(DOCKER_ARGS) $(DOCKER_IMAGE):$(DOCKER_TAG)
 
 .PHONY : mallennlp
-mallennlp : build run
+mallennlp : build serve
 
-.PHONY : run-it
-run-it :
+.PHONY : serve-it
+serve-it :
 	docker run -it $(DOCKER_ARGS) $(DOCKER_IMAGE):$(DOCKER_TAG) $(cmd)
 
 .PHONY : typecheck

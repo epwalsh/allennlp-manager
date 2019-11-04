@@ -1,5 +1,16 @@
+import click
+
+from mallennlp.bin.serve import serve
+from mallennlp.bin.new import new
+
+
+@click.group()
 def main():
-    print("Hello from mallennlp!")
+    pass
+
+
+main.add_command(serve)
+main.add_command(new)
 
 
 if __name__ == "__main__":
