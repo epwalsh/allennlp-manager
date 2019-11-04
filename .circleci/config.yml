@@ -63,7 +63,7 @@ jobs:
           name: Install directly
           command: |
             . venv/bin/activate
-            pip install "git+git://github.com/epwalsh/mallennlp-manager.git@$CIRCLE_SHA1"
+            pip install "git+git://github.com/epwalsh/allennlp-manager.git@$CIRCLE_SHA1"
 
       - run:
           name: Check installation
