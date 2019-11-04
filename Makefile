@@ -1,13 +1,13 @@
-port = 5000
-cmd  = /bin/bash
-path = example-project
-test = mallennlp
+port  = 5000
+cmd   = /bin/bash
+test  = mallennlp
+cwd   = $(shell pwd)
+path := $(cwd)/example-project
 
-ACCESS_FILE     := $(path)/.env
 DOCKER_IMAGE     = allennlp-manager
 DOCKER_TAG       = latest
 DOCKER_HUB_TAG  := $(DOCKER_TAG)
-DOCKER_ARGS     := --rm -p 5000:$(port) -v $(path):/opt/python/app/project --env-file $(ACCESS_FILE)
+DOCKER_ARGS     := --rm -p 5000:$(port) --mount type=bind,source=$(path),target=/opt/python/app/project
 COMMITHASH      := $(shell git rev-parse --verify HEAD)
 INSTALLED_BIN   := $(shell which mallennlp)
 

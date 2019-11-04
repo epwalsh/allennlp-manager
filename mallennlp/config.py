@@ -1,10 +1,12 @@
 from collections import OrderedDict
+import os
 from pathlib import Path
 from typing import ClassVar
 
 import attr
 import toml
 
+from mallennlp import VERSION
 from mallennlp.exceptions import NotInProjectError
 
 
@@ -15,7 +17,11 @@ class ProjectConfig:
 
 @attr.s(slots=True, auto_attribs=True)
 class ServerConfig:
+    image: str = f"epwalsh/allennlp-manager:{VERSION}"
     port: int = 5000
+    secret: str = attr.ib(
+        default=None, converter=lambda s: s or os.urandom(24).hex()  # type: ignore
+    )
 
 
 @attr.s(slots=True, auto_attribs=True)

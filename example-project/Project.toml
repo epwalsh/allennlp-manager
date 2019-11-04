@@ -2,4 +2,6 @@
 name = "my-project"
 
 [server]
+image = "allennlp-manager:latest"
 port = 5000
+secret = "02ba5d730b8ba557a75766917eff0402"

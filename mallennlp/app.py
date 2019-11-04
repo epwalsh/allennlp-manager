@@ -1,22 +1,28 @@
 import logging
-import os
+from pathlib import Path
 
 from flask import Flask, Response
 
-
-logger = logging.getLogger("gunicorn.error")
-
-
-application = Flask(__name__)
-application.secret_key = os.environ["SECRET_KEY"]
-application.logger.handlers = logger.handlers
-application.logger.setLevel(logger.level)
+from mallennlp.config import Config
 
 
-@application.route("/")
-def main():
-    return Response("Hello from AllenNLP manager!")
+def create_app():
+    logger = logging.getLogger("gunicorn.error")
+
+    config = Config.from_toml(Path("/opt/python/app/project"))
+
+    application = Flask(__name__)
+    application.secret_key = config.server.secret
+    application.logger.handlers = logger.handlers
+    application.logger.setLevel(logger.level)
+
+    @application.route("/")
+    def main():
+        return Response("Hello from AllenNLP manager!")
+
+    return application
 
 
 if __name__ == "__main__":
-    application.run(debug=True)
+    app = create_app()
+    app.run(debug=True)
