@@ -35,6 +35,8 @@ RUN chmod +x /entrypoint.sh
 
 COPY requirements.txt requirements.txt
 RUN ["/bin/bash", "-c", "pip --no-cache-dir install -r <(sed -e '/TESTING/,$d' requirements.txt)"]
+COPY requirements.server.txt requirements.server.txt
+RUN ["/bin/bash", "-c", "pip --no-cache-dir install -r <(sed -e '/TESTING/,$d' requirements.server.txt)"]
 
 COPY mallennlp mallennlp/
 

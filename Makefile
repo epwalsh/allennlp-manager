@@ -1,14 +1,21 @@
 port = 5000
 cmd  = /bin/bash
-path = ./example-project
+path = example-project
 test = mallennlp
 
+ACCESS_FILE     := $(path)/.env
 DOCKER_IMAGE     = allennlp-manager
 DOCKER_TAG       = latest
 DOCKER_HUB_TAG  := $(DOCKER_TAG)
-DOCKER_ARGS     := --rm -p 5000:$(port) -v $(path):/opt/python/app/project
+DOCKER_ARGS     := --rm -p 5000:$(port) -v $(path):/opt/python/app/project --env-file $(ACCESS_FILE)
 COMMITHASH      := $(shell git rev-parse --verify HEAD)
 INSTALLED_BIN   := $(shell which mallennlp)
+
+.PHONY : clean
+clean :
+	@rm -rf ./allennlp_manager.egg-info/
+	@rm -rf ./.mypy_cache/
+	@rm -rf ./.pytest_cache/
 
 .PHONY : build
 build :
