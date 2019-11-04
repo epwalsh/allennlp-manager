@@ -1,6 +1,5 @@
-[package]
+[project]
 name = "my-project"
-allennlp-version = "0.9"
 
 [server]
 port = 5000

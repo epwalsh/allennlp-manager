@@ -1,1 +1,3 @@
+attrs==18.2.0
+toml==0.10.0
 -e git+https://github.com/allenai/allennlp.git@f3083c8fb9150f07e3ca98bb3ea9368a081df028#egg=allennlp
