@@ -3,7 +3,7 @@ import tempfile
 
 import pytest
 
-from mallennlp.config import Config
+from mallennlp.config import Config, ProjectConfig, ServerConfig
 from mallennlp.exceptions import NotInProjectError
 
 
@@ -32,3 +32,11 @@ def test_from_toml(project_path):
     config = Config.from_toml(project_path)
     assert config.project.name == "my-project"
     assert config.server.port == 5000
+
+
+def test_to_toml(tmpdir):
+    config = Config(ProjectConfig(name="my-test-project"), ServerConfig(port=8888))
+    config.to_toml(tmpdir)
+    config = Config.from_toml(tmpdir)
+    assert config.project.name == "my-test-project"
+    assert config.server.port == 8888
