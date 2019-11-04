@@ -2,6 +2,7 @@
 
 [![CircleCI](https://circleci.com/gh/epwalsh/allennlp-manager.svg?style=svg)](https://circleci.com/gh/epwalsh/allennlp-manager)
 ![Docker Hub](https://img.shields.io/docker/pulls/epwalsh/allennlp-manager)
+![GitHub commit activity](https://img.shields.io/github/commit-activity/w/epwalsh/allennlp-manager)
 ![GitHub](https://img.shields.io/github/license/epwalsh/allennlp-manager)
 
 Your manager for AllenNLP experiments.
