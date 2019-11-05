@@ -129,7 +129,7 @@ def create_dash(flask_app: Flask, config: Config):
     # Import all dashboard pages so that they get registered.
     import_submodules("mallennlp.dashboard")
 
-    def make_callback(PageClass, method_name, method, callback_store_names):
+    def make_callback(PageClass, page_name, method_name, method, callback_store_names):
         """
         Create a Dash callback from a Page callback.
         """
@@ -147,18 +147,19 @@ def create_dash(flask_app: Flask, config: Config):
             args, store = args[:-1], args[-1]
             page = PageClass.from_store(store)
             result = getattr(page, method_name)(*args)
+            new_store = page.dump_store()
             logger.debug(
-                "Page '%s' received callback '%s': %s, %s -> %s",
+                "Page '%s' received callback '%s': %s, %s -> %s, %s",
                 page_name,
                 method_name,
                 args,
                 store,
                 result,
+                new_store,
             )
-            store = page.dump_store()
             if not isinstance(result, tuple):
-                return (result, store)
-            return result + (store,)
+                return (result, new_store)
+            return result + (new_store,)
 
         callback_store_name = PageClass.store_name + f"-callback-{method_name}"
         callback_store_names.append(callback_store_name)
@@ -191,7 +192,9 @@ def create_dash(flask_app: Flask, config: Config):
             # of doing all the work here in the loop so we don't run into a "late binding"
             # issue. See https://stackoverflow.com/questions/3431676/creating-functions-in-a-loop
             # for example.
-            make_callback(PageClass, method_name, method, callback_store_names)
+            make_callback(
+                PageClass, page_name, method_name, method, callback_store_names
+            )
         PageClass.callback_stores = callback_store_names
         if callback_store_names:
             dash.callback(
