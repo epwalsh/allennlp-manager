@@ -5,6 +5,7 @@ import urllib.parse as urlparse
 from typing import List
 
 from allennlp.common.util import import_submodules
+from allennlp.common.checks import ConfigurationError
 from dash import Dash
 from dash.dependencies import Input, Output, State
 from dash.exceptions import PreventUpdate
@@ -12,7 +13,7 @@ import dash_bootstrap_components as dbc
 import dash_core_components as dcc
 import dash_html_components as html
 from flask import Flask, redirect
-from flask_login import LoginManager, login_required, logout_user
+from flask_login import LoginManager, login_required, logout_user, current_user
 
 from mallennlp.config import Config
 from mallennlp.dashboard.page import Page
@@ -88,6 +89,25 @@ def create_dash(flask_app: Flask, config: Config):
         ]
     )
 
+    # Define callback to render navbar.
+    @dash.callback(Output("navbar-content", "children"), [Input("url", "pathname")])
+    def render_navbar(pathname):
+        if current_user.is_authenticated:
+            menu_items = [
+                dbc.DropdownMenuItem(
+                    ["Signed in as ", html.Strong("admin")], disabled=True
+                ),
+                html.Hr(),
+                dbc.DropdownMenuItem(dcc.Link("Home", href="/")),
+                dbc.DropdownMenuItem(dcc.Link("Logout", href="/logout", refresh=True)),
+            ]
+            return [
+                dbc.DropdownMenu(
+                    nav=True, in_navbar=True, label="Menu", children=menu_items
+                )
+            ]
+        return [dbc.NavItem(dbc.NavLink("Sign in", href="/login", external_link=True))]
+
     # Define callback to render pages. Takes the URL path and get the corresponding
     # page.
     @dash.callback(
@@ -98,7 +118,13 @@ def create_dash(flask_app: Flask, config: Config):
         if pathname is None:
             raise PreventUpdate
         params = urlparse.parse_qs(urlparse.urlparse(param_string).query)
-        return Page.by_name(pathname).from_params(params).render()
+        try:
+            PageClass = Page.by_name(pathname)
+            # TODO: check for current user if `PageClass.requires_login`.
+        except ConfigurationError:
+            PageClass = Page.by_name("/not-found")
+        page = PageClass.from_params(params)
+        return page.render()
 
     # Import all dashboard pages so that they get registered.
     import_submodules("mallennlp.dashboard")
