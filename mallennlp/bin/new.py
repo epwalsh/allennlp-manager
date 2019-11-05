@@ -9,6 +9,7 @@ from mallennlp.config import Config, ProjectConfig, ServerConfig
 @click.command()
 @click.argument("name")
 @click.option("--display-name", type=str)
+@click.option("--loglevel", type=click.Choice(["DEBUG", "INFO", "WARNING", "ERROR"]))
 @click.option("--server-image", type=str)
 @click.option("--server-port", type=int)
 @click.option("--server-secret", type=str)

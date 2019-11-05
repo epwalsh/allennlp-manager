@@ -9,10 +9,13 @@ import dash_html_components as html
 class Page(Registrable):
     requires_login = True
     store_name: str
+    callback_stores: List[str]
 
     def render(self) -> html.Div:
+        store = self.dump_store()
         return html.Div(
-            [dcc.Store(id=self.store_name, data=self.dump_store())]
+            [dcc.Store(id=self.store_name, data=store)]
+            + [dcc.Store(id=s, data=store) for s in self.callback_stores]
             + self.get_elements()
         )
 

@@ -2,6 +2,7 @@ import inspect
 import logging
 from pathlib import Path
 import urllib.parse as urlparse
+from typing import List
 
 from allennlp.common.util import import_submodules
 from dash import Dash
@@ -102,7 +103,10 @@ def create_dash(flask_app: Flask, config: Config):
     # Import all dashboard pages so that they get registered.
     import_submodules("mallennlp.dashboard")
 
-    def make_callback(method_name, method):
+    def make_callback(PageClass, method_name, method, callback_store_names):
+        """
+        Create a Dash callback from a Page callback.
+        """
         outputs, inputs, states = method.callback_parameters
         logger.debug(
             "Page '%s' registered callback '%s' (%s, %s) -> %s",
@@ -125,24 +129,50 @@ def create_dash(flask_app: Flask, config: Config):
                 store,
                 result,
             )
+            store = page.dump_store()
             if not isinstance(result, tuple):
-                result = (result,)
-            return result
+                return (result, store)
+            return result + (store,)
 
+        callback_store_name = PageClass.store_name + f"-callback-{method_name}"
+        callback_store_names.append(callback_store_name)
+        outputs.append(Output(callback_store_name, "data"))
         states.append(State(PageClass.store_name, "data"))
         dash.callback(outputs, inputs, states)(callback)
+
+    def store_callback(*args):
+        """
+        Update the Page store from the latest Page callback store.
+        """
+        half = len(args) // 2
+        timestamps, datas = args[:half], args[half:]
+        latest_index = max(range(len(datas)), key=timestamps.__getitem__)
+        latest = datas[latest_index]
+        return latest
 
     # Now we loop through all registered pages and register their callbacks
     # with the dashboard application.
     for page_name in Page.list_available():
         PageClass = Page.by_name(page_name)
         PageClass.store_name = f"page-{page_name}-store"
+        callback_store_names: List[str] = []
         for method_name, method in filter(
             lambda x: callable(x[1]), inspect.getmembers(PageClass)
         ):
             if not getattr(method, "is_callback", False):
                 continue
-            make_callback(method_name, method)
+            # We need to do this by calling the function we made `make_callback` instead
+            # of doing all the work here in the loop so we don't run into a "late binding"
+            # issue. See https://stackoverflow.com/questions/3431676/creating-functions-in-a-loop
+            # for example.
+            make_callback(PageClass, method_name, method, callback_store_names)
+        PageClass.callback_stores = callback_store_names
+        if callback_store_names:
+            dash.callback(
+                Output(PageClass.store_name, "data"),
+                [Input(s, "modified_timestamp") for s in callback_store_names],
+                [State(s, "data") for s in callback_store_names],
+            )(store_callback)
 
     return dash
 
