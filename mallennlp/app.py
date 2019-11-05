@@ -18,11 +18,12 @@ from flask_login import LoginManager, login_required, logout_user, current_user
 from mallennlp.config import Config
 from mallennlp.dashboard.page import Page
 from mallennlp.domain.user import User, AnonymousUser
+from mallennlp.services import db
 
 
 def create_app(config: Config, gunicorn: bool = True):
-    app = Flask(__name__)
-    app.secret_key = config.server.secret
+    app = Flask(__name__, instance_path=config.server.instance_path)
+    app.config.from_object(config.server)
 
     loglevel = getattr(logging, config.project.loglevel.upper())
     if gunicorn:
@@ -33,6 +34,8 @@ def create_app(config: Config, gunicorn: bool = True):
         app.logger.setLevel(loglevel)
     else:
         app.logger.setLevel(loglevel)
+
+    db.init_app(app)
 
     login_manager = LoginManager()
     login_manager.init_app(app)

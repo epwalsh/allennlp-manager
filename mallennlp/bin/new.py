@@ -4,6 +4,7 @@ from pathlib import Path
 import click
 
 from mallennlp.config import Config, ProjectConfig, ServerConfig
+from mallennlp.services.db import init_db
 
 
 @click.command()
@@ -27,10 +28,14 @@ def new(name: str, **kwargs):
     server_options = {
         k[7:]: v for k, v in kwargs.items() if k.startswith("server_") and v is not None
     }
+    path = Path(name).resolve()
     config = Config(
-        ProjectConfig(name=name, **project_options), ServerConfig(**server_options)
+        ProjectConfig(path, name=name, **project_options),
+        ServerConfig(path, **server_options),
     )
-    config.to_toml(Path(name))
+    os.makedirs(config.server.instance_path)
+    config.to_toml(path)
+    init_db(config)
     click.secho(f"Created project named {name}", fg="green")
     click.echo(
         "To edit the project's config, run 'mallennlp edit' from within the project "

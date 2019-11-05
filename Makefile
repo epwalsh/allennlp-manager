@@ -2,7 +2,8 @@ port  = 5000
 cmd   = /bin/bash
 test  = mallennlp
 cwd   = $(shell pwd)
-path := $(cwd)/example-project
+project = example-project
+path := $(cwd)/$(project)
 
 DOCKER_IMAGE     = allennlp-manager
 DOCKER_TAG       = latest
@@ -25,15 +26,21 @@ build :
 		-f Dockerfile \
 		.
 
-.PHONY : serve
-serve :
-	python -m mallennlp.bin.main --wd $(path) serve
+.PHONY : project
+project :
+	rm -rf $(project)/
+	mallennlp new $(project) --loglevel=DEBUG
 
-.PHONY : mallennlp
-mallennlp : build serve
+.PHONY : serve
+serve : build project
+	mallennlp --wd $(path) serve
+
+.PHONY : flask
+flask : project
+	python mallennlp/app.py
 
 .PHONY : serve-it
-serve-it :
+serve-it : build project
 	docker run -it $(DOCKER_ARGS) $(DOCKER_IMAGE):$(DOCKER_TAG) $(cmd)
 
 .PHONY : typecheck
