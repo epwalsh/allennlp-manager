@@ -14,6 +14,7 @@ from mallennlp.exceptions import NotInProjectError
 class ProjectConfig:
     name: str = "my-project"
     display_name: Optional[str] = None
+    loglevel: str = "INFO"
 
 
 @attr.s(slots=True, auto_attribs=True)

@@ -30,6 +30,10 @@ For the first release I intend to have all of the features implemented except fo
 
 ## Updates
 
+**11/5**
+
+Dashboard skeleton implemented with `Page` abstraction.
+
 **11/4**
 
 CLI implemented (using click). Project can be created with `mallennlp new [PROJECT NAME]` and dashboard can be served with `mallennlp serve` from within the project directory (dashboard just returns 'Hello from AllenNLP manager' at the moment).

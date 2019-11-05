@@ -8,16 +8,14 @@ from mallennlp.config import ServerConfig, ProjectConfig
 
 
 def check_types(attribute, option):
-    if attribute.type == str:
-        assert option.type == click.STRING
+    if attribute.type == str or attribute.type == typing.Union[str, type(None)]:
+        assert option.type == click.STRING or isinstance(option.type, click.Choice)
     elif attribute.type == int:
         assert option.type == click.INT
     elif attribute.type == bool:
         assert option.type == click.BOOL
     elif attribute.type == float:
         assert option.type == click.FLOAT
-    elif attribute.type == typing.Union[str, type(None)]:
-        assert option.type == click.STRING
 
 
 def test_project_options_match_config_parameters():
