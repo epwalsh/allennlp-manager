@@ -1,4 +1,6 @@
 from functools import wraps
+import shlex
+import subprocess
 
 import click
 
@@ -16,3 +18,15 @@ def requires_config(command):
         return command(config, *args, **kwargs)
 
     return wrapped_command
+
+
+def run_subprocess(command: str) -> int:
+    args = shlex.split(command)
+    process = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    while True:
+        output = process.stdout.readline()
+        if process.poll() is not None and output == b"":
+            break
+        if output:
+            click.echo(output.strip())
+    return process.returncode

@@ -1,19 +1,24 @@
 import os
-import shlex
-import subprocess
 
 import click
 
-from mallennlp.bin.common import requires_config
+from mallennlp.bin.common import requires_config, run_subprocess
 
 
 @click.command()
+@click.option("--update", is_flag=True, help="Pull the latest image before serving.")
 @requires_config
-def serve(config):
+def serve(config, update):
     """
     Serve the dashboard locally.
     """
-    args = shlex.split(
+    if update:
+        click.secho(f"Updating {config.server.image}", fg="green")
+        returncode = run_subprocess(f"docker pull {config.server.image}")
+        if returncode != 0:
+            raise click.ClickException(click.style("failed to update image", fg="red"))
+    click.secho(f"Serving AllenNLP Manager for {config.project.name}", fg="green")
+    returncode = run_subprocess(
         f"docker run "
         f"--rm "
         f"-p 5000:{config.server.port} "
@@ -23,13 +28,5 @@ def serve(config):
         f"--cpus={config.server.cpus} "
         f"{config.server.image}"
     )
-    click.secho(f"Serving AllenNLP Manager for {config.project.name}", fg="green")
-    process = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-    while True:
-        output = process.stdout.readline()
-        if process.poll() is not None and output == b"":
-            break
-        if output:
-            click.echo(output.strip())
-    if process.returncode != 0:
+    if returncode != 0:
         raise click.ClickException(click.style("server error", fg="red"))
