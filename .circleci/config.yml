@@ -59,7 +59,7 @@ jobs:
             . venv/bin/activate
             make integration-tests
 
-  pip_github_install:
+  test_pip_github_install:
     <<: *defaults
     steps:
       - run:
@@ -82,7 +82,7 @@ jobs:
             python -c 'import mallennlp'
             which mallennlp
 
-  build:
+  build_server_image:
     <<: *defaults
     steps:
       - setup_remote_docker
@@ -98,17 +98,6 @@ jobs:
           command: |
             make build
 
-      # - run:
-      #     name: Check server running
-      #     command: |
-      #       set -e
-      #       . venv/bin/activate
-      #       make project
-      #       cd example-project
-      #       mallennlp serve -d
-      #       curl http://127.0.0.1:5000/
-      #       mallennlp stop
-
       - run:
           name: Push image
           command: |
@@ -120,14 +109,14 @@ workflows:
   test_and_build:
     jobs:
       - test
-      - pip_github_install:
-          filters:
-            branches:
-              only: master
-      - build:
+      # - test_pip_github_install:
+      #     filters:
+      #       branches:
+      #         only: master
+      - build_server_image:
           requires:
             - test
-            - pip_github_install
+            # - test_pip_github_install
           filters:
             branches:
               only: master

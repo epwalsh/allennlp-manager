@@ -4,7 +4,7 @@
 [![Docker Hub](https://img.shields.io/docker/pulls/epwalsh/allennlp-manager)](https://cloud.docker.com/repository/docker/epwalsh/allennlp-manager)
 [![License](https://img.shields.io/github/license/epwalsh/allennlp-manager)](https://github.com/epwalsh/allennlp-manager/blob/master/LICENSE)
 
-Your manager for AllenNLP experiments.
+Your manager for [AllenNLP](https://github.com/allenai/allennlp) experiments.
 
 ### Table of contents
 
@@ -35,7 +35,7 @@ For the first release I intend to have all of the features implemented except fo
 
 ## Dependencies
 
-AllenNLP, Python 3.6, and Docker are required.
+AllenNLP, Python 3.6 (or higher), and Docker are required.
 
 ## Installation
 

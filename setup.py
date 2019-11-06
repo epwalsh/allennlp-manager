@@ -27,7 +27,7 @@ setup(
     install_requires=read_reqs_file("requirements.txt") + ["allennlp"],
     tests_require=read_reqs_file("requirements.dev.txt"),
     extras_require={"server": read_reqs_file("requirements.server.txt")},
-    python_requires=">=3.6.1,<3.7.0",
+    python_requires=">=3.6.1",
     include_package_data=True,
     entry_points={"console_scripts": ["mallennlp=mallennlp.bin.main:main"]},
 )
