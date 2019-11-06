@@ -29,7 +29,7 @@ build :
 .PHONY : project
 project :
 	rm -rf $(project)/
-	mallennlp new $(project) --loglevel=DEBUG
+	mallennlp new $(project) --loglevel=DEBUG --server-image=$(DOCKER_IMAGE):$(DOCKER_TAG)
 
 .PHONY : serve
 serve : build project
