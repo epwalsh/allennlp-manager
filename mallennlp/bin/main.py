@@ -3,7 +3,7 @@ import os
 import click
 
 from mallennlp.bin.serve import serve
-from mallennlp.bin.new import new
+from mallennlp.bin.new import new, init
 from mallennlp.bin.edit import edit
 from mallennlp.bin.launch import launch
 from mallennlp.bin.user import user
@@ -26,6 +26,7 @@ def main(wd):
 
 main.add_command(serve)
 main.add_command(new)
+main.add_command(init)
 main.add_command(edit)
 main.add_command(launch)
 main.add_command(user)
