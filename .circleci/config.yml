@@ -10,13 +10,15 @@ jobs:
     steps:
       - checkout
 
-      - restore_cache:
+      - &restore_cache
+        restore_cache:
           name: Restoring dependencies cache
           keys:
             - deps-v1-{{ checksum "requirements.txt" }}-{{ checksum "requirements.server.txt" }}-{{ checksum "requirements.dev.txt" }}
             - deps-v1-
 
-      - run:
+      - &setup_environment
+        run:
           name: Installing dependencies
           command: |
             python3 -m venv venv
@@ -24,8 +26,10 @@ jobs:
             pip install -r requirements.txt
             pip install -r requirements.server.txt
             pip install -r requirements.dev.txt
+            python setup.py develop
 
-      - save_cache:
+      - &save_cache
+        save_cache:
           name: Saving dependencies cache
           key: deps-v1-{{ checksum "requirements.txt" }}-{{ checksum "requirements.server.txt" }}-{{ checksum "requirements.dev.txt" }}
           paths:
@@ -83,6 +87,9 @@ jobs:
     steps:
       - setup_remote_docker
       - checkout
+      - *restore_cache
+      - *setup_environment
+      - *save_cache
 
       - run:
           name: Login to Docker Hub
@@ -93,6 +100,14 @@ jobs:
           name: Build image
           command: |
             make build
+
+      - run:
+          name: Check server running
+          command: |
+            . venv/bin/activate
+            make project
+            cd project && mallennlp serve -d
+            curl http://127.0.0.1:5000/
 
       - run:
           name: Push image
