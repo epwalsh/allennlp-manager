@@ -40,7 +40,7 @@ serve : build project
 	mallennlp --wd $(path) serve
 
 .PHONY : flask
-flask : project
+flask :
 	python mallennlp/app.py
 
 .PHONY : serve-it

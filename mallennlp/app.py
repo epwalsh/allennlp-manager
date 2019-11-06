@@ -86,7 +86,7 @@ def create_dash(flask_app: Flask, config: Config):
                 brand="AllenNLP Manager",
                 brand_href="/",
                 sticky="top",
-                color="#72C0B9",
+                color="#162328",
                 dark=True,
             ),
             dbc.Container(id="page-content"),
@@ -96,21 +96,31 @@ def create_dash(flask_app: Flask, config: Config):
     # Define callback to render navbar.
     @dash.callback(Output("navbar-content", "children"), [Input("url", "pathname")])
     def render_navbar(pathname):
+        source_link = dbc.NavItem(
+            dbc.NavLink(
+                [html.I(className="fab fa-github"), " Source"],
+                href="https://github.com/epwalsh/allennlp-manager",
+            )
+        )
         if current_user.is_authenticated:
             menu_items = [
                 dbc.DropdownMenuItem(
-                    ["Signed in as ", html.Strong("admin")], disabled=True
+                    ["Signed in as ", html.Strong(current_user.username)], disabled=True
                 ),
                 html.Hr(),
                 dbc.DropdownMenuItem(dcc.Link("Home", href="/")),
                 dbc.DropdownMenuItem(dcc.Link("Logout", href="/logout", refresh=True)),
             ]
             return [
+                source_link,
                 dbc.DropdownMenu(
                     nav=True, in_navbar=True, label="Menu", children=menu_items
-                )
+                ),
             ]
-        return [dbc.NavItem(dbc.NavLink("Sign in", href="/login", external_link=True))]
+        return [
+            source_link,
+            dbc.NavItem(dbc.NavLink("Sign in", href="/login", external_link=True)),
+        ]
 
     # Define callback to render pages. Takes the URL path and get the corresponding
     # page.

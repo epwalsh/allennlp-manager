@@ -6,6 +6,7 @@ import click
 
 from mallennlp.config import Config
 from mallennlp.exceptions import NotInProjectError
+from mallennlp.services.user import UserService
 
 
 def requires_config(command):
@@ -30,3 +31,10 @@ def run_subprocess(command: str) -> int:
         if output:
             click.echo(output.strip())
     return process.returncode
+
+
+def validate_password(ctx, param, value):
+    ok, reason = UserService.validate_password(value)
+    if not ok:
+        raise click.BadParameter(click.style(reason, fg="red"))
+    return value

@@ -1,0 +1,89 @@
+#page-content {
+    margin-top: 50px;
+}
+
+.fa {
+    padding: 3px;
+}
+
+ul {
+    margin-bottom: 2px;
+    margin-top: 2px;
+}
+
+h3, h4, h5 {
+    color: #3A4A65;
+}
+
+.switch-active > div > div > div > button {
+    transform: translateX(18px) !important;
+}
+
+._dash-undo-redo {
+    display: none;
+}
+
+.dash-element {
+    margin-bottom: 21px;
+    margin-right: 5px;
+    margin-left: 5px;
+    box-shadow: 0 4px 4px 0 rgba(0, 0, 0, 0), 0 6px 20px 0 rgba(0, 0, 0, 0);
+    border-color: #FFF;
+    border-width: 1px;
+    border-style: solid;
+    border-radius: 4px;
+}
+
+.dash-element-no-hover {
+    box-shadow: 0 4px 4px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
+    border-color: #FFF;
+    border-width: 1px;
+    border-style: solid;
+    border-radius: 4px;
+}
+
+.dash-element-hover:hover {
+    box-shadow: 0 4px 4px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
+    border-color: #FFF;
+    border-width: 1px;
+    border-style: solid;
+    border-radius: 4px;
+}
+
+.dash-padded-element {
+    padding-top: 10px;
+    padding-bottom: 10px;
+}
+
+.dash-breadcrumb-left-chevron {
+    margin-right: 10px;
+}
+
+.dash-breadcrumb-right-chevron {
+    margin-left: 10px;
+}
+
+.dash-element-align-right {
+    text-align: right;
+}
+
+@media (max-width: 767px) {
+    .plot-no-mobile,
+    .no-mobile {
+        display: none;
+    }
+}
+
+#login-password-input, #login-username-input {
+    margin-left: 10px;
+    margin-right: 10px;
+    max-width: 400px;
+}
+
+#login-button {
+    margin-left: 10px;
+}
+
+.navbar-dark .navbar-nav .nav-link {
+    color: #FFFFFF;
+}

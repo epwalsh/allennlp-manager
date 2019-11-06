@@ -3,6 +3,7 @@ from pathlib import Path
 
 import click
 
+from mallennlp.bin.common import validate_password
 from mallennlp.config import Config, ProjectConfig, ServerConfig
 from mallennlp.services.db import init_db, get_db_from_cli
 from mallennlp.services.user import UserService
@@ -20,6 +21,7 @@ from mallennlp.services.user import UserService
     prompt="Set dashboard password",
     hide_input=True,
     confirmation_prompt=True,
+    callback=validate_password,
 )
 @click.option("--display-name", type=str)
 @click.option("--loglevel", type=click.Choice(["DEBUG", "INFO", "WARNING", "ERROR"]))
