@@ -23,7 +23,7 @@ class Page(Registrable):
         raise NotImplementedError
 
     @classmethod
-    def from_params(cls, params: Dict[str, Any]):
+    def from_params(cls, params: Dict[str, List[str]]):
         return cls()
 
     @classmethod

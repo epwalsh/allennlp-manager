@@ -17,8 +17,9 @@ from flask_login import LoginManager, login_required, logout_user, current_user
 
 from mallennlp.config import Config
 from mallennlp.dashboard.page import Page
-from mallennlp.domain.user import User, AnonymousUser
+from mallennlp.domain.user import AnonymousUser
 from mallennlp.services import db
+from mallennlp.services.user import UserService
 
 
 def create_app(config: Config, gunicorn: bool = True):
@@ -45,7 +46,7 @@ def create_app(config: Config, gunicorn: bool = True):
 
     @login_manager.user_loader
     def load_user(userid: str):
-        return User.get(userid)
+        return UserService().get(userid)
 
     @app.route("/logout")
     @login_required
@@ -123,7 +124,9 @@ def create_dash(flask_app: Flask, config: Config):
         params = urlparse.parse_qs(urlparse.urlparse(param_string).query)
         try:
             PageClass = Page.by_name(pathname)
-            # TODO: check for current user if `PageClass.requires_login`.
+            if PageClass.requires_login and not current_user.is_authenticated:
+                PageClass = Page.by_name("/login")
+                params = {"next_pathname": [pathname], "next_params": [param_string]}
         except ConfigurationError:
             PageClass = Page.by_name("/not-found")
         page = PageClass.from_params(params)
