@@ -109,3 +109,5 @@ scratch*
 
 # example-project
 example-project/
+*.sqlite3
+.instance/
