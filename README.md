@@ -30,6 +30,10 @@ For the first release I intend to have all of the features implemented except fo
 
 ## Updates
 
+**11/6**
+
+Added sqlite database and implemented login / authentication system.
+
 **11/5**
 
 Dashboard skeleton implemented with `Page` abstraction.

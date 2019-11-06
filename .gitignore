@@ -106,3 +106,6 @@ venv.bak/
 # Scratch files.
 tmp*
 scratch*
+
+# example-project
+example-project/
