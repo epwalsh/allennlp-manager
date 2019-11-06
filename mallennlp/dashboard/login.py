@@ -1,3 +1,4 @@
+import time
 from typing import List, Dict
 
 from dash.dependencies import Input, Output, State
@@ -127,6 +128,7 @@ class LoginPage(Page):
     def redirect(self, state, n_clicks):
         if not state or not n_clicks or not current_user.is_authenticated:
             raise PreventUpdate
+        time.sleep(1)
         next_pathname = self.next_pathname
         next_params = self.next_params
         return next_pathname, next_pathname, next_params
