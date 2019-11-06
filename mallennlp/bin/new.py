@@ -4,7 +4,7 @@ from pathlib import Path
 import click
 
 from mallennlp.bin.common import validate_password
-from mallennlp.config import Config, ProjectConfig, ServerConfig
+from mallennlp.domain.config import Config, ProjectConfig, ServerConfig
 from mallennlp.services.db import init_db, get_db_from_cli
 from mallennlp.services.user import UserService
 

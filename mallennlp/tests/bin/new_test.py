@@ -4,7 +4,7 @@ import attr
 import click
 
 from mallennlp.bin.new import new
-from mallennlp.config import ServerConfig, ProjectConfig
+from mallennlp.domain.config import ServerConfig, ProjectConfig
 
 
 def check_types(attribute, option):

@@ -15,7 +15,7 @@ import dash_html_components as html
 from flask import Flask, redirect
 from flask_login import LoginManager, login_required, logout_user, current_user
 
-from mallennlp.config import Config
+from mallennlp.domain.config import Config
 from mallennlp.dashboard.page import Page
 from mallennlp.domain.user import AnonymousUser
 from mallennlp.services import db
