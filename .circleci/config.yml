@@ -87,9 +87,6 @@ jobs:
     steps:
       - setup_remote_docker
       - checkout
-      - *restore_cache
-      - *setup_environment
-      - *save_cache
 
       - run:
           name: Login to Docker Hub
@@ -101,17 +98,16 @@ jobs:
           command: |
             make build
 
-      - run:
-          name: Check server running
-          command: |
-            set -e
-            . venv/bin/activate
-            make project
-            cd example-project
-            ls
-            pwd
-            mallennlp serve -d
-            curl http://127.0.0.1:5000/
+      # - run:
+      #     name: Check server running
+      #     command: |
+      #       set -e
+      #       . venv/bin/activate
+      #       make project
+      #       cd example-project
+      #       mallennlp serve -d
+      #       curl http://127.0.0.1:5000/
+      #       mallennlp stop
 
       - run:
           name: Push image

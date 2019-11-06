@@ -13,7 +13,7 @@ Your manager for AllenNLP experiments.
 - [**Installation**](#installation)
 - [**Quick start**](#quick-start) :rocket:
 - [**Contributing**](#for-potential-contributors)
-- [**Additional configuration**](#additional-configuration)
+- [**Advanced configuration**](#advanced-configuration)
 - [**Updates**](#updates) :tada: :tada: :tada:
 
 ## Road map
@@ -65,7 +65,7 @@ The continuous integration for **allennlp-manager** is a lot like that of **Alle
 
 If this is your first time contributing to a project on GitHub, please see [this Gist](https://gist.github.com/epwalsh/9e1b77d46ec232d55e6e344bb649fb19) for an example workflow.
 
-## Additional configuration
+## Advanced configuration
 
 ### Command completion
 
