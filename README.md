@@ -7,9 +7,15 @@
 
 Your manager for AllenNLP experiments.
 
-## Dependencies
+### Table of contents
 
-AllenNLP, Python 3.6, and Docker are required.
+- [**Road map**](#road-map)
+- [**Dependencies**](#dependencies)
+- [**Installation**](#installation)
+- [**Quick start**](#quick-start)
+- [**Contributing**](#for-potential-contributors)
+- [**Additional configuration**](#additional-configuration)
+- [**Updates**](#updates)
 
 ## Road map
 
@@ -28,6 +34,51 @@ In addition to the dashboard, there will be a multi-purpose CLI with commands fo
 
 For the first release I intend to have all of the features implemented except for, possibly, the **slurm**-like resource manager and job queueing system, as that may become quite complex.
 
+## Dependencies
+
+AllenNLP, Python 3.6, and Docker are required.
+
+## Installation
+
+```bash
+pip install 'git+git://github.com/epwalsh/allennlp-manager.git#egg=mallennlp'
+```
+
+## Quick start
+
+Create a new project named `my-project`:
+
+```bash
+mallennlp new my-project && cd my-project
+```
+
+Then edit the `Project.toml` file to your liking and start the server:
+
+```bash
+mallennlp serve
+```
+
+## For potential contributors
+
+I chose to implement this project entirely in Python to make it as easy possible for anyone to contribute, since if you are using AllenNLP you must already be familiar with Python. The dashboard is built with [plotly Dash](https://plot.ly/dash/), which is kind of like Python's version of [Shiny](https://shiny.rstudio.com/) if you're familiar with R.
+
+The continuous integration for **allennlp-manager** is a lot like that of **AllenNLP**. Unit tests are run with [pytest](https://docs.pytest.org/en/latest/), code is type-checked with [mypy](http://mypy-lang.org/), linted with [flake8](http://flake8.pycqa.org/en/latest/), and formatted with [black](https://pypi.org/project/black/). You can run all of the CI-steps locally with `make test`.
+
+If this is your first time contributing to a project on GitHub, please see [this Gist](https://gist.github.com/epwalsh/9e1b77d46ec232d55e6e344bb649fb19) for an example workflow.
+
+## Additional configuration
+
+### Command completion
+
+Since the CLI is implemented using Click, [setting up completion for Bash or ZSH](https://click.palletsprojects.com/en/7.x/bashcomplete/) is easy. For example,
+you can just add
+
+```
+eval "$(_MALLENNLP_COMPLETE=source mallennlp)"
+```
+
+to your `.bashrc`. Note however that it is better to use the [activation script approach](https://click.palletsprojects.com/en/7.x/bashcomplete/#activation-script) instead, otherwise your shell may take a couple seconds to start.
+
 ## Updates
 
 **11/6**
@@ -41,31 +92,3 @@ Dashboard skeleton implemented with `Page` abstraction.
 **11/4**
 
 CLI implemented (using click). Project can be created with `mallennlp new [PROJECT NAME]` and dashboard can be served with `mallennlp serve` from within the project directory (dashboard just returns 'Hello from AllenNLP manager' at the moment).
-
-## For potential contributors
-
-I chose to implement this project entirely in Python to make it as easy possible for anyone to contribute, since if you are using AllenNLP you must already be familiar with Python. The dashboard is built with [plotly Dash](https://plot.ly/dash/), which is kind of like Python's version of [Shiny](https://shiny.rstudio.com/) if you're familiar with R.
-
-The continuous integration for **allennlp-manager** is a lot like that of **AllenNLP**. Unit tests are run with [pytest](https://docs.pytest.org/en/latest/), code is type-checked with [mypy](http://mypy-lang.org/), linted with [flake8](http://flake8.pycqa.org/en/latest/), and formatted with [black](https://pypi.org/project/black/). You can run all of the CI-steps locally with `make test`.
-
-If this is your first time contributing to a project on GitHub, please see [this Gist](https://gist.github.com/epwalsh/9e1b77d46ec232d55e6e344bb649fb19) for an example workflow.
-
-<!-- ## Installation -->
-
-<!-- ```bash -->
-<!-- pip install 'git+git://github.com/epwalsh/allennlp-manager.git#egg=mallennlp' -->
-<!-- ``` -->
-
-<!-- ## Quick start -->
-
-<!-- Create a new project named `my-project`: -->
-
-<!-- ```bash -->
-<!-- mallennlp new my-project && cd my-project -->
-<!-- ``` -->
-
-<!-- Then edit the `Project.toml` file to your liking and start the server: -->
-
-<!-- ```bash -->
-<!-- mallennlp serve -->
-<!-- ``` -->
