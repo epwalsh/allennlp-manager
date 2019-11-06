@@ -1,6 +1,7 @@
 port  = 5000
 cmd   = /bin/bash
-test  = mallennlp
+module = mallennlp
+test  := $(module)
 cwd   = $(shell pwd)
 project = example-project
 path := $(cwd)/$(project)
@@ -41,7 +42,7 @@ serve : build project
 
 .PHONY : flask
 flask :
-	python mallennlp/app.py
+	python $(module)/app.py
 
 .PHONY : serve-it
 serve-it : build project
@@ -50,22 +51,27 @@ serve-it : build project
 .PHONY : typecheck
 typecheck :
 	@echo "Typechecks: mypy"
-	@mypy $(test) --ignore-missing-imports --no-site-packages
+	@mypy $(module) tests --ignore-missing-imports --no-site-packages
 
 .PHONY : lint
 lint :
 	@echo "Lint: flake8"
-	@flake8 $(test)
+	@flake8 $(module) tests
 	@echo "Lint: black"
-	@black --check $(test)
+	@black --check $(module) tests
 
-.PHONY : unit-test
-unit-test :
+.PHONY : unit-tests
+unit-tests :
 	@echo "Unit tests: pytest"
 	@python -m pytest -v --color=yes $(test)
 
+.PHONY : integration-tests
+integration-tests :
+	@echo "Integration tests: pytest"
+	@python -m pytest -v --color=yes tests
+
 .PHONY : test
-test : typecheck lint unit-test
+test : typecheck lint unit-tests integration-tests
 
 .PHONY: create-branch
 create-branch :

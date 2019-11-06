@@ -47,7 +47,13 @@ jobs:
           name: Running unit tests
           command: |
             . venv/bin/activate
-            make unit-test
+            make unit-tests
+
+      - run:
+          name: Running integration tests
+          command: |
+            . venv/bin/activate
+            make integration-tests
 
   pip_github_install:
     <<: *defaults
