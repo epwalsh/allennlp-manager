@@ -4,8 +4,8 @@ import subprocess
 
 import click
 
-from mallennlp.domain.config import Config
 from mallennlp.exceptions import NotInProjectError
+from mallennlp.services.config import Config
 from mallennlp.services.user import UserService
 
 

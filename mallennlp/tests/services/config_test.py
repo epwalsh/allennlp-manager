@@ -3,7 +3,8 @@ import tempfile
 
 import pytest
 
-from mallennlp.domain.config import Config, ProjectConfig, ServerConfig
+from mallennlp.domain.config import ProjectConfig, ServerConfig
+from mallennlp.services.config import Config
 from mallennlp.exceptions import NotInProjectError
 
 

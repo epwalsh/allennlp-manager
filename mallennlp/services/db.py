@@ -3,7 +3,7 @@ import sqlite3
 
 from flask import current_app, g
 
-from mallennlp.domain.config import Config
+from mallennlp.services.config import Config
 
 
 def get_db_from_cli(config: Config):
