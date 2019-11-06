@@ -51,7 +51,8 @@ class UserService:
     def changepw(self, username: str, password: str) -> bool:
         hashed_password = generate_password_hash(password, method="sha256")
         self.cursor.execute(
-            "UPDATE user SET password=? WHERE username=?", (hashed_password, username)
+            "UPDATE user SET password=?, alt_id = alt_id + 1 WHERE username=?",
+            (hashed_password, username),
         )
         self.db.commit()
         return self.find(username, password) is not None

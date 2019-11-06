@@ -21,9 +21,11 @@ def requires_config(command):
     return wrapped_command
 
 
-def run_subprocess(command: str) -> int:
-    args = shlex.split(command)
-    process = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+def run_subprocess(command: str, shell: bool = False) -> int:
+    args = command if shell else shlex.split(command)
+    process = subprocess.Popen(
+        args, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=shell
+    )
     while True:
         output = process.stdout.readline()
         if process.poll() is not None and output == b"":

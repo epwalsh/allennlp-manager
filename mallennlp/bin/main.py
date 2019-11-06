@@ -7,6 +7,7 @@ from mallennlp.bin.new import new
 from mallennlp.bin.edit import edit
 from mallennlp.bin.launch import launch
 from mallennlp.bin.user import user
+from mallennlp.bin.stop import stop
 
 
 @click.group()
@@ -28,6 +29,7 @@ main.add_command(new)
 main.add_command(edit)
 main.add_command(launch)
 main.add_command(user)
+main.add_command(stop)
 
 
 if __name__ == "__main__":
