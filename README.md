@@ -2,20 +2,19 @@
 
 [![CircleCI](https://circleci.com/gh/epwalsh/allennlp-manager.svg?style=svg)](https://circleci.com/gh/epwalsh/allennlp-manager)
 [![Docker Hub](https://img.shields.io/docker/pulls/epwalsh/allennlp-manager)](https://cloud.docker.com/repository/docker/epwalsh/allennlp-manager)
-[![GitHub commit activity](https://img.shields.io/github/commit-activity/w/epwalsh/allennlp-manager)](https://github.com/epwalsh/allennlp-manager/graphs/commit-activity)
 [![License](https://img.shields.io/github/license/epwalsh/allennlp-manager)](https://github.com/epwalsh/allennlp-manager/blob/master/LICENSE)
 
 Your manager for AllenNLP experiments.
 
 ### Table of contents
 
-- [**Road map**](#road-map)
+- [**Road map**](#road-map) :car:
 - [**Dependencies**](#dependencies)
 - [**Installation**](#installation)
-- [**Quick start**](#quick-start)
+- [**Quick start**](#quick-start) :rocket:
 - [**Contributing**](#for-potential-contributors)
 - [**Additional configuration**](#additional-configuration)
-- [**Updates**](#updates)
+- [**Updates**](#updates) :tada: :tada: :tada:
 
 ## Road map
 
