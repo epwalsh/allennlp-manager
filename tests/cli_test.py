@@ -1,4 +1,5 @@
 import os
+import shutil
 
 from click.testing import CliRunner
 import pytest
@@ -26,6 +27,29 @@ def isolated_filesystem(runner):
         yield filesystem
 
 
+@pytest.fixture(scope="function")
+def tmp_folder():
+    os.mkdir("foo")
+    os.chdir("foo")
+    yield "foo"
+    os.chdir("../")
+    shutil.rmtree("foo", ignore_errors=True)
+
+
+def test_init_project(runner, tmp_folder):
+    result = runner.invoke(
+        main,
+        [
+            "init",
+            f"--username={USERNAME}",
+            f"--password={PASSWORD}",
+            "--loglevel=DEBUG",
+        ],
+    )
+    assert result.exit_code == 0
+    assert os.path.exists(Config.CONFIG_PATH)
+
+
 def test_create_project(runner):
     result = runner.invoke(
         main,
@@ -49,6 +73,36 @@ def project():
     """
     if os.path.exists(PROJECT_NAME):
         os.chdir(PROJECT_NAME)
+
+
+def test_try_create_project_again_fails(runner):
+    os.chdir("../")
+    result = runner.invoke(
+        main,
+        [
+            "new",
+            PROJECT_NAME,
+            f"--username={USERNAME}",
+            f"--password={PASSWORD}",
+            "--loglevel=DEBUG",
+        ],
+    )
+    assert result.exit_code == 1
+    assert "directory already exists" in result.output
+
+
+def test_try_init_project_fails(runner):
+    result = runner.invoke(
+        main,
+        [
+            "init",
+            f"--username={USERNAME}",
+            f"--password={PASSWORD}",
+            "--loglevel=DEBUG",
+        ],
+    )
+    assert result.exit_code == 1
+    assert "project already exists" in result.output
 
 
 @pytest.fixture(scope="function")
