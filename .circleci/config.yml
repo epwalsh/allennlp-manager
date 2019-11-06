@@ -107,7 +107,10 @@ jobs:
             set -e
             . venv/bin/activate
             make project
-            cd example-project && mallennlp serve -d
+            cd example-project
+            ls
+            pwd
+            mallennlp serve -d
             curl http://127.0.0.1:5000/
 
       - run:
