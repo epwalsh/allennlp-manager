@@ -1,10 +1,10 @@
-port  = 5000
-cmd   = /bin/bash
-module = mallennlp
-test  := $(module)
-cwd   = $(shell pwd)
+port    = 5000
+cmd     = /bin/bash
+module  = mallennlp
+test   := $(module)
+cwd     = $(shell pwd)
 project = example-project
-path := $(cwd)/$(project)
+path   := $(cwd)/$(project)
 
 DOCKER_IMAGE     = allennlp-manager
 DOCKER_TAG       = latest
@@ -34,7 +34,7 @@ project :
 		--loglevel=DEBUG \
 		--server-image=$(DOCKER_IMAGE):$(DOCKER_TAG) \
 		--username=epwalsh \
-		--password=password
+		--password=testing123
 
 .PHONY : serve
 serve : build project

@@ -23,6 +23,7 @@ def validate_username(ctx, param, value):
         raise click.BadParameter(
             click.style(f"Unknown username {click.style(value, bold=True)}", fg="red")
         )
+    return value
 
 
 @click.command("changepw")
