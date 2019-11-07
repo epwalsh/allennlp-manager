@@ -29,9 +29,9 @@ RUN adduser --system --no-create-home --shell /bin/false --group --disabled-logi
 WORKDIR /opt/python/app/
 
 COPY requirements.txt requirements.txt
-RUN ["/bin/bash", "-c", "pip --no-cache-dir install -r <(sed -e '/TESTING/,$d' requirements.txt)"]
+RUN pip --no-cache-dir install -r requirements.txt
 COPY requirements.server.txt requirements.server.txt
-RUN ["/bin/bash", "-c", "pip --no-cache-dir install -r <(sed -e '/TESTING/,$d' requirements.server.txt)"]
+RUN pip --no-cache-dir install -r requirements.server.txt
 
 COPY nginx.conf /etc/nginx/nginx.conf
 COPY supervisord.conf /etc/supervisord.conf

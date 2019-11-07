@@ -19,4 +19,5 @@ click>=6.7,<7.0
 click-completion>=0.5.0,<1.0.0
 colorama>=0.3.9,<1.0.0
 
+# Pin this here, but in setup.py we unpin to allow library users more flexibility.
 -e git+https://github.com/allenai/allennlp.git@f3083c8fb9150f07e3ca98bb3ea9368a081df028#egg=allennlp

@@ -26,7 +26,6 @@ jobs:
             pip install -r requirements.txt
             pip install -r requirements.server.txt
             pip install -r requirements.dev.txt
-            python setup.py develop
 
       - &save_cache
         save_cache:
@@ -62,6 +61,8 @@ jobs:
   test_install_from_github:
     <<: *defaults
     steps:
+      - *restore_cache
+
       - run:
           name: Set up environment
           command: |
@@ -78,10 +79,7 @@ jobs:
       - run:
           name: Check installation
           command: |
-            set -e
             . venv/bin/activate
-            python -c 'import mallennlp'
-            which mallennlp
             mallennlp --help
 
   build_server_image:
