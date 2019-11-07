@@ -1,64 +1,40 @@
-port    = 5000
-cmd     = /bin/bash
-module  = mallennlp
-test   := $(module)
-cwd     = $(shell pwd)
-project = example-project
-path   := $(cwd)/$(project)
+test = mallennlp
 
-DOCKER_IMAGE     = allennlp-manager
-DOCKER_TAG       = latest
-DOCKER_HUB_TAG  := $(DOCKER_TAG)
-DOCKER_ARGS     := --rm -p 5000:$(port) --mount type=bind,source=$(path),target=/opt/python/app/project
-COMMITHASH      := $(shell git rev-parse --verify HEAD)
-INSTALLED_BIN   := $(shell which mallennlp)
+MODULE         = mallennlp
+PROJECT        = example-project
+PROJECT_PATH          := $(realpath $(PROJECT))
+INSTALLED_BIN := $(shell which mallennlp)
 
 .PHONY : clean
 clean :
 	@rm -rf ./allennlp_manager.egg-info/
 	@rm -rf ./.mypy_cache/
 	@rm -rf ./.pytest_cache/
-
-.PHONY : build
-build :
-	docker build \
-		--build-arg COMMITHASH=$(COMMITHASH) \
-		-t $(DOCKER_IMAGE):$(DOCKER_TAG) \
-		-f Dockerfile \
-		.
+	@rm -rf $(PROJECT)
 
 .PHONY : project
 project :
-	rm -rf $(project)/
-	mallennlp new $(project) \
+	rm -rf $(PROJECT)/
+	mallennlp new $(PROJECT) \
 		--loglevel=DEBUG \
-		--server-image=$(DOCKER_IMAGE):$(DOCKER_TAG) \
 		--username=epwalsh \
 		--password=testing123
 
 .PHONY : serve
 serve : build project
-	mallennlp --wd $(path) serve
-
-.PHONY : flask
-flask :
-	python $(module)/app.py
-
-.PHONY : serve-it
-serve-it : build project
-	docker run -it $(DOCKER_ARGS) $(DOCKER_IMAGE):$(DOCKER_TAG) $(cmd)
+	mallennlp --wd $(PROJECT_PATH) serve
 
 .PHONY : typecheck
 typecheck :
 	@echo "Typechecks: mypy"
-	@mypy $(module) tests --ignore-missing-imports --no-site-packages
+	@mypy $(MODULE) tests --ignore-missing-imports --no-site-packages
 
 .PHONY : lint
 lint :
 	@echo "Lint: flake8"
-	@flake8 $(module) tests
+	@flake8 $(MODULE) tests
 	@echo "Lint: black"
-	@black --check $(module) tests
+	@black --check $(MODULE) tests
 
 .PHONY : unit-tests
 unit-tests :
@@ -84,15 +60,6 @@ else ifneq ($(name),)
 else
 	$(error must supply 'issue' or 'name' parameter)
 endif
-
-.PHONY : hub-login
-hub-login :
-	docker login --username=epwalsh
-
-.PHONY : hub-push
-hub-push :
-	docker tag $(DOCKER_IMAGE):$(DOCKER_TAG) epwalsh/$(DOCKER_IMAGE):$(DOCKER_HUB_TAG)
-	docker push epwalsh/$(DOCKER_IMAGE):$(DOCKER_HUB_TAG)
 
 .PHONY : install
 install :

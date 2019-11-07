@@ -5,32 +5,29 @@ defaults: &defaults
 
 version: 2
 jobs:
+  # Lint code, type check code, and run all unit and integration tests.
   test:
     <<: *defaults
     steps:
       - checkout
 
-      - &restore_cache
-        restore_cache:
+      - restore_cache:
           name: Restoring dependencies cache
           keys:
-            - deps-v1-{{ checksum "requirements.txt" }}-{{ checksum "requirements.server.txt" }}-{{ checksum "requirements.dev.txt" }}
+            - deps-v1-{{ checksum "requirements.txt" }}-{{ checksum "requirements.dev.txt" }}
             - deps-v1-
 
-      - &setup_environment
-        run:
+      - run:
           name: Installing dependencies
           command: |
             python3 -m venv venv
             . venv/bin/activate
             pip install -r requirements.txt
-            pip install -r requirements.server.txt
             pip install -r requirements.dev.txt
 
-      - &save_cache
-        save_cache:
+      - save_cache:
           name: Saving dependencies cache
-          key: deps-v1-{{ checksum "requirements.txt" }}-{{ checksum "requirements.server.txt" }}-{{ checksum "requirements.dev.txt" }}
+          key: deps-v1-{{ checksum "requirements.txt" }}-{{ checksum "requirements.dev.txt" }}
           paths:
             - venv
 
@@ -58,7 +55,8 @@ jobs:
             . venv/bin/activate
             make integration-tests
 
-  test_install_from_github:
+  # Install current commit directly from GitHub with pip and ensure everything works.
+  test_pip_install:
     <<: *defaults
     steps:
       - checkout
@@ -89,41 +87,9 @@ jobs:
             pip install "git+git://github.com/epwalsh/allennlp-manager.git@$CIRCLE_SHA1"
             mallennlp --help
 
-  build_server_image:
-    <<: *defaults
-    steps:
-      - setup_remote_docker
-      - checkout
-
-      - run:
-          name: Login to Docker Hub
-          command: |
-            docker login --username="$HUB_USERNAME" --password="$HUB_PASSWORD"
-
-      - run:
-          name: Build image
-          command: |
-            make build
-
-      - run:
-          name: Push image
-          command: |
-            make hub-push
-            make hub-push DOCKER_HUB_TAG=$(python -c 'from mallennlp import VERSION; print(VERSION)')
-
 workflows:
   version: 2
-  test_and_build:
+  test:
     jobs:
       - test
-      - test_install_from_github:
-          filters:
-            branches:
-              only: master
-      - build_server_image:
-          requires:
-            - test
-            - test_install_from_github
-          filters:
-            branches:
-              only: master
+      - test_pip_install
