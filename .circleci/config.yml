@@ -59,7 +59,7 @@ jobs:
             . venv/bin/activate
             make integration-tests
 
-  test_pip_github_install:
+  test_install_from_github:
     <<: *defaults
     steps:
       - run:
@@ -78,9 +78,11 @@ jobs:
       - run:
           name: Check installation
           command: |
+            set -e
             . venv/bin/activate
             python -c 'import mallennlp'
             which mallennlp
+            mallennlp --help
 
   build_server_image:
     <<: *defaults
@@ -109,14 +111,14 @@ workflows:
   test_and_build:
     jobs:
       - test
-      # - test_pip_github_install:
-      #     filters:
-      #       branches:
-      #         only: master
+      - test_install_from_github:
+          filters:
+            branches:
+              only: master
       - build_server_image:
           requires:
             - test
-            # - test_pip_github_install
+            - test_install_from_github
           filters:
             branches:
               only: master

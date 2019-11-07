@@ -1,0 +1,17 @@
+# Ignore everything
+**
+
+# ... except
+!mallennlp/**
+!nginx.conf
+!supervisord.conf
+!entrypoint.sh
+!requirements*.txt
+
+# Ignore cache stuff.
+**/__pycache__
+**/.mypy_cache
+**.py[cod]
+
+# Ignore tests.
+**/tests
