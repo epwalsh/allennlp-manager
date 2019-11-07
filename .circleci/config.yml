@@ -1,58 +1,58 @@
-defaults: &defaults
-  docker:
-    - image: circleci/python:3.6
-  working_directory: ~/allennlp-manager
+test_steps: &test_steps
+  steps:
+    - checkout
+
+    - restore_cache:
+        name: Restoring dependencies cache
+        keys:
+          - deps-v1-{{ checksum "requirements.txt" }}-{{ checksum "requirements.dev.txt" }}
+          - deps-v1-
+
+    - run:
+        name: Installing dependencies
+        command: |
+          python3 -m venv venv
+          . venv/bin/activate
+          pip install -r requirements.txt
+          pip install -r requirements.dev.txt
+
+    - save_cache:
+        name: Saving dependencies cache
+        key: deps-v1-{{ checksum "requirements.txt" }}-{{ checksum "requirements.dev.txt" }}
+        paths:
+          - venv
+
+    - run:
+        name: Running code linters
+        command: |
+          . venv/bin/activate
+          make lint
+
+    - run:
+        name: Running type checks
+        command: |
+          . venv/bin/activate
+          make typecheck
+
+    - run:
+        name: Running unit tests
+        command: |
+          . venv/bin/activate
+          make unit-tests
+
+    - run:
+        name: Running integration tests
+        command: |
+          . venv/bin/activate
+          make integration-tests
 
 version: 2
 jobs:
   test:
-    <<: *defaults
-    steps:
-      - checkout
-
-      - restore_cache:
-          name: Restoring dependencies cache
-          keys:
-            - deps-v1-{{ checksum "requirements.txt" }}-{{ checksum "requirements.dev.txt" }}
-            - deps-v1-
-
-      - run:
-          name: Installing dependencies
-          command: |
-            python3 -m venv venv
-            . venv/bin/activate
-            pip install -r requirements.txt
-            pip install -r requirements.dev.txt
-
-      - save_cache:
-          name: Saving dependencies cache
-          key: deps-v1-{{ checksum "requirements.txt" }}-{{ checksum "requirements.dev.txt" }}
-          paths:
-            - venv
-
-      - run:
-          name: Running code linters
-          command: |
-            . venv/bin/activate
-            make lint
-
-      - run:
-          name: Running type checks
-          command: |
-            . venv/bin/activate
-            make typecheck
-
-      - run:
-          name: Running unit tests
-          command: |
-            . venv/bin/activate
-            make unit-tests
-
-      - run:
-          name: Running integration tests
-          command: |
-            . venv/bin/activate
-            make integration-tests
+    docker:
+      - image: circleci/python:3.6
+    working_directory: ~/allennlp-manager
+    <<: *test_steps
 
 workflows:
   version: 2
