@@ -1,4 +1,5 @@
 import click
+from gevent import monkey
 from gunicorn.app.base import BaseApplication
 
 from mallennlp.bin.common import requires_config
@@ -32,6 +33,7 @@ def serve(config, launch):
     """
     Serve the dashboard locally.
     """
+    monkey.patch_all()
     click.secho(
         f"Serving AllenNLP manager for {click.style(config.project.name, bold=True)}",
         fg="green",
