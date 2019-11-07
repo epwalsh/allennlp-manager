@@ -1,7 +1,6 @@
 # [WORK IN PROGRESS] allennlp-manager
 
 [![CircleCI](https://circleci.com/gh/epwalsh/allennlp-manager.svg?style=svg)](https://circleci.com/gh/epwalsh/allennlp-manager)
-[![Docker Hub](https://img.shields.io/docker/pulls/epwalsh/allennlp-manager)](https://cloud.docker.com/repository/docker/epwalsh/allennlp-manager)
 [![License](https://img.shields.io/github/license/epwalsh/allennlp-manager)](https://github.com/epwalsh/allennlp-manager/blob/master/LICENSE)
 
 Your manager for [AllenNLP](https://github.com/allenai/allennlp) experiments.

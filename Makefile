@@ -1,74 +1,52 @@
-port    = 5000
-cmd     = /bin/bash
-module  = mallennlp
-test   := $(module)
-cwd     = $(shell pwd)
-project = example-project
-path   := $(cwd)/$(project)
+test = mallennlp
 
-DOCKER_IMAGE     = allennlp-manager
-DOCKER_TAG       = latest
-DOCKER_HUB_TAG  := $(DOCKER_TAG)
-DOCKER_ARGS     := --rm -p 5000:$(port) --mount type=bind,source=$(path),target=/opt/python/app/project
-COMMITHASH      := $(shell git rev-parse --verify HEAD)
-INSTALLED_BIN   := $(shell which mallennlp)
+MODULE            = mallennlp
+INTEGRATION_TESTS = tests
+PROJECT           = example-project
+PROJECT_PATH     := $(realpath $(PROJECT))
+INSTALLED_BINARY := $(shell which mallennlp)
+PYTEST_COMMAND    = python -m pytest -v --color=yes
 
 .PHONY : clean
 clean :
 	@rm -rf ./allennlp_manager.egg-info/
 	@rm -rf ./.mypy_cache/
 	@rm -rf ./.pytest_cache/
-
-.PHONY : build
-build :
-	docker build \
-		--build-arg COMMITHASH=$(COMMITHASH) \
-		-t $(DOCKER_IMAGE):$(DOCKER_TAG) \
-		-f Dockerfile \
-		.
+	@rm -rf $(PROJECT)
 
 .PHONY : project
 project :
-	rm -rf $(project)/
-	mallennlp new $(project) \
+	rm -rf $(PROJECT)/
+	mallennlp new $(PROJECT) \
 		--loglevel=DEBUG \
-		--server-image=$(DOCKER_IMAGE):$(DOCKER_TAG) \
 		--username=epwalsh \
 		--password=testing123
 
 .PHONY : serve
 serve : build project
-	mallennlp --wd $(path) serve
-
-.PHONY : flask
-flask :
-	python $(module)/app.py
-
-.PHONY : serve-it
-serve-it : build project
-	docker run -it $(DOCKER_ARGS) $(DOCKER_IMAGE):$(DOCKER_TAG) $(cmd)
+	mallennlp --wd $(PROJECT_PATH) serve
 
 .PHONY : typecheck
 typecheck :
 	@echo "Typechecks: mypy"
-	@mypy $(module) tests --ignore-missing-imports --no-site-packages
+	@mypy $(MODULE) $(INTEGRATION_TESTS) --ignore-missing-imports --no-site-packages
 
 .PHONY : lint
 lint :
 	@echo "Lint: flake8"
-	@flake8 $(module) tests
+	@flake8 $(MODULE) $(INTEGRATION_TESTS)
 	@echo "Lint: black"
-	@black --check $(module) tests
+	@black --check $(MODULE) $(INTEGRATION_TESTS)
 
 .PHONY : unit-tests
 unit-tests :
 	@echo "Unit tests: pytest"
-	@python -m pytest -v --color=yes $(test)
+	@$(PYTEST_COMMAND) $(test)
 
 .PHONY : integration-tests
 integration-tests :
 	@echo "Integration tests: pytest"
-	@python -m pytest -v --color=yes tests
+	@$(PYTEST_COMMAND) $(INTEGRATION_TESTS)
 
 .PHONY : test
 test : typecheck lint unit-tests integration-tests
@@ -85,19 +63,10 @@ else
 	$(error must supply 'issue' or 'name' parameter)
 endif
 
-.PHONY : hub-login
-hub-login :
-	docker login --username=epwalsh
-
-.PHONY : hub-push
-hub-push :
-	docker tag $(DOCKER_IMAGE):$(DOCKER_TAG) epwalsh/$(DOCKER_IMAGE):$(DOCKER_HUB_TAG)
-	docker push epwalsh/$(DOCKER_IMAGE):$(DOCKER_HUB_TAG)
-
 .PHONY : install
 install :
 	python setup.py develop
 
 .PHONY : uninstall
 uninstall :
-	python setup.py develop --uninstall && rm -f $(INSTALLED_BIN)
+	python setup.py develop --uninstall && rm -f $(INSTALLED_BINARY)
