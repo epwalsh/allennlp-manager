@@ -1,9 +1,11 @@
 test = mallennlp
 
-MODULE         = mallennlp
-PROJECT        = example-project
-PROJECT_PATH          := $(realpath $(PROJECT))
-INSTALLED_BIN := $(shell which mallennlp)
+MODULE            = mallennlp
+INTEGRATION_TESTS = tests
+PROJECT           = example-project
+PROJECT_PATH     := $(realpath $(PROJECT))
+INSTALLED_BINARY := $(shell which mallennlp)
+PYTEST_COMMAND    = python -m pytest -v --color=yes
 
 .PHONY : clean
 clean :
@@ -27,24 +29,24 @@ serve : build project
 .PHONY : typecheck
 typecheck :
 	@echo "Typechecks: mypy"
-	@mypy $(MODULE) tests --ignore-missing-imports --no-site-packages
+	@mypy $(MODULE) $(INTEGRATION_TESTS) --ignore-missing-imports --no-site-packages
 
 .PHONY : lint
 lint :
 	@echo "Lint: flake8"
-	@flake8 $(MODULE) tests
+	@flake8 $(MODULE) $(INTEGRATION_TESTS)
 	@echo "Lint: black"
-	@black --check $(MODULE) tests
+	@black --check $(MODULE) $(INTEGRATION_TESTS)
 
 .PHONY : unit-tests
 unit-tests :
 	@echo "Unit tests: pytest"
-	@python -m pytest -v --color=yes $(test)
+	@$(PYTEST_COMMAND) $(test)
 
 .PHONY : integration-tests
 integration-tests :
 	@echo "Integration tests: pytest"
-	@python -m pytest -v --color=yes tests
+	@$(PYTEST_COMMAND) $(INTEGRATION_TESTS)
 
 .PHONY : test
 test : typecheck lint unit-tests integration-tests
@@ -67,4 +69,4 @@ install :
 
 .PHONY : uninstall
 uninstall :
-	python setup.py develop --uninstall && rm -f $(INSTALLED_BIN)
+	python setup.py develop --uninstall && rm -f $(INSTALLED_BINARY)
