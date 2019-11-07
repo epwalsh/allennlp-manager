@@ -26,7 +26,7 @@ setup(
     package_data={"mallennlp": ["services/schema.sql", "assets/*.css"]},
     install_requires=read_reqs_file("requirements.txt") + ["allennlp"],
     tests_require=read_reqs_file("requirements.dev.txt"),
-    python_requires=">=3.6.1",
+    python_requires=">=3.6.1,<3.8",
     include_package_data=True,
     entry_points={"console_scripts": ["mallennlp=mallennlp.bin.main:main"]},
 )
