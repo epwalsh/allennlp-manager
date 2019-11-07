@@ -11,8 +11,8 @@ Your manager for [AllenNLP](https://github.com/allenai/allennlp) experiments.
 - [**Dependencies**](#dependencies)
 - [**Installation**](#installation)
 - [**Quick start**](#quick-start) :rocket:
+- [**Configuration**](#configuration)
 - [**Contributing**](#for-potential-contributors)
-- [**Advanced configuration**](#advanced-configuration)
 - [**Updates**](#updates) :tada: :tada: :tada:
 
 ## Road map
@@ -56,17 +56,15 @@ Then edit the `Project.toml` file to your liking and start the server:
 mallennlp serve
 ```
 
-## For potential contributors
+## Configuration
 
-I chose to implement this project entirely in Python to make it as easy possible for anyone to contribute, since if you are using AllenNLP you must already be familiar with Python. The dashboard is built with [plotly Dash](https://plot.ly/dash/), which is kind of like Python's version of [Shiny](https://shiny.rstudio.com/) if you're familiar with R.
+A project is customized through the `Project.toml` file in the root directory of the project. There is a section `[project]` for general options such as the log level (which applies to both the CLI and the dashboard) and a `[server]` section for dashboard-specific options such the host port to bind to.
 
-The continuous integration for **allennlp-manager** is a lot like that of **AllenNLP**. Unit tests are run with [pytest](https://docs.pytest.org/en/latest/), code is type-checked with [mypy](http://mypy-lang.org/), linted with [flake8](http://flake8.pycqa.org/en/latest/), and formatted with [black](https://pypi.org/project/black/). You can run all of the CI-steps locally with `make test`.
+For convenience, you can open the configuration file quickly with the command `mallennlp edit`.
 
-If this is your first time contributing to a project on GitHub, please see [this Gist](https://gist.github.com/epwalsh/9e1b77d46ec232d55e6e344bb649fb19) for an example workflow.
+### Advanced configuration
 
-## Advanced configuration
-
-### Command completion
+#### Command completion
 
 Since the CLI is implemented using Click, [setting up completion for Bash or ZSH](https://click.palletsprojects.com/en/7.x/bashcomplete/) is easy. For example,
 you can just add
@@ -76,6 +74,14 @@ eval "$(_MALLENNLP_COMPLETE=source mallennlp)"
 ```
 
 to your `.bashrc`. Note however that it is better to use the [activation script approach](https://click.palletsprojects.com/en/7.x/bashcomplete/#activation-script) instead, otherwise your shell may take a couple seconds to start.
+
+## For potential contributors
+
+I chose to implement this project entirely in Python to make it as easy possible for anyone to contribute, since if you are using AllenNLP you must already be familiar with Python. The dashboard is built with [plotly Dash](https://plot.ly/dash/), which is kind of like Python's version of [Shiny](https://shiny.rstudio.com/) if you're familiar with R.
+
+The continuous integration for **allennlp-manager** is a lot like that of **AllenNLP**. Unit tests are run with [pytest](https://docs.pytest.org/en/latest/), code is type-checked with [mypy](http://mypy-lang.org/), linted with [flake8](http://flake8.pycqa.org/en/latest/), and formatted with [black](https://pypi.org/project/black/). You can run all of the CI-steps locally with `make test`.
+
+If this is your first time contributing to a project on GitHub, please see [this Gist](https://gist.github.com/epwalsh/9e1b77d46ec232d55e6e344bb649fb19) for an example workflow.
 
 ## Updates
 
