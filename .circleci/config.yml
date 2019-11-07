@@ -5,7 +5,6 @@ defaults: &defaults
 
 version: 2
 jobs:
-  # Lint code, type check code, and run all unit and integration tests.
   test:
     <<: *defaults
     steps:
@@ -55,41 +54,8 @@ jobs:
             . venv/bin/activate
             make integration-tests
 
-  # Install current commit directly from GitHub with pip and ensure everything works.
-  test_pip_install:
-    <<: *defaults
-    steps:
-      - checkout
-
-      - restore_cache:
-          name: Restoring dependencies cache
-          keys:
-            - deps-v2-{{ checksum "requirements.txt" }}
-
-      - run:
-          name: Set up environment
-          command: |
-            python3 -m venv venv
-            . venv/bin/activate
-            pip install -r requirements.txt
-
-      - save_cache:
-          name: Saving dependencies cache
-          key: deps-v2-{{ checksum "requirements.txt" }}
-          paths:
-            - venv
-
-      - run:
-          name: Check pip install
-          command: |
-            . venv/bin/activate
-            mkdir tmp && cd tmp/
-            pip install "git+git://github.com/epwalsh/allennlp-manager.git@$CIRCLE_SHA1"
-            mallennlp --help
-
 workflows:
   version: 2
   test:
     jobs:
       - test
-      - test_pip_install
