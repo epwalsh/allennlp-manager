@@ -1,5 +1,4 @@
 import os
-import sys
 
 import click
 
@@ -19,13 +18,10 @@ from mallennlp.bin.stop import stop
     help="Set the working directory.",
 )
 @click.version_option(version=VERSION)
-def main(wd, version):
+def main(wd):
     """
     AllenNLP Manager
     """
-    if version:
-        click.echo(f"AllenNLP Manager v{VERSION}")
-        sys.exit(0)
     if wd is not None:
         os.chdir(wd)
 
