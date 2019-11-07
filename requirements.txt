@@ -1,9 +1,22 @@
+# Pin these to avoid conflicts.
+boto==2.49.0
+boto3==1.9.115
+botocore==1.12.115
+
+# Webserver.
 flask>=1.0.2,<2.0.0
 flask-cors>=3.0.7,<4.0.0
 flask-login>=0.4.1,<1.0.0
+
+# Data classes.
 attrs>=18.2.0,<19.0.0
+
+# Serializing to/from toml files.
 toml>=0.10.0,<1.0.0
+
+# Command line interface.
 click>=6.7,<7.0
 click-completion>=0.5.0,<1.0.0
 colorama>=0.3.9,<1.0.0
+
 -e git+https://github.com/allenai/allennlp.git@f3083c8fb9150f07e3ca98bb3ea9368a081df028#egg=allennlp
