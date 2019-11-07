@@ -84,7 +84,7 @@ class HelloWorld(Page):
         return ["Hello, World!"]
 ```
 
-You can put `hello_world` module in the root of your project directory, or just make sure it's in your `PYTHONPATH`. Then add `imports = ['hello_world']` under the `[server]` section of the `Project.toml` configuration file. Now when you should see a link to your page "Hello, World!" in the dropdown menu.
+You can put the `hello_world` module in the root of your project directory, or just make sure it's in your `PYTHONPATH`. Then add `imports = ['hello_world']` under the `[server]` section of the `Project.toml` configuration file. Now you should see a link "Hello, World!" to your page in the dropdown menu.
 
 #### Command completion
 
