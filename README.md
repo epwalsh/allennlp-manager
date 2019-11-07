@@ -81,7 +81,7 @@ to your `.bashrc`. Note however that it is better to use the [activation script 
 
 **11/7**
 
-Big improvements to the CLI and dashboard. Added system info page to dashboard.
+Big improvements to the CLI and dashboard. Added [system info page](https://user-images.githubusercontent.com/8812459/68428301-c01f8200-0160-11ea-871a-7d9a83b21637.png) to dashboard.
 
 **11/6**
 
