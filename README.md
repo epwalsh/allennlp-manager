@@ -64,6 +64,28 @@ For convenience, you can open the configuration file quickly with the command `m
 
 ### Advanced configuration
 
+#### Adding custom pages
+
+Dashboard pages are just registered subclasses of `mallennlp.dashboard.page.Page`, which is an AllenNLP `Registrable`. Therefore you can easily add more pages to the dashboard by registering your own `Page` implementations. The registered name of a page corresponds to its URL route. For example, the home page is registered under the name "/" and the system info page is registered under the name "/sys-info". At a bare minimum, a custom `Page` just needs to implement `Page.get_elements(self)`, which renders the layout of the page. 
+
+Here's how you would add a page that just says "Hello, World!" in the body:
+
+```python
+# hello_world/__init__.py
+
+from mallennlp.dashboard.page import Page
+
+@Page.register("/hello-world")
+class HelloWorld(Page):
+    requires_login = True
+    navlink_name = "Hello, World!"
+
+    def get_elements(self):
+        return ["Hello, World!"]
+```
+
+You can put `hello_world` module in the root of your project directory, or just make sure it's in your `PYTHONPATH`. Then add `imports = ['hello_world']` under the `[server]` section of the `Project.toml` configuration file. Now when you should see a link to your page "Hello, World!" in the dropdown menu.
+
 #### Command completion
 
 Since the CLI is implemented using Click, [setting up completion for Bash or ZSH](https://click.palletsprojects.com/en/7.x/bashcomplete/) is easy. For example,

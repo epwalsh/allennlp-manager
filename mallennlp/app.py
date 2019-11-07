@@ -58,6 +58,20 @@ def init_dash(flask_app: Flask, config: Config):
         ]
     )
 
+    # Import all dashboard pages so that they get registered.
+    import_submodules("mallennlp.dashboard")
+    for module in config.server.imports or []:
+        logger.info("Importing additional module %s", module)
+        import_submodules(module)
+
+    additional_navlinks = []
+    for page_name in Page.list_available():
+        PageClass = Page.by_name(page_name)
+        if PageClass.navlink_name is not None:
+            additional_navlinks.append(
+                dbc.DropdownMenuItem(dcc.Link(PageClass.navlink_name, href=page_name))
+            )
+
     # Define callback to render navbar.
     @dash.callback(Output("navbar-content", "children"), [Input("url", "pathname")])
     def render_navbar(pathname):
@@ -75,9 +89,18 @@ def init_dash(flask_app: Flask, config: Config):
                 html.Hr(),
                 dbc.DropdownMenuItem(dcc.Link("Home", href="/")),
                 dbc.DropdownMenuItem(dcc.Link("System Info", href="/sys-info")),
-                html.Hr(),
-                dbc.DropdownMenuItem(dcc.Link("Logout", href="/logout", refresh=True)),
             ]
+            if additional_navlinks:
+                menu_items.append(html.Hr())
+                menu_items.extend(additional_navlinks)
+            menu_items.extend(
+                [
+                    html.Hr(),
+                    dbc.DropdownMenuItem(
+                        dcc.Link("Logout", href="/logout", refresh=True)
+                    ),
+                ]
+            )
             return [
                 source_link,
                 dbc.DropdownMenu(
@@ -108,9 +131,6 @@ def init_dash(flask_app: Flask, config: Config):
             PageClass = Page.by_name("/not-found")
         page = PageClass.from_params(params)
         return page.render()
-
-    # Import all dashboard pages so that they get registered.
-    import_submodules("mallennlp.dashboard")
 
     def make_callback(PageClass, page_name, method_name, method, callback_store_names):
         """
@@ -144,10 +164,10 @@ def init_dash(flask_app: Flask, config: Config):
                 return (result, new_store)
             return result + (new_store,)
 
-        callback_store_name = PageClass.store_name + f"-callback-{method_name}"
+        callback_store_name = PageClass._store_name + f"-callback-{method_name}"
         callback_store_names.append(callback_store_name)
         outputs.append(Output(callback_store_name, "data"))
-        states.append(State(PageClass.store_name, "data"))
+        states.append(State(PageClass._store_name, "data"))
         dash.callback(outputs, inputs, states)(callback)
 
     def store_callback(*args):
@@ -164,7 +184,7 @@ def init_dash(flask_app: Flask, config: Config):
     # with the dashboard application.
     for page_name in Page.list_available():
         PageClass = Page.by_name(page_name)
-        PageClass.store_name = f"page-{page_name}-store"
+        PageClass._store_name = f"page-{page_name}-store"
         callback_store_names: List[str] = []
         for method_name, method in filter(
             lambda x: callable(x[1]), inspect.getmembers(PageClass)
@@ -178,10 +198,10 @@ def init_dash(flask_app: Flask, config: Config):
             make_callback(
                 PageClass, page_name, method_name, method, callback_store_names
             )
-        PageClass.callback_stores = callback_store_names
+        PageClass._callback_stores = callback_store_names
         if callback_store_names:
             dash.callback(
-                Output(PageClass.store_name, "data"),
+                Output(PageClass._store_name, "data"),
                 [Input(s, "modified_timestamp") for s in callback_store_names],
                 [State(s, "data") for s in callback_store_names],
             )(store_callback)
@@ -194,14 +214,7 @@ def create_app(config: Config, gunicorn: bool = True):
     app.config.from_object(config.server)
 
     loglevel = getattr(logging, config.project.loglevel.upper())
-    if gunicorn:
-        app.logger.handlers.clear()
-        gunicorn_logger = logging.getLogger("gunicorn.error")
-        gunicorn_logger.setLevel(loglevel)
-        app.logger.handlers = gunicorn_logger.handlers
-        app.logger.setLevel(loglevel)
-    else:
-        app.logger.setLevel(loglevel)
+    app.logger.setLevel(loglevel)
 
     db.init_app(app)
 

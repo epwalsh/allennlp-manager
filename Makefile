@@ -16,11 +16,14 @@ clean :
 
 .PHONY : project
 project :
-	rm -rf $(PROJECT)/
-	mallennlp new $(PROJECT) \
+	@rm -rf $(PROJECT)/
+	@mallennlp new $(PROJECT) \
 		--loglevel=DEBUG \
 		--username=epwalsh \
-		--password=testing123
+		--password=testing123 \
+		--server-imports hello_world
+	@mkdir $(PROJECT)/hello_world
+	@echo 'from mallennlp.dashboard.page import Page\n\n@Page.register("/hello-world")\nclass HelloWorld(Page):\n    requires_login = True\n    navlink_name = "Hello, World!"\n\n    def get_elements(self):\n        return ["Hello, World!"]' > $(PROJECT)/hello_world/__init__.py
 
 .PHONY : serve
 serve : build project

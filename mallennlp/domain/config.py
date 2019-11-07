@@ -1,6 +1,6 @@
 import os
 from pathlib import Path
-from typing import Optional
+from typing import Optional, List
 
 import attr
 
@@ -21,6 +21,7 @@ class ServerConfig:
         default=None, converter=lambda s: s or os.urandom(24).hex()  # type: ignore
     )
     concurrency: int = 10
+    imports: Optional[List[str]] = None
 
     """
     Uppercase properties are mapped to the Flask config.
