@@ -79,6 +79,10 @@ to your `.bashrc`. Note however that it is better to use the [activation script 
 
 ## Updates
 
+**11/7**
+
+Big improvements to the CLI and dashboard. Added system info page to dashboard.
+
 **11/6**
 
 Added sqlite database and implemented login / authentication system.
