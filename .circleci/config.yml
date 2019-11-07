@@ -61,7 +61,10 @@ jobs:
   test_install_from_github:
     <<: *defaults
     steps:
-      - *restore_cache
+      - restore_cache:
+          name: Restoring dependencies cache
+          keys:
+            - deps-v1-
 
       - run:
           name: Set up environment
