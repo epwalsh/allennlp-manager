@@ -9,6 +9,7 @@ from mallennlp.domain.config import ServerConfig, ProjectConfig
 
 
 def check_types(attribute, option):
+    # Crude ad hoc way of comparing CLI types against Config types.
     if attribute.type == str or attribute.type == typing.Union[str, type(None)]:
         assert option.type == click.STRING or isinstance(option.type, click.Choice)
     elif attribute.type == int:
@@ -17,6 +18,9 @@ def check_types(attribute, option):
         assert option.type == click.BOOL
     elif attribute.type == float:
         assert option.type == click.FLOAT
+    elif attribute.type == typing.Union[typing.List[str], type(None)]:
+        assert option.type == click.STRING
+        assert option.multiple
 
 
 @pytest.mark.parametrize("command, ignore", [(new, []), (init, ["name"])])

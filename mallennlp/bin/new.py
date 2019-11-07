@@ -89,6 +89,7 @@ def validate_name(ctx, param, value):
 @click.option("--server-concurrency", type=int)
 @click.option("--server-memory", type=int)
 @click.option("--server-cpus", type=float)
+@click.option("--server-imports", type=str, multiple=True)
 def new(name: str, username: str, password: str, **kwargs):
     """
     Create a new project directory.
@@ -120,6 +121,7 @@ def new(name: str, username: str, password: str, **kwargs):
 @click.option("--server-concurrency", type=int)
 @click.option("--server-memory", type=int)
 @click.option("--server-cpus", type=float)
+@click.option("--server-imports", type=str, multiple=True)
 def init(username: str, password: str, **kwargs):
     """
     Initialize a project in existing directory.
