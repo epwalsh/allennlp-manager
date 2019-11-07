@@ -16,13 +16,15 @@ def retrieve_sys_info_components() -> List[Any]:
     return [
         dcc.Markdown(
             f"""
-**Driver version:** `{info.driver_version}`
+**Platform:** `{info.platform}`
 
-**Devices available:** `{len(info.gpus)}`
+**Nvidia driver version:** `{info.driver_version}`
+
+**GPU devices available:** `{len(info.gpus)}`
 
 ---
 
-Show utilization for:
+Show GPU utilization for:
             """.strip()
         ),
         dcc.Dropdown(

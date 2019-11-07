@@ -43,5 +43,6 @@ class GpuInfo:
 
 @attr.s(auto_attribs=True)
 class SysInfo:
+    platform: str
     driver_version: Optional[str] = None
     gpus: Optional[List[GpuInfo]] = None

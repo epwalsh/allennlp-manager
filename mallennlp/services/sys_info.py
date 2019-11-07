@@ -1,3 +1,4 @@
+import platform
 from subprocess import check_output
 
 from mallennlp.domain.sys_info import SysInfo, GpuInfo
@@ -28,7 +29,7 @@ class SysInfoService:
 
     @classmethod
     def get(cls) -> SysInfo:
-        info = SysInfo()
+        info = SysInfo(platform.platform())
         try:
             output = cls.get_query_output()
             devices = [l.strip() for l in output.strip().split("\n")]
