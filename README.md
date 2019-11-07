@@ -34,7 +34,7 @@ For the first release I intend to have all of the features implemented except fo
 
 ## Dependencies
 
-AllenNLP, Python 3.6 (or higher), and Docker are required.
+AllenNLP and Python 3.6 or 3.7.
 
 ## Installation
 

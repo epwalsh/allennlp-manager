@@ -99,4 +99,4 @@ workflows:
     jobs:
       - test
       - test_py37
-      - test_py38
+      # - test_py38
