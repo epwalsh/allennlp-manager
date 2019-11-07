@@ -22,42 +22,7 @@ from mallennlp.services.config import Config
 from mallennlp.services.user import UserService
 
 
-def create_app(config: Config, gunicorn: bool = True):
-    app = Flask(__name__, instance_path=config.server.instance_path)
-    app.config.from_object(config.server)
-
-    loglevel = getattr(logging, config.project.loglevel.upper())
-    if gunicorn:
-        app.logger.handlers.clear()
-        gunicorn_logger = logging.getLogger("gunicorn.error")
-        gunicorn_logger.setLevel(loglevel)
-        app.logger.handlers = gunicorn_logger.handlers
-        app.logger.setLevel(loglevel)
-    else:
-        app.logger.setLevel(loglevel)
-
-    db.init_app(app)
-
-    login_manager = LoginManager()
-    login_manager.init_app(app)
-    login_manager.login_view = "/login"
-    login_manager.anonymous_user = AnonymousUser
-    login_manager.session_protection = "strong"
-
-    @login_manager.user_loader
-    def load_user(userid: str):
-        return UserService().get(userid)
-
-    @app.route("/logout")
-    @login_required
-    def logout():
-        logout_user()
-        return redirect("/login")
-
-    return app
-
-
-def create_dash(flask_app: Flask, config: Config):
+def init_dash(flask_app: Flask, config: Config):
     logger = flask_app.logger
     dash = Dash(
         __name__,
@@ -222,8 +187,44 @@ def create_dash(flask_app: Flask, config: Config):
     return dash
 
 
+def create_app(config: Config, gunicorn: bool = True):
+    app = Flask(__name__, instance_path=config.server.instance_path)
+    app.config.from_object(config.server)
+
+    loglevel = getattr(logging, config.project.loglevel.upper())
+    if gunicorn:
+        app.logger.handlers.clear()
+        gunicorn_logger = logging.getLogger("gunicorn.error")
+        gunicorn_logger.setLevel(loglevel)
+        app.logger.handlers = gunicorn_logger.handlers
+        app.logger.setLevel(loglevel)
+    else:
+        app.logger.setLevel(loglevel)
+
+    db.init_app(app)
+
+    login_manager = LoginManager()
+    login_manager.init_app(app)
+    login_manager.login_view = "/login"
+    login_manager.anonymous_user = AnonymousUser
+    login_manager.session_protection = "strong"
+
+    @login_manager.user_loader
+    def load_user(userid: str):
+        return UserService().get(userid)
+
+    @app.route("/logout")
+    @login_required
+    def logout():
+        logout_user()
+        return redirect("/login")
+
+    init_dash(app, config)
+
+    return app
+
+
 if __name__ == "__main__":
     config = Config.from_toml(Path("./example-project"))
     app = create_app(config, gunicorn=False)
-    dash = create_dash(app, config)
     app.run(debug=True)
