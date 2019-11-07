@@ -189,7 +189,7 @@ def create_dash(flask_app: Flask, config: Config):
         """
         half = len(args) // 2
         timestamps, datas = args[:half], args[half:]
-        latest_index = max(range(len(datas)), key=timestamps.__getitem__)
+        latest_index = max(range(len(datas)), key=lambda i: timestamps[i] or -1)
         latest = datas[latest_index]
         return latest
 
