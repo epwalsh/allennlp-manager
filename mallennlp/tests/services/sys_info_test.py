@@ -36,5 +36,5 @@ def test_get_with_nvidia_gpu():
 @pytest.mark.skipif(torch.cuda.is_available(), reason="GPU available")
 def test_get_without_gpu():
     info = SysInfoService().get()
-    assert len(info.gpus) == 0
+    assert info.gpus is None
     assert info.driver_version is None
