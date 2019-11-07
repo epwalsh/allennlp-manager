@@ -47,6 +47,7 @@ class SysInfoService:
                         fan=int(values[7]),
                     )
                 )
+            info.gpus = sorted(info.gpus, key=lambda x: x.id)
         except FileNotFoundError:
             # `nvidia-smi` doesn't exit.
             pass

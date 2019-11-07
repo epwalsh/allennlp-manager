@@ -74,6 +74,8 @@ def init_dash(flask_app: Flask, config: Config):
                 ),
                 html.Hr(),
                 dbc.DropdownMenuItem(dcc.Link("Home", href="/")),
+                dbc.DropdownMenuItem(dcc.Link("System Info", href="/sys-info")),
+                html.Hr(),
                 dbc.DropdownMenuItem(dcc.Link("Logout", href="/logout", refresh=True)),
             ]
             return [
