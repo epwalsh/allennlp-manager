@@ -57,9 +57,9 @@ def update_device_history(
     _, gpus = retrieve_gpu_info()
     if not gpus:
         raise CudaUnavailableError
-    gpu: Optional[GpuInfo] = None
     if device_id == -1:
         # Average across all devices.
+        gpu = None
         mem = int(sum(100 * (x.mem_usage / x.mem_capacity) for x in gpus) / len(gpus))
         util = int(sum(x.utilization for x in gpus) / len(gpus))
     else:
