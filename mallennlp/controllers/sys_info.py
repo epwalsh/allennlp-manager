@@ -40,6 +40,8 @@ def retrieve_sys_info_components() -> List[Any]:
                 f"""
 **Nvidia driver version:** `{info.driver_version}`
 
+**CUDA version:** `{info.cuda_version}`
+
 **GPU devices available:** `{len(info.gpus)}`
 
 ---
