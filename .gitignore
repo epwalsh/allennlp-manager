@@ -109,6 +109,5 @@ scratch*
 
 # Project stuff.
 tmp-project/
-Project.toml
 *.sqlite3
 .instance/
