@@ -1,6 +1,7 @@
 import time
 from typing import List, Dict
 
+import attr
 from dash.dependencies import Input, Output, State
 from dash.exceptions import PreventUpdate
 import dash_bootstrap_components as dbc
@@ -10,26 +11,31 @@ from flask_login import login_user, current_user
 
 from mallennlp.dashboard.components import element
 from mallennlp.dashboard.page import Page
+from mallennlp.domain.page_state import BasePageState
 from mallennlp.services.user import UserService
+
+
+def validate_next_params(next_params: str) -> str:
+    if next_params and "_refresh=1" not in next_params:
+        return next_params + "&_refresh=1"
+    return "?_refresh=1"
 
 
 @Page.register("/login")
 class LoginPage(Page):
-    def __init__(self, next_pathname: str = None, next_params: str = None):
-        self.next_pathname = next_pathname or "/"
-        if self.next_pathname == "/login":
-            self.next_pathname = "/"
-        if next_params and "_refresh=1" not in next_params:
-            self.next_params = next_params + "&_refresh=1"
-        else:
-            self.next_params = "?_refresh=1"
-
-    @classmethod
-    def from_params(cls, params: Dict[str, List[str]]):
-        return cls(
-            next_pathname=(params.get("next_pathname") or ["/"])[0],
-            next_params=(params.get("next_params") or [""])[0],
+    @attr.s(kw_only=True, auto_attribs=True)
+    class PageState(BasePageState):
+        next_pathname: str = attr.ib(
+            default="/", converter=lambda p: "/" if p == "/login" else p  # type: ignore
         )
+        next_params: str = attr.ib(default="", converter=validate_next_params)
+
+        @classmethod
+        def from_params(cls, params: Dict[str, List[str]]):
+            return cls(
+                next_pathname=(params.get("next_pathname") or ["/"])[0],
+                next_params=(params.get("next_params") or [""])[0],
+            )
 
     def get_elements(self):
         return [
@@ -129,6 +135,6 @@ class LoginPage(Page):
         if not state or not n_clicks or not current_user.is_authenticated:
             raise PreventUpdate
         time.sleep(1)
-        next_pathname = self.next_pathname
-        next_params = self.next_params
+        next_pathname = self.s.next_pathname
+        next_params = self.s.next_params
         return next_pathname, next_pathname, next_params
