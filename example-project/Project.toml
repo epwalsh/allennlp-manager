@@ -1,6 +1,7 @@
 [project]
 name = "example-project"
-loglevel = "DEBUG"
+loglevel = "INFO"
+display_name = "My Project"
 
 [server]
 port = 5000

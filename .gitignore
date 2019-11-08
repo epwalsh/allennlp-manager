@@ -111,3 +111,8 @@ scratch*
 tmp-project/
 *.sqlite3
 .instance/
+*.tfevents.*
+*.th
+*.tar.gz
+!example-project/**/stdout.log
+!example-project/**/stderr.log
