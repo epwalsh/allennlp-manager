@@ -1,11 +1,12 @@
 import platform
 from subprocess import check_output
+from typing import Optional, Tuple, List
 
 from mallennlp.domain.sys_info import SysInfo, GpuInfo
 
 
 class SysInfoService:
-    query = [
+    gpu_query = [
         "nvidia-smi",
         "--query-gpu="
         + ",".join(
@@ -24,20 +25,20 @@ class SysInfoService:
     ]
 
     @classmethod
-    def get_query_output(cls) -> str:
-        return check_output(cls.query, universal_newlines=True)
+    def get_gpu_query_output(cls) -> str:
+        return check_output(cls.gpu_query, universal_newlines=True, timeout=3)
 
     @classmethod
-    def get(cls) -> SysInfo:
-        info = SysInfo(platform.platform())
+    def get_gpu_info(cls) -> Tuple[Optional[str], Optional[List[GpuInfo]]]:
         try:
-            output = cls.get_query_output()
+            driver_version = None
+            gpus = []
+            output = cls.get_gpu_query_output()
             devices = [l.strip() for l in output.strip().split("\n")]
-            info.gpus = []
             for device in devices:
                 values = device.split(", ")
-                info.driver_version = values[2]
-                info.gpus.append(
+                driver_version = values[2]
+                gpus.append(
                     GpuInfo(
                         id=int(values[0]),
                         name=values[1],
@@ -48,8 +49,15 @@ class SysInfoService:
                         fan=int(values[7]),
                     )
                 )
-            info.gpus = sorted(info.gpus, key=lambda x: x.id)
+            return driver_version, sorted(gpus, key=lambda x: x.id)
         except FileNotFoundError:
             # `nvidia-smi` doesn't exit.
-            pass
+            return None, None
+
+    @classmethod
+    def get(cls) -> SysInfo:
+        info = SysInfo(platform.platform())
+        driver_version, gpus = cls.get_gpu_info()
+        info.driver_version = driver_version
+        info.gpus = gpus
         return info

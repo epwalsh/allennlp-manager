@@ -7,3 +7,7 @@ class NotInProjectError(Error):
         super().__init__(
             "You are not in a project directory or you're Project.toml config file is missing"
         )
+
+
+class CudaUnavailableError(Error):
+    pass

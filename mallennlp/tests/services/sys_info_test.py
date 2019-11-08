@@ -10,10 +10,10 @@ MOCKED_QUERY_OUTPUT = """
 
 
 def test_parse_output(monkeypatch):
-    def mock_query_output():
+    def mock_gpu_query_output():
         return MOCKED_QUERY_OUTPUT
 
-    monkeypatch.setattr(SysInfoService, "get_query_output", mock_query_output)
+    monkeypatch.setattr(SysInfoService, "get_gpu_query_output", mock_gpu_query_output)
     info = SysInfoService.get()
     assert info.driver_version == "418.87.01"
     assert len(info.gpus) == 2
