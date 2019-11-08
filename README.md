@@ -58,7 +58,7 @@ mallennlp serve
 
 ## Configuration
 
-A project is customized through the `Project.toml` file in the root directory of the project. There is a section `[project]` for general options such as the log level (which applies to both the CLI and the dashboard) and a `[server]` section for dashboard-specific options such the host port to bind to.
+A project is customized through the `Project.toml` file in the root directory of the project. There is a section `[project]` for general options such as the log level (which applies to both the CLI and the dashboard) and a `[server]` section for dashboard-specific options such as the host port to bind to.
 
 For convenience, you can open the configuration file quickly with the command `mallennlp edit`.
 
