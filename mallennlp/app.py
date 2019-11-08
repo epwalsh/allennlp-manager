@@ -121,6 +121,8 @@ def init_dash(flask_app: Flask, config: Config):
     def render_page(pathname: str, param_string: str) -> html.Div:
         if pathname is None:
             raise PreventUpdate
+        if pathname != "/" and pathname.endswith("/"):
+            pathname = pathname[:-1]
         params = urlparse.parse_qs(urlparse.urlparse(param_string).query)
         try:
             PageClass = Page.by_name(pathname)
