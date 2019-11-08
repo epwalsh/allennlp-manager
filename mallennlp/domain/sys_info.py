@@ -3,7 +3,7 @@ from typing import Optional, List
 import attr
 
 
-@attr.s(auto_attribs=True)
+@attr.s(auto_attribs=True, kw_only=True)
 class GpuInfo:
     id: int
     """
@@ -17,13 +17,15 @@ class GpuInfo:
 
     mem_usage: int
     """
-    Memory usage in MiB.
+    Memory usage (in MiB by default).
     """
 
     mem_capacity: int
     """
-    Memory capacity in MiB.
+    Memory capacity (in MiB by default).
     """
+
+    mem_units: str = "MiB"
 
     utilization: int
     """
@@ -35,6 +37,8 @@ class GpuInfo:
     Device temperature in celcius.
     """
 
+    temp_units: str = "°C"
+
     fan: int
     """
     Percent fan utilization.
@@ -45,4 +49,5 @@ class GpuInfo:
 class SysInfo:
     platform: str
     driver_version: Optional[str] = None
+    cuda_version: Optional[str] = None
     gpus: Optional[List[GpuInfo]] = None

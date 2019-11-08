@@ -1,4 +1,4 @@
-from typing import List, Dict
+from typing import List, Dict, Any, Optional
 
 from dash.dependencies import Input, Output
 import dash_core_components as dcc
@@ -7,9 +7,13 @@ import dash_html_components as html
 from mallennlp.controllers.sys_info import (
     retrieve_sys_info_components,
     render_device_util_plot,
+    update_device_history,
+    render_device_info,
 )
 from mallennlp.dashboard.components import element
 from mallennlp.dashboard.page import Page
+from mallennlp.domain.sys_info import GpuInfo
+from mallennlp.exceptions import CudaUnavailableError
 
 
 @Page.register("/sys-info")
@@ -21,15 +25,16 @@ class SysInfoPage(Page):
         message: str = "hi there!",
         last_button: str = "hello",
         device_id: int = -1,
+        device_info: Dict[str, Any] = None,
         device_history: List[Dict[str, int]] = None,
     ):
         self.message = message
         self.last_button = last_button
         self.device_id = device_id
-        self.device_history = device_history or self.reset_device_history()
+        self.device_history = device_history or self.empty_device_history()
 
     @classmethod
-    def reset_device_history(cls):
+    def empty_device_history(cls):
         return [{"mem": 0, "util": 0} for _ in range(cls.max_device_history)]
 
     def get_elements(self):
@@ -52,8 +57,23 @@ class SysInfoPage(Page):
             Input("sys-info-update-interval", "n_intervals"),
         ],
     )
-    def render_gpu_utilization_plot(self, device_id, _):
+    def render_gpu_utilization_info(self, device_id, _):
+        if device_id is None:
+            return None
         if device_id != self.device_id:
             self.device_id = device_id
-            self.device_history = self.reset_device_history()
-        return render_device_util_plot(self.device_history, self.device_id)
+            self.device_history = self.empty_device_history()
+        device_info: Optional[GpuInfo] = None
+        try:
+            self.device_history, device_info = update_device_history(
+                self.device_history, self.device_id
+            )
+        except CudaUnavailableError:
+            self.device_history = self.empty_device_history()
+        if device_info:
+            return [
+                html.Br(),
+                render_device_info(device_info),
+                render_device_util_plot(self.device_history, self.device_id),
+            ]
+        return [render_device_util_plot(self.device_history, self.device_id)]
