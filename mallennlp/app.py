@@ -139,6 +139,7 @@ def init_dash(flask_app: Flask, config: Config):
         Create a Dash callback from a Page callback.
         """
         outputs, inputs, states = method.callback_parameters
+        no_output = len(outputs) == 0
         logger.debug(
             "Page '%s' registered callback '%s' (%s, %s) -> %s",
             page_name,
@@ -162,6 +163,8 @@ def init_dash(flask_app: Flask, config: Config):
                 result,
                 new_store,
             )
+            if no_output:
+                return (new_store,)
             if not isinstance(result, tuple):
                 return (result, new_store)
             return result + (new_store,)

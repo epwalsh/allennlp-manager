@@ -17,18 +17,19 @@ Your manager for [AllenNLP](https://github.com/allenai/allennlp) experiments.
 
 ## Road map
 
-The goal of this project is to build a CLI and dashboard for running, queueing, tracking, and comparing experiments.
+The goal of this project is to build a customizable CLI and dashboard for running, queueing, tracking, and comparing experiments.
 
 This was inspired by other open source projects such as the resource manager [**slurm**](https://slurm.schedmd.com/documentation.html) and visualization toolkit [**TensorBoard**](https://www.tensorflow.org/tensorboard), as well as commercial software such as [**Weights & Biases**](https://www.wandb.com/) and [**Foundations Atlas**](https://www.atlas.dessa.com/).
 
-**slurm** and **TensorBoard** are both excellent tools, but they fall short for NLP researchers in a number of ways. For example, **slurm** is difficult to set up and use - especially on your own desktop or server - unless you're an experienced sys admin, and **TensorBoard** has limited functionality for searching, organizing, tagging, and comparing models. And while the commercial options are fairly easy to use and come with a solid set of features, they were built as generic tools and therefore don't "understand" all of AllenNLP's features.
+**slurm** and **TensorBoard** are both excellent tools, but they fall short for NLP researchers in a number of ways. For example, **slurm** is difficult to set up and use - especially on your own desktop or server - unless you're an experienced sys admin, and **TensorBoard** has limited functionality for searching, organizing, tagging, and comparing models. And while the commercial options are fairly easy to use and come with a solid set of features, they were built as generic tools and therefore don't "understand" all of AllenNLP's features. They are also not customizable or extendable.
 
 **allennlp-manager** aims to leverage all of the convenient pieces of AllenNLP to provide you with a dashboard that let's you
 - quickly search through all of your experiments based on properties like model type, training / validation set, or arbitrary tags,
-- visualize the metrics from training runs of an experiment, and
-- compare experiments in a number of ways, such as looking at a git diff of configuration files.
+- visualize the metrics from training runs of an experiment,
+- compare experiments in a number of ways, such as looking at a git diff of configuration files,
+- and easily extend it by adding your own interactive pages.
 
-In addition to the dashboard, there will be a multi-purpose CLI with commands for serving the dashboard, updating to the latest version, and programmatically submitting training runs.
+In addition to the dashboard, there is a multi-purpose CLI with commands for serving the dashboard, updating to the latest version, and programmatically submitting training runs.
 
 For the first release I intend to have all of the features implemented except for, possibly, the **slurm**-like resource manager and job queueing system, as that may become quite complex.
 
@@ -66,13 +67,12 @@ For convenience, you can open the configuration file quickly with the command `m
 
 #### Adding custom pages
 
-Dashboard pages are just registered subclasses of `mallennlp.dashboard.page.Page`, which is an AllenNLP `Registrable`. Therefore you can easily add more pages to the dashboard by registering your own `Page` implementations. The registered name of a page corresponds to its URL route. For example, the home page is registered under the name "/" and the system info page is registered under the name "/sys-info". At a bare minimum, a custom `Page` just needs to implement `Page.get_elements(self)`, which renders the layout of the page. 
+Dashboard pages are just registered subclasses of `mallennlp.dashboard.page.Page`, which is an AllenNLP `Registrable`. Therefore you can easily add more pages to the dashboard by registering your own `Page` implementations. The registered name of a page corresponds to its URL route. For example, the home page is registered under the name "/" and the system info page is registered under the name "/sys-info". At a bare minimum, a custom `Page` just needs to implement `Page.get_elements(self)`, which renders the layout of the page. This can return anything that `Dash` can render, such as basic types as well as any `Dash` components (such as [HTML Components](https://dash.plot.ly/dash-html-components) or [Core Components](https://dash.plot.ly/dash-core-components)). For more information check out the [Dash Tutorial](https://dash.plot.ly/).
 
 Here's how you would add a page that just says "Hello, World!" in the body:
 
 ```python
 # hello_world/__init__.py
-
 from mallennlp.dashboard.page import Page
 
 @Page.register("/hello-world")
@@ -85,6 +85,68 @@ class HelloWorld(Page):
 ```
 
 You can put the `hello_world` module in the root of your project directory, or just make sure it's in your `PYTHONPATH`. Then add `imports = ['hello_world']` under the `[server]` section of the `Project.toml` configuration file. Now you should see a link "Hello, World!" to your page in the dropdown menu.
+
+#### Interactive custom pages
+
+If you want your custom page to be interactive and stateful, you just need to define the `PageState` (an [`attrs` class](https://www.attrs.org/en/stable/) inheriting from `BasePageState`) and implement the callbacks (which are defined just like [dash callbacks](https://dash.plot.ly/getting-started-part-2)):
+
+```python
+# hello_world/__init__.py
+import attr
+
+from dash.exceptions import PreventUpdate
+from dash.dependencies import Input, Output, State
+import dash_bootstrap_components as dbc
+import dash_html_components as html
+
+from mallennlp.domain.page_state import BasePageState
+from mallennlp.dashboard.page import Page
+
+
+@Page.register("/hello-world")
+class HelloWorld(Page):
+    requires_login = True
+    navlink_name = "Hello, World!"
+
+    @attr.s(kw_only=True, auto_attribs=True)
+    class PageState(BasePageState):
+        name: str = "World!"
+
+    def get_elements(self):
+        return [
+            dbc.Input(
+                placeholder="Enter your name", type="text", id="hello-name-input"
+            ),
+            dbc.Button("Save", id="hello-name-save", color="primary"),
+            dbc.Button("Say hello", id="hello-name-trigger-output", color="primary"),
+            html.Div(id="hello-name-output"),
+        ]
+
+    @Page.callback(
+        # This callback doesn't have any outputs.
+        [],
+        # The "Save" button will trigger this callback.
+        [Input("hello-name-save", "n_clicks")],
+        # The callback will have access to the text input, but changes in the input
+        # will not trigger the callback.
+        [State("hello-name-input", "value")],
+    )
+    def save_name(self, n_clicks, value):
+        if not n_clicks or not value:
+            raise PreventUpdate
+        self.s.name = value  # update PageState
+
+    @Page.callback(
+        # Output of this callback is the "hello-name-output" <div> children.
+        [Output("hello-name-output", "children")],
+        # This callback is triggered by the "Say hello" button.
+        [Input("hello-name-trigger-output", "n_clicks")],
+    )
+    def render_hello_output(self, n_clicks):
+        if not n_clicks:
+            raise PreventUpdate
+        return f"Hello, {self.s.name}!"
+```
 
 #### Command completion
 
