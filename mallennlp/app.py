@@ -1,6 +1,5 @@
 import inspect
 import logging
-from pathlib import Path
 import urllib.parse as urlparse
 from typing import List
 
@@ -214,7 +213,7 @@ def init_dash(flask_app: Flask, config: Config):
     return dash
 
 
-def create_app(config: Config, gunicorn: bool = True):
+def create_app(config: Config):
     app = Flask(__name__, instance_path=config.server.instance_path)
     app.config.from_object(config.server)
 
@@ -243,9 +242,3 @@ def create_app(config: Config, gunicorn: bool = True):
     init_dash(app, config)
 
     return app
-
-
-if __name__ == "__main__":
-    config = Config.from_toml(Path("./example-project"))
-    app = create_app(config, gunicorn=False)
-    app.run(debug=True)

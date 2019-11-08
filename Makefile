@@ -2,7 +2,7 @@ test = mallennlp
 
 MODULE            = mallennlp
 INTEGRATION_TESTS = tests
-PROJECT           = example-project
+PROJECT           = tmp-project
 PROJECT_PATH     := $(realpath $(PROJECT))
 INSTALLED_BINARY := $(shell which mallennlp)
 PYTEST_COMMAND    = python -m pytest -v --color=yes
