@@ -169,6 +169,10 @@ If this is your first time contributing to a project on GitHub, please see [this
 
 ## Updates
 
+**11/8**
+
+Made dashboard extendable, improved statefulness of `Page` class. Added caching to webserver.
+
 **11/7**
 
 Big improvements to the CLI and dashboard. Added [system info page](https://user-images.githubusercontent.com/8812459/68428301-c01f8200-0160-11ea-871a-7d9a83b21637.png) to dashboard.

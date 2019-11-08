@@ -20,7 +20,7 @@ class ServerConfig:
     secret: str = attr.ib(
         default=None, converter=lambda s: s or os.urandom(24).hex()  # type: ignore
     )
-    concurrency: int = 10
+    concurrency: int = 100
     imports: Optional[List[str]] = None
 
     """
@@ -34,6 +34,10 @@ class ServerConfig:
     @property
     def instance_path(self):
         return self._path / ".instance/"
+
+    @property
+    def cache_path(self):
+        return self.instance_path / "cache/"
 
     @property
     def DATABASE(self):

@@ -17,7 +17,7 @@ from flask_login import LoginManager, login_required, logout_user, current_user
 
 from mallennlp.dashboard.page import Page
 from mallennlp.domain.user import AnonymousUser
-from mallennlp.services import db
+from mallennlp.services import db, cache
 from mallennlp.services.config import Config
 from mallennlp.services.user import UserService
 
@@ -222,6 +222,7 @@ def create_app(config: Config, gunicorn: bool = True):
     app.logger.setLevel(loglevel)
 
     db.init_app(app)
+    cache.init_app(app, config)
 
     login_manager = LoginManager()
     login_manager.init_app(app)

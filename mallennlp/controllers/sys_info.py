@@ -4,12 +4,23 @@ import dash_core_components as dcc
 import dash_bootstrap_components as dbc
 
 from mallennlp.exceptions import CudaUnavailableError
-from mallennlp.domain.sys_info import GpuInfo
+from mallennlp.domain.sys_info import SysInfo, GpuInfo
+from mallennlp.services.cache import cache
 from mallennlp.services.sys_info import SysInfoService
 
 
+@cache.memoize(timeout=60)
+def retrieve_sys_info() -> SysInfo:
+    return SysInfoService.get()
+
+
+@cache.memoize(timeout=1)
+def retrieve_gpu_info() -> Tuple[Optional[str], Optional[List[GpuInfo]]]:
+    return SysInfoService.get_gpu_info()
+
+
 def retrieve_sys_info_components() -> List[Any]:
-    info = SysInfoService.get()
+    info = retrieve_sys_info()
     components: List[Any] = [dcc.Markdown(f"**Platform:** `{info.platform}`")]
     if not info.gpus or not info.driver_version:
         components.append(dbc.Alert("No GPU devices available", color="danger"))
@@ -29,6 +40,8 @@ def retrieve_sys_info_components() -> List[Any]:
                 f"""
 **Nvidia driver version:** `{info.driver_version}`
 
+**CUDA version:** `{info.cuda_version}`
+
 **GPU devices available:** `{len(info.gpus)}`
 
 ---
@@ -43,12 +56,12 @@ def retrieve_sys_info_components() -> List[Any]:
 def update_device_history(
     history: List[Dict[str, int]], device_id: int
 ) -> Tuple[List[Dict[str, int]], Optional[GpuInfo]]:
-    _, gpus = SysInfoService.get_gpu_info()
+    _, gpus = retrieve_gpu_info()
     if not gpus:
         raise CudaUnavailableError
-    gpu: Optional[GpuInfo] = None
     if device_id == -1:
         # Average across all devices.
+        gpu = None
         mem = int(sum(100 * (x.mem_usage / x.mem_capacity) for x in gpus) / len(gpus))
         util = int(sum(x.utilization for x in gpus) / len(gpus))
     else:
