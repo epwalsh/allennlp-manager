@@ -38,7 +38,7 @@ class SysInfoPage(Page):
 
     def get_elements(self):
         return [
-            dcc.Interval(id="sys-info-update-interval", interval=1000 * 1),
+            dcc.Interval(id="sys-info-update-interval", interval=1500),
             html.H3("System Info"),
             element(
                 [
