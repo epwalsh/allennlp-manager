@@ -29,7 +29,6 @@ def test_from_toml_raises(tmpdir):
 
 
 def test_from_toml(project_path):
-    print([p for p in project_path.iterdir()])
     config = Config.from_toml(project_path)
     assert config.project.name == "my-project"
     assert config.server.port == 5000
