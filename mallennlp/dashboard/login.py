@@ -11,7 +11,7 @@ from flask_login import login_user, current_user
 
 from mallennlp.dashboard.components import element
 from mallennlp.dashboard.page import Page
-from mallennlp.domain.page_state import BasePageState
+from mallennlp.domain.page_state import PageSessionState
 from mallennlp.services.user import UserService
 
 
@@ -24,7 +24,7 @@ def validate_next_params(next_params: str) -> str:
 @Page.register("/login")
 class LoginPage(Page):
     @attr.s(kw_only=True, auto_attribs=True)
-    class PageState(BasePageState):
+    class SessionState(PageSessionState):
         next_pathname: str = attr.ib(
             default="/", converter=lambda p: "/" if p == "/login" else p  # type: ignore
         )

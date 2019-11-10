@@ -2,6 +2,8 @@ test = mallennlp
 
 MODULE            = mallennlp
 INTEGRATION_TESTS = tests
+EXAMPLE_PROJECT   = example-project
+SRC              := $(MODULE) $(INTEGRATION_TESTS) $(EXAMPLE_PROJECT)
 PROJECT           = tmp-project
 PROJECT_PATH     := $(realpath $(PROJECT))
 INSTALLED_BINARY := $(shell which mallennlp)
@@ -32,14 +34,14 @@ serve : build project
 .PHONY : typecheck
 typecheck :
 	@echo "Typechecks: mypy"
-	@mypy $(MODULE) $(INTEGRATION_TESTS) --ignore-missing-imports --no-site-packages
+	@mypy $(SRC) --ignore-missing-imports --no-site-packages
 
 .PHONY : lint
 lint :
 	@echo "Lint: flake8"
-	@flake8 $(MODULE) $(INTEGRATION_TESTS)
+	@flake8 $(SRC)
 	@echo "Lint: black"
-	@black --check $(MODULE) $(INTEGRATION_TESTS)
+	@black --check $(SRC)
 
 .PHONY : unit-tests
 unit-tests :

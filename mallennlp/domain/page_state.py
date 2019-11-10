@@ -1,17 +1,11 @@
-from typing import Dict, List, Any
+from typing import Dict, List
 
 import attr
+from mallennlp.domain.storable import Storable
 
 
-@attr.s(kw_only=True)
-class BasePageState:
+@attr.s
+class PageSessionState(Storable):
     @classmethod
     def from_params(cls, params: Dict[str, List[str]]):
         return cls()
-
-    @classmethod
-    def from_store(cls, data: Dict[str, Any]):
-        return cls(**data)  # type: ignore
-
-    def dump_store(self) -> Dict[str, Any]:
-        return attr.asdict(self)

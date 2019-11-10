@@ -5,7 +5,7 @@ from dash.dependencies import Input, Output, State
 import dash_core_components as dcc
 import dash_html_components as html
 
-from mallennlp.domain.page_state import BasePageState
+from mallennlp.domain.page_state import PageSessionState
 
 
 class Page(Registrable):
@@ -19,9 +19,9 @@ class Page(Registrable):
     If set, this page will have a link in the navbar by this name.
     """
 
-    PageState: Type[BasePageState] = BasePageState
+    SessionState: Type[PageSessionState] = PageSessionState
     """
-    If the page needs to be stateful, the state class should be defined here.
+    If the page needs to be stateful within a session, the state class should be defined here.
     """
 
     _store_name: str
@@ -43,11 +43,11 @@ class Page(Registrable):
 
     @classmethod
     def from_params(cls, params: Dict[str, List[str]]):
-        return cls(cls.PageState.from_params(params))
+        return cls(cls.SessionState.from_params(params))
 
     @classmethod
-    def from_store(cls, data):
-        return cls(cls.PageState.from_store(data))
+    def load_store(cls, data):
+        return cls(cls.SessionState.load_store(data))
 
     def dump_store(self) -> Dict[str, Any]:
         return self.s.dump_store()

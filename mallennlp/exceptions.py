@@ -11,3 +11,7 @@ class NotInProjectError(Error):
 
 class CudaUnavailableError(Error):
     pass
+
+
+class InvalidPageParametersError(Error):
+    pass

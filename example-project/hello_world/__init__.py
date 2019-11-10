@@ -5,7 +5,7 @@ from dash.dependencies import Input, Output, State
 import dash_bootstrap_components as dbc
 import dash_html_components as html
 
-from mallennlp.domain.page_state import BasePageState
+from mallennlp.domain.page_state import PageSessionState
 from mallennlp.dashboard.page import Page
 
 
@@ -15,7 +15,7 @@ class HelloWorld(Page):
     navlink_name = "Hello, World!"
 
     @attr.s(kw_only=True, auto_attribs=True)
-    class PageState(BasePageState):
+    class SessionState(PageSessionState):
         name: str = "World!"
 
     def get_elements(self):
@@ -37,7 +37,7 @@ class HelloWorld(Page):
     def save_name(self, n_clicks, value):
         if not n_clicks or not value:
             raise PreventUpdate
-        self.s.name = value  # update PageState
+        self.s.name = value  # update SessionState
 
     @Page.callback(
         [Output("hello-name-output", "children")],

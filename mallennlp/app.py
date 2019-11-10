@@ -16,6 +16,7 @@ from flask_login import LoginManager, login_required, logout_user, current_user
 
 from mallennlp.dashboard.page import Page
 from mallennlp.domain.user import AnonymousUser
+from mallennlp.exceptions import InvalidPageParametersError
 from mallennlp.services import db, cache
 from mallennlp.services.config import Config
 from mallennlp.services.user import UserService
@@ -129,8 +130,12 @@ def init_dash(flask_app: Flask, config: Config):
                 PageClass = Page.by_name("/login")
                 params = {"next_pathname": [pathname], "next_params": [param_string]}
         except ConfigurationError:
-            PageClass = Page.by_name("/not-found")
-        page = PageClass.from_params(params)
+            PageClass = Page.by_name("/404-not-found")
+        try:
+            page = PageClass.from_params(params)
+        except InvalidPageParametersError as e:
+            params["e"] = [str(e)]
+            page = Page.by_name("/400-bad-request").from_params(params)
         return page.render()
 
     def make_callback(PageClass, page_name, method_name, method, callback_store_names):
