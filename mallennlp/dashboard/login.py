@@ -11,8 +11,8 @@ from flask_login import login_user, current_user
 
 from mallennlp.dashboard.components import element
 from mallennlp.dashboard.page import Page
-from mallennlp.domain.page_state import PageSessionState
 from mallennlp.services.user import UserService
+from mallennlp.services.serialization import Serializable
 
 
 def validate_next_params(next_params: str) -> str:
@@ -24,18 +24,20 @@ def validate_next_params(next_params: str) -> str:
 @Page.register("/login")
 class LoginPage(Page):
     @attr.s(kw_only=True, auto_attribs=True)
-    class SessionState(PageSessionState):
+    class SessionState(Serializable):
         next_pathname: str = attr.ib(
             default="/", converter=lambda p: "/" if p == "/login" else p  # type: ignore
         )
         next_params: str = attr.ib(default="", converter=validate_next_params)
 
-        @classmethod
-        def from_params(cls, params: Dict[str, List[str]]):
-            return cls(
+    @classmethod
+    def from_params(cls, params: Dict[str, List[str]]):
+        return cls(
+            cls.SessionState(
                 next_pathname=(params.get("next_pathname") or ["/"])[0],
                 next_params=(params.get("next_params") or [""])[0],
             )
+        )
 
     def get_elements(self):
         return [

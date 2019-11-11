@@ -8,27 +8,27 @@ import dash_html_components as html
 
 from mallennlp.dashboard.components import element
 from mallennlp.dashboard.page import Page
-from mallennlp.domain.page_state import PageSessionState
 from mallennlp.exceptions import InvalidPageParametersError
 from mallennlp.services.log_stream import LogStreamService
+from mallennlp.services.serialization import Serializable
 
 
 @Page.register("/log-stream")
 class LogStream(Page):
     @attr.s(kw_only=True, auto_attribs=True)
-    class SessionState(PageSessionState):
+    class SessionState(Serializable):
         stream: LogStreamService
 
-        @classmethod
-        def from_params(cls, params: Dict[str, List[str]]):
-            try:
-                path = params["path"][0]
-                if not Path(path).exists():
-                    raise InvalidPageParametersError(f"log file {path} not found")
-                stream = LogStreamService(path)
-                return cls(stream=stream)
-            except (IndexError, KeyError):
-                raise InvalidPageParametersError("'path' parameter is required")
+    @classmethod
+    def from_params(cls, params: Dict[str, List[str]]):
+        try:
+            path = params["path"][0]
+            if not Path(path).exists():
+                raise InvalidPageParametersError(f"log file {path} not found")
+            stream = LogStreamService(path)
+            return cls(cls.SessionState(stream=stream))
+        except (IndexError, KeyError):
+            raise InvalidPageParametersError("'path' parameter is required")
 
     def get_elements(self):
         return [

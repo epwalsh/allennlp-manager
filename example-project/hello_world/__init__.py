@@ -5,8 +5,8 @@ from dash.dependencies import Input, Output, State
 import dash_bootstrap_components as dbc
 import dash_html_components as html
 
-from mallennlp.domain.page_state import PageSessionState
 from mallennlp.dashboard.page import Page
+from mallennlp.services.serialization import Serializable
 
 
 @Page.register("/hello-world")
@@ -15,7 +15,7 @@ class HelloWorld(Page):
     navlink_name = "Hello, World!"
 
     @attr.s(kw_only=True, auto_attribs=True)
-    class SessionState(PageSessionState):
+    class SessionState(Serializable):
         name: str = "World!"
 
     def get_elements(self):

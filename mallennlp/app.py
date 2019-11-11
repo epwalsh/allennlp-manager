@@ -157,7 +157,7 @@ def init_dash(flask_app: Flask, config: Config):
             args, store = args[:-1], args[-1]
             page = PageClass.from_store(store)
             result = getattr(page, method_name)(*args)
-            new_store = page.dump_store()
+            new_store = page.to_store()
             logger.debug(
                 "Page '%s' received callback '%s': %s, %s -> %s, %s",
                 page_name,

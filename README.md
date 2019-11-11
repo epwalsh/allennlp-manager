@@ -88,7 +88,7 @@ You can put the `hello_world` module in the root of your project directory, or j
 
 #### Interactive custom pages
 
-If you want your custom page to be interactive and stateful, you just need to define the `SessionState` (an [`attrs` class](https://www.attrs.org/en/stable/) inheriting from `PageSessionState`) and implement the callbacks (which are defined just like [dash callbacks](https://dash.plot.ly/getting-started-part-2)):
+If you want your custom page to be interactive and stateful, you just need to define the `SessionState` (an [`attrs` class](https://www.attrs.org/en/stable/) inheriting from `mallennlp.services.serialization.Serializable`) and implement the callbacks (which are defined just like [dash callbacks](https://dash.plot.ly/getting-started-part-2)):
 
 ```python
 # hello_world/__init__.py
@@ -99,8 +99,8 @@ from dash.dependencies import Input, Output, State
 import dash_bootstrap_components as dbc
 import dash_html_components as html
 
-from mallennlp.domain.page_state import PageSessionState
 from mallennlp.dashboard.page import Page
+from mallennlp.services.serialization import Serializable
 
 
 @Page.register("/hello-world")
@@ -109,7 +109,7 @@ class HelloWorld(Page):
     navlink_name = "Hello, World!"
 
     @attr.s(kw_only=True, auto_attribs=True)
-    class SessionState(PageSessionState):
+    class SessionState(Serializable):
         name: str = "World!"
 
     def get_elements(self):
@@ -117,19 +117,16 @@ class HelloWorld(Page):
             dbc.Input(
                 placeholder="Enter your name", type="text", id="hello-name-input"
             ),
+            html.Br(),
             dbc.Button("Save", id="hello-name-save", color="primary"),
+            html.Br(),
             dbc.Button("Say hello", id="hello-name-trigger-output", color="primary"),
+            html.Br(),
             html.Div(id="hello-name-output"),
         ]
 
     @Page.callback(
-        # This callback doesn't have any outputs.
-        [],
-        # The "Save" button will trigger this callback.
-        [Input("hello-name-save", "n_clicks")],
-        # The callback will have access to the text input, but changes in the input
-        # will not trigger the callback.
-        [State("hello-name-input", "value")],
+        [], [Input("hello-name-save", "n_clicks")], [State("hello-name-input", "value")]
     )
     def save_name(self, n_clicks, value):
         if not n_clicks or not value:
@@ -137,9 +134,7 @@ class HelloWorld(Page):
         self.s.name = value  # update SessionState
 
     @Page.callback(
-        # Output of this callback is the "hello-name-output" <div> children.
         [Output("hello-name-output", "children")],
-        # This callback is triggered by the "Say hello" button.
         [Input("hello-name-trigger-output", "n_clicks")],
     )
     def render_hello_output(self, n_clicks):

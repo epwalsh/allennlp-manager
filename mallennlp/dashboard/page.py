@@ -5,7 +5,7 @@ from dash.dependencies import Input, Output, State
 import dash_core_components as dcc
 import dash_html_components as html
 
-from mallennlp.domain.page_state import PageSessionState
+from mallennlp.services.serialization import Serializable
 
 
 class Page(Registrable):
@@ -19,9 +19,10 @@ class Page(Registrable):
     If set, this page will have a link in the navbar by this name.
     """
 
-    SessionState: Type[PageSessionState] = PageSessionState
+    SessionState: Type[Serializable] = Serializable
     """
     If the page needs to be stateful within a session, the state class should be defined here.
+    The state instance will then be available as `self.s`.
     """
 
     _store_name: str
@@ -31,7 +32,7 @@ class Page(Registrable):
         self.s = state
 
     def render(self) -> html.Div:
-        store = self.dump_store()
+        store = self.to_store()
         return html.Div(
             [dcc.Store(id=self._store_name, data=store)]
             + [dcc.Store(id=s, data=store) for s in self._callback_stores]
@@ -43,14 +44,15 @@ class Page(Registrable):
 
     @classmethod
     def from_params(cls, params: Dict[str, List[str]]):
-        return cls(cls.SessionState.from_params(params))
+        return cls(cls.SessionState())
 
     @classmethod
-    def load_store(cls, data):
-        return cls(cls.SessionState.load_store(data))
+    def from_store(cls, data: Dict[str, Any]):
+        s = cls.SessionState.decode(data["s"])
+        return cls(s)
 
-    def dump_store(self) -> Dict[str, Any]:
-        return self.s.dump_store()
+    def to_store(self) -> Dict[str, Any]:
+        return {"s": self.s.encode()}
 
     @staticmethod
     def callback(

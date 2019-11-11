@@ -3,11 +3,11 @@ from typing import List, Optional
 
 import attr
 
-from mallennlp.domain.storable import Storable
+from mallennlp.services.serialization import Serializable
 
 
 @attr.s(auto_attribs=True)
-class LogStreamService(Storable):
+class LogStreamService(Serializable):
     path: str
     """
     Path to the log file to stream.
