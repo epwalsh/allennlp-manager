@@ -199,6 +199,10 @@ If this is your first time contributing to a project on GitHub, please see [this
 
 ## Updates
 
+**11/12**
+
+Adding customizable typed parameter parsing to `Page` class.
+
 **11/8**
 
 Made dashboard extendable, improved statefulness of `Page` class. Added caching to webserver.
