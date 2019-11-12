@@ -5,53 +5,63 @@ from typing import Dict, Any
 import attr
 
 
-@attr.s
-class Serializable:
+class JsonSerializer(json.JSONEncoder):
     """
-    An attrs class that is serializable to JSON.
+    Adds a serializable default representation for `attr` classes.
     """
 
-    @classmethod
-    def from_default(cls, default):
-        """
-        Decode the `default()` representation into an instance.
-        """
-        fields = attr.fields_dict(cls)
-        params: Dict[str, Any] = {}
-        for param_name, param_value in default.items():
-            field_attr = fields[param_name]
-            field_type = field_attr.type
+    def default(self, o):
+        if attr.has(o):
+            return attr.asdict(o, recurse=False, retain_collection_types=False)
+        return json.JSONEncoder.default(self, o)
 
-            # Private fields should be instantiated without leading '_'.
-            if param_name.startswith("_"):
-                param_name = param_name[1:]
 
-            # If field is type is Serializable, call `from_default` on the params dict.
-            if (
-                field_type is not None
-                and inspect.isclass(field_type)
-                and issubclass(field_type, Serializable)
-            ):
-                params[param_name] = field_type.from_default(param_value)
-            else:
-                params[param_name] = param_value
-        return cls(**params)  # type: ignore
+def from_default(cls, default):
+    """
+    Initialize attr object from it's default representation.
+    """
+    fields = attr.fields_dict(cls)
+    params: Dict[str, Any] = {}
+    for param_name, param_value in default.items():
+        field_attr = fields[param_name]
+        field_type = field_attr.type
 
-    def default(self) -> Any:
-        """
-        Return a representation that is JSON serializable.
-        """
-        return attr.asdict(self, recurse=False, retain_collection_types=False)
+        # Private fields should be instantiated without leading '_'.
+        if param_name.startswith("_"):
+            param_name = param_name[1:]
 
-    def encode(self) -> str:
-        class Encoder(json.JSONEncoder):
-            def default(self, o):
-                if isinstance(o, Serializable):
-                    return o.default()
-                return json.JSONEncoder.default(self, o)
+        # Recursively initialize fields that are also `attr` objects.
+        if (
+            field_type is not None
+            and inspect.isclass(field_type)
+            and attr.has(field_type)
+        ):
+            params[param_name] = from_default(field_type, param_value)
+        else:
+            params[param_name] = param_value
+    return cls(**params)
 
-        return Encoder().encode(self)
 
-    @classmethod
-    def decode(cls, s: str):
-        return cls.from_default(json.loads(s))
+def serialize(self) -> str:
+    """
+    Encode a serializable object into a str.
+    """
+    return JsonSerializer().encode(self)
+
+
+@classmethod  # type: ignore
+def deserialize(cls, s: str):
+    """
+    Decode a serializable object from a str.
+    """
+    default = json.loads(s)
+    return from_default(cls, default)
+
+
+def serializable(cls):
+    """
+    Class decorator for creating serializable classes.
+    """
+    cls.serialize = serialize
+    cls.deserialize = deserialize
+    return attr.s(auto_attribs=True, slots=True)(cls)

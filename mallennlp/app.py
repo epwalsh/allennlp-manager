@@ -1,6 +1,5 @@
 import inspect
 import logging
-import urllib.parse as urlparse
 from typing import List
 
 from allennlp.common.util import import_submodules
@@ -29,8 +28,8 @@ def init_dash(flask_app: Flask, config: Config):
         server=flask_app,
         routes_pathname_prefix="/",
         external_stylesheets=[
-            dbc.themes.BOOTSTRAP,
-            "https://use.fontawesome.com/releases/v5.8.1/css/all.css",
+            #  dbc.themes.BOOTSTRAP,
+            #  "https://use.fontawesome.com/releases/v5.8.1/css/all.css"
         ],
         meta_tags=[
             {"charset": "utf-8"},
@@ -123,20 +122,25 @@ def init_dash(flask_app: Flask, config: Config):
             raise PreventUpdate
         if pathname != "/" and pathname.endswith("/"):
             pathname = pathname[:-1]
-        params = urlparse.parse_qs(urlparse.urlparse(param_string).query)
         try:
             PageClass = Page.by_name(pathname)
             if PageClass.requires_login and not current_user.is_authenticated:
                 PageClass = Page.by_name("/login")
-                params = {"next_pathname": [pathname], "next_params": [param_string]}
+                params = PageClass.Params(
+                    next_pathname=pathname, next_params=param_string
+                )
+                return PageClass.from_params(params).render()
+
+            params = PageClass.Params.from_url(param_string)
+            return PageClass.from_params(params).render()
         except ConfigurationError:
             PageClass = Page.by_name("/404-not-found")
-        try:
-            page = PageClass.from_params(params)
+            params = PageClass.Params()
+            return PageClass.from_params(params).render()
         except InvalidPageParametersError as e:
-            params["e"] = [str(e)]
-            page = Page.by_name("/400-bad-request").from_params(params)
-        return page.render()
+            PageClass = Page.by_name("/400-bad-request")
+            params = PageClass.Params(e=str(e))
+            return PageClass.from_params(params).render()
 
     def make_callback(PageClass, page_name, method_name, method, callback_store_names):
         """

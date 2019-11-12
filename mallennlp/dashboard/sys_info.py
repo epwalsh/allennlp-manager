@@ -15,7 +15,7 @@ from mallennlp.dashboard.components import element
 from mallennlp.dashboard.page import Page
 from mallennlp.domain.sys_info import GpuInfo
 from mallennlp.exceptions import CudaUnavailableError
-from mallennlp.services.serialization import Serializable
+from mallennlp.services.serialization import serializable
 
 
 MAX_DEVICE_HISTORY = 20
@@ -27,13 +27,12 @@ def empty_device_history():
 
 @Page.register("/sys-info")
 class SysInfoPage(Page):
-    @attr.s(kw_only=True, auto_attribs=True)
-    class SessionState(Serializable):
-        device_id: int = -1
+    @serializable
+    class SessionState:
+        device_id: int = attr.ib(default=-1)
         device_info: Optional[Dict[str, Any]] = None
         device_history: List[Dict[str, int]] = attr.ib(
-            default=None,
-            converter=lambda h: h or empty_device_history(),  # type: ignore
+            default=attr.Factory(empty_device_history)
         )
 
     def get_elements(self):

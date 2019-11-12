@@ -1,21 +1,22 @@
-import attr
-
-from mallennlp.services.serialization import Serializable
+from mallennlp.services.serialization import serializable
 
 
-@attr.s(auto_attribs=True)
-class SerializableInner(Serializable):
+@serializable
+class SerializableInner:
     x: str
     _y: str
 
 
-@attr.s(auto_attribs=True)
-class SerializableOuter(Serializable):
+@serializable
+class SerializableOuter:
     a: int
     b: SerializableInner
 
 
 def test_encode_and_decode():
-    o = SerializableOuter(a=1, b=SerializableInner(x="1", y="2"))
-    s = o.encode()
-    assert SerializableOuter.decode(s) == o
+    o = SerializableOuter(1, SerializableInner(x="1", y="2"))
+    assert o.a == 1
+    assert o.b.x == "1"
+    assert o.b._y == "2"
+    s = o.serialize()  # type: ignore
+    assert SerializableOuter.deserialize(s) == o  # type: ignore

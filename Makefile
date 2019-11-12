@@ -34,14 +34,14 @@ serve : build project
 .PHONY : typecheck
 typecheck :
 	@echo "Typechecks: mypy"
-	@mypy $(SRC) --ignore-missing-imports --no-site-packages
+	@python -m mypy $(SRC) --ignore-missing-imports --no-site-packages
 
 .PHONY : lint
 lint :
 	@echo "Lint: flake8"
-	@flake8 $(SRC)
+	@python -m flake8 $(SRC)
 	@echo "Lint: black"
-	@black --check $(SRC)
+	@python -m black --check $(SRC)
 
 .PHONY : unit-tests
 unit-tests :

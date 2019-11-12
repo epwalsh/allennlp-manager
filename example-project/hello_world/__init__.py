@@ -1,12 +1,11 @@
-import attr
-
 from dash.exceptions import PreventUpdate
 from dash.dependencies import Input, Output, State
 import dash_bootstrap_components as dbc
 import dash_html_components as html
 
 from mallennlp.dashboard.page import Page
-from mallennlp.services.serialization import Serializable
+from mallennlp.services.serialization import serializable
+from mallennlp.services.url_parse import from_url
 
 
 @Page.register("/hello-world")
@@ -14,9 +13,14 @@ class HelloWorld(Page):
     requires_login = True
     navlink_name = "Hello, World!"
 
-    @attr.s(kw_only=True, auto_attribs=True)
-    class SessionState(Serializable):
+    @serializable
+    class SessionState:
         name: str = "World!"
+
+    @from_url
+    @serializable
+    class Params:
+        initial_message: str = "Hello, World!"
 
     def get_elements(self):
         return [
@@ -28,7 +32,7 @@ class HelloWorld(Page):
             html.Br(),
             dbc.Button("Say hello", id="hello-name-trigger-output", color="primary"),
             html.Br(),
-            html.Div(id="hello-name-output"),
+            html.Div(id="hello-name-output", children=self.p.initial_message),
         ]
 
     @Page.callback(

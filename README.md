@@ -88,11 +88,40 @@ You can put the `hello_world` module in the root of your project directory, or j
 
 #### Interactive custom pages
 
-If you want your custom page to be interactive and stateful, you just need to define the `SessionState` (an [`attrs` class](https://www.attrs.org/en/stable/) inheriting from `mallennlp.services.serialization.Serializable`) and implement the callbacks (which are defined just like [dash callbacks](https://dash.plot.ly/getting-started-part-2)):
+`Page` instances have two attributes, an arbitrary `SessionState` object (`self.s`) and a `Params` object (`self.p`) that holds any typed URL parameters for the page, if they have been defined. By default the `SessionState` and `Params` object don't have any attributes. Overriding these with a custom `SessionState` or `Params` object looks like this:
+
+```python
+from mallennlp.dashboard.page import Page
+from mallennlp.services.serialization import serializable
+from mallennlp.services.url_parse import from_url
+
+@Page.register("/hello-world")
+class HelloWorld(Page):
+
+    @serializable
+    class SessionState:
+        name: str = "World!"
+
+    @from_url
+    @serializable
+    class Params:
+        initial_message: str = "Hello, World!"
+
+    # ... snip ...
+```
+
+Both `SessionState` and `Params` need to be serializable, which is ensured by the `@serializable` decorator. The decorator is really just a wrapper around [`attr.s`](https://www.attrs.org/en/stable/index.html) while adding some additional helper methods. The `@from_url` decorator adds a classmethod to the `Params` object that parses the attributes from a URL string.
+
+Your page then becomes interactive when you implement a callback method for any input components that were created in `Page.get_elements`. Page callbacks are defined by decorating a `Page` method with `@Page.callback`. Under the hood, callbacks are just [Dash callbacks](https://dash.plot.ly/getting-started-part-2) with some magic behind the scenes that makes the function into an instance method of your page.
+
+Combining these concepts, we can easily add to our `HelloWorld` to make it interactive:
 
 ```python
 # hello_world/__init__.py
-import attr
+#
+# The page will render a different initial message based on the URL parameter
+# 'initial_message' and then update the message when the user types into the text input
+# and uses the buttons.
 
 from dash.exceptions import PreventUpdate
 from dash.dependencies import Input, Output, State
@@ -100,7 +129,8 @@ import dash_bootstrap_components as dbc
 import dash_html_components as html
 
 from mallennlp.dashboard.page import Page
-from mallennlp.services.serialization import Serializable
+from mallennlp.services.serialization import serializable
+from mallennlp.services.url_parse import from_url
 
 
 @Page.register("/hello-world")
@@ -108,9 +138,14 @@ class HelloWorld(Page):
     requires_login = True
     navlink_name = "Hello, World!"
 
-    @attr.s(kw_only=True, auto_attribs=True)
-    class SessionState(Serializable):
+    @serializable
+    class SessionState:
         name: str = "World!"
+
+    @from_url
+    @serializable
+    class Params:
+        initial_message: str = "Hello, World!"
 
     def get_elements(self):
         return [
@@ -122,7 +157,7 @@ class HelloWorld(Page):
             html.Br(),
             dbc.Button("Say hello", id="hello-name-trigger-output", color="primary"),
             html.Br(),
-            html.Div(id="hello-name-output"),
+            html.Div(id="hello-name-output", children=self.p.initial_message),
         ]
 
     @Page.callback(
