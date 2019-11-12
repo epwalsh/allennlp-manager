@@ -27,24 +27,28 @@ jobs:
       - &lint
         run:
           name: Running code linters
+          when: always
           command: |
             . venv/bin/activate
             make lint
       - &typecheck
         run:
           name: Running type checks
+          when: always
           command: |
             . venv/bin/activate
             make typecheck
       - &unit-tests
         run:
           name: Running unit tests
+          when: always
           command: |
             . venv/bin/activate
             make unit-tests
       - &integration-tests
         run:
           name: Running integration tests
+          when: always
           command: |
             . venv/bin/activate
             make integration-tests
