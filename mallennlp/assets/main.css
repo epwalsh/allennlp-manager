@@ -91,3 +91,7 @@ p {
 .navbar-dark .navbar-nav .nav-link {
     color: #FFFFFF;
 }
+
+#log-stream-content > pre {
+    margin-bottom: 0;
+}

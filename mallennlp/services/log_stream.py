@@ -7,13 +7,19 @@ from mallennlp.services.serialization import serializable
 
 
 @serializable
+class Line:
+    content: str
+    number: int
+
+
+@serializable
 class LogStreamService:
     path: str
     """
     Path to the log file to stream.
     """
 
-    _lines: List[str] = attr.ib(default=attr.Factory(list))
+    _lines: List[Line] = attr.ib(default=attr.Factory(list))
     """
     Keeps track of current lines.
     """
@@ -35,12 +41,12 @@ class LogStreamService:
 
     _last_modified: Optional[float] = None
 
-    max_lines: int = 500
+    max_lines: Optional[int] = None
     """
     Maximum number of lines to display.
     """
 
-    max_lines_per_update: int = 50
+    max_lines_per_update: Optional[int] = None
     """
     Approximate maximum number of lines to read per update. The actual number of lines
     read per update may be greater. How much so depends on the number
@@ -51,30 +57,36 @@ class LogStreamService:
     performance (more small reads have to be done).
     """
 
-    max_blocks_per_update: int = 128 * 10
+    max_blocks_per_update: Optional[int] = None
     """
     Maximum number of blocks to read per update.
     """
 
-    max_block_size: int = 8
+    max_block_size: int = -1
     """
     Max number of characters to read per block.
     """
 
-    def _should_read(self) -> bool:
-        if not self._at_eof:
-            return True
+    @property
+    def current_line_number(self) -> int:
+        if not self._lines:
+            return 0
+        return self._lines[-1].number
+
+    def should_read(self) -> bool:
         path = Path(self.path)
         if self._last_modified is None:
             self._last_modified = path.stat().st_mtime
+            return True
+        if not self._at_eof:
             return True
         tmp = self._last_modified
         self._last_modified = path.stat().st_mtime
         return tmp < self._last_modified
 
-    def readlines(self) -> List[str]:
-        if not self._should_read():
-            return self._lines
+    def readlines(self) -> List[Line]:
+        if self._last_modified is None:
+            self._last_modified = Path(self.path).stat().st_mtime
         with open(self.path) as f:
             if self._position is not None:
                 f.seek(self._position)
@@ -90,19 +102,28 @@ class LogStreamService:
                         if line.endswith("\n"):
                             # We have a complete line.
                             n_lines += 1
-                            self._lines.append(line.strip())
+                            self._lines.append(
+                                Line(line.strip(), self.current_line_number + 1)
+                            )
                             self._current_line = ""
                         else:
                             # Incomplete line.
                             self._current_line = line
-                    if n_lines >= self.max_lines_per_update:
+                    if (
+                        self.max_lines_per_update
+                        and n_lines >= self.max_lines_per_update
+                    ):
                         break
-                    if n_blocks >= self.max_blocks_per_update:
+                    if (
+                        self.max_blocks_per_update
+                        and n_blocks >= self.max_blocks_per_update
+                    ):
                         break
                 else:
                     break
             self._position = f.tell()
-            self._lines = self._lines[-self.max_lines :]
+            if self.max_lines:
+                self._lines = self._lines[-self.max_lines :]
             # Peek one more character to see if we're at EOF.
             self._at_eof = not bool(f.read(1))
         return self._lines

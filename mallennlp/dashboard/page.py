@@ -49,11 +49,13 @@ class Page(Registrable):
         self.p = params
 
     def render(self) -> html.Div:
+        # Call this before `self.store()` in case `self.get_elements` modifies state.
+        elements = self.get_elements()
         store = self.to_store()
         return html.Div(
             [dcc.Store(id=self._store_name, data=store)]
             + [dcc.Store(id=s, data=store) for s in self._callback_stores]
-            + self.get_elements()
+            + elements
         )
 
     def get_elements(self) -> List[Any]:

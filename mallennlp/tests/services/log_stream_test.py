@@ -7,7 +7,14 @@ def test_stream_stdout_log():
     path = Path("mallennlp/tests/fixtures/test_experiment/stdout.log")
     with open(path) as f:
         all_lines = [l.strip() for l in f]
-    s = LogStreamService(str(path), max_lines=100, max_lines_per_update=50)
+    s = LogStreamService(
+        str(path),
+        max_lines=100,
+        max_lines_per_update=50,
+        max_blocks_per_update=128 * 10,
+        max_block_size=8,
+    )
+    assert s.should_read()
 
     # Just make sure this was initialized correctly with the attr factory.
     assert isinstance(s._lines, list)
@@ -15,20 +22,20 @@ def test_stream_stdout_log():
     # First read, lines 1 - 50.
     lines = s.readlines()
     assert len(lines) == s.max_lines_per_update
-    assert lines[0] == all_lines[0]
-    assert lines[-1] == all_lines[49]
+    assert lines[0].content == all_lines[0]
+    assert lines[-1].content == all_lines[49]
 
     # Second read, lines 1 - 100.
     lines = s.readlines()
     assert len(lines) == s.max_lines
-    assert lines[0] == all_lines[0]
-    assert lines[-1] == all_lines[99]
+    assert lines[0].content == all_lines[0]
+    assert lines[-1].content == all_lines[99]
 
     # Third read, lines 51 - 150.
     lines = s.readlines()
     assert len(lines) == s.max_lines
-    assert lines[0] == all_lines[50]
-    assert lines[-1] == all_lines[149]
+    assert lines[0].content == all_lines[50]
+    assert lines[-1].content == all_lines[149]
 
     # Read until the end (415 lines).
     s.readlines()  # lines 101 - 200.
@@ -38,20 +45,20 @@ def test_stream_stdout_log():
     s.readlines()  # lines 301 - 400.
     lines = s.readlines()  # lines 316 - 415.
     assert len(lines) == s.max_lines
-    assert lines[0] == all_lines[315]
-    assert lines[-1] == all_lines[414]
+    assert lines[0].content == all_lines[315]
+    assert lines[-1].content == all_lines[414]
 
     # Result should be the same still.
     lines = s.readlines()  # lines 316 - 415.
     assert len(lines) == s.max_lines
-    assert lines[0] == all_lines[315]
-    assert lines[-1] == all_lines[414]
+    assert lines[0].content == all_lines[315]
+    assert lines[-1].content == all_lines[414]
 
     # Shouldn't have to read again.
     assert s._at_eof
-    assert not s._should_read()
+    assert not s.should_read()
     path.touch()
-    assert s._should_read()
+    assert s.should_read()
 
 
 def test_small_lines_bigger_block_size():
@@ -69,9 +76,9 @@ def test_small_lines_bigger_block_size():
         max_block_size=4,
     )
     lines = s.readlines()
-    assert lines == all_lines[0:2]
+    assert [l.content for l in lines] == all_lines[0:2]
     lines = s.readlines()
-    assert lines == all_lines[0:5]
+    assert [l.content for l in lines] == all_lines[0:5]
 
 
 def test_small_lines_block_size_1():
@@ -88,4 +95,4 @@ def test_small_lines_block_size_1():
     lines = s.readlines()
     assert lines == []
     lines = s.readlines()
-    assert lines == all_lines[0:1]
+    assert [l.content for l in lines] == all_lines[0:1]

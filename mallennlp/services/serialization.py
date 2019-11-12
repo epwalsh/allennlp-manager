@@ -1,6 +1,6 @@
 import inspect
 import json
-from typing import Dict, Any
+from typing import Dict, Any, List
 
 import attr
 
@@ -30,14 +30,21 @@ def from_default(cls, default):
         if param_name.startswith("_"):
             param_name = param_name[1:]
 
-        # Recursively initialize fields that are also `attr` objects.
+        # Recursively initialize fields that are also `attr` objects, otherwise
+        # use the raw default `param_value`.
         if (
             field_type is not None
             and inspect.isclass(field_type)
             and attr.has(field_type)
         ):
+            # Field type is an `attr` object.
             params[param_name] = from_default(field_type, param_value)
+        elif getattr(field_type, "__origin__", None) in (List, list):
+            # List of things, possibly other `attr` objects.
+            subtype = field_type.__args__[0]
+            params[param_name] = [from_default(subtype, val) for val in param_value]
         else:
+            # Default to just using `param_value` as is.
             params[param_name] = param_value
     return cls(**params)
 
