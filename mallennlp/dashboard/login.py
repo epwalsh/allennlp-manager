@@ -23,7 +23,10 @@ class LoginPage(Page):
         next_pathname: str = attr.ib(
             default="/", converter=lambda p: "/" if p == "/login" else p  # type: ignore
         )
-        next_params: str = ""
+        next_params: str = attr.ib(
+            default="?_refresh=true",
+            converter=lambda p: p if p else "?_refresh=true",  # type: ignore
+        )
 
     def get_elements(self):
         return [
@@ -101,14 +104,34 @@ class LoginPage(Page):
     )
     def try_log_in(self, n_clicks, username, password):
         if current_user.is_authenticated:
-            return dbc.Alert("You are already logged in", color="success")
+            return dbc.Toast(
+                "You are already logged in",
+                id="login-state-notification",
+                header="Success",
+                icon="success",
+                style={"position": "fixed", "top": 66, "right": 10, "width": 350},
+            )
         if not n_clicks or not username or not password:
             raise PreventUpdate
         user = UserService().find(username, password)
         if user:
             login_user(user)
-            return dbc.Alert(f"Welcome, {user.username}!", color="success")
-        return dbc.Alert("Invalid username or password", color="danger")
+            return dbc.Toast(
+                f"Welcome, {user.username}!",
+                id="login-state-notification",
+                header="Success",
+                icon="success",
+                style={"position": "fixed", "top": 66, "right": 10, "width": 350},
+            )
+        return dbc.Toast(
+            "Invalid username or password",
+            id="login-state-notification",
+            header="Error",
+            dismissable=True,
+            duration=4000,
+            icon="danger",
+            style={"position": "fixed", "top": 66, "right": 10, "width": 350},
+        )
 
     @Page.callback(
         [
@@ -120,7 +143,7 @@ class LoginPage(Page):
         [State("login-button", "n_clicks")],
     )
     def redirect(self, state, n_clicks):
-        if not state or not n_clicks or not current_user.is_authenticated:
+        if (not state and not n_clicks) or not current_user.is_authenticated:
             raise PreventUpdate
         time.sleep(1)
         next_pathname = self.p.next_pathname
