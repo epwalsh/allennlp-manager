@@ -1,6 +1,6 @@
 import inspect
 import json
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Type, TypeVar
 
 import attr
 
@@ -16,11 +16,16 @@ class JsonSerializer(json.JSONEncoder):
         return json.JSONEncoder.default(self, o)
 
 
-def from_default(cls, default):
+T = TypeVar("T")
+
+
+def from_default(ObjType: Type[T], default: Any) -> T:
     """
-    Initialize attr object from it's default representation.
+    Initialize an object from it's default representation.
     """
-    fields = attr.fields_dict(cls)
+    if not attr.has(ObjType):
+        return default
+    fields = attr.fields_dict(ObjType)
     params: Dict[str, Any] = {}
     for param_name, param_value in default.items():
         field_attr = fields[param_name]
@@ -32,21 +37,21 @@ def from_default(cls, default):
 
         # Recursively initialize fields that are also `attr` objects, otherwise
         # use the raw default `param_value`.
-        if (
-            field_type is not None
-            and inspect.isclass(field_type)
-            and attr.has(field_type)
-        ):
-            # Field type is an `attr` object.
-            params[param_name] = from_default(field_type, param_value)
-        elif getattr(field_type, "__origin__", None) in (List, list):
-            # List of things, possibly other `attr` objects.
-            subtype = field_type.__args__[0]
-            params[param_name] = [from_default(subtype, val) for val in param_value]
+        if field_type is not None:
+            if inspect.isclass(field_type) and attr.has(field_type):
+                # Field type is an `attr` object.
+                params[param_name] = from_default(field_type, param_value)
+            elif getattr(field_type, "__origin__", None) in (List, list):
+                # List of things, possibly other `attr` objects.
+                subtype = field_type.__args__[0]
+                params[param_name] = [from_default(subtype, val) for val in param_value]
+            else:
+                # Default to just using `param_value` as is.
+                params[param_name] = param_value
         else:
             # Default to just using `param_value` as is.
             params[param_name] = param_value
-    return cls(**params)
+    return ObjType(**params)  # type: ignore
 
 
 def serialize(self) -> str:

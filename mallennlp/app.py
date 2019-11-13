@@ -251,3 +251,9 @@ def create_app(config: Config):
     init_dash(app, config)
 
     return app
+
+
+if __name__ == "__main__":
+    config = Config.from_toml()
+    app = create_app(config)
+    app.run(debug=True, host="0.0.0.0")
