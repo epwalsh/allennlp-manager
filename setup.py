@@ -23,7 +23,9 @@ setup(
     description="Your manager for AllenNLP experiments",
     url="https://github.com/epwalsh/allennlp-manager",
     packages=find_packages(exclude=["mallennlp.tests.*", "tests"]),
-    package_data={"mallennlp": ["services/schema.sql", "assets/*.css"]},
+    package_data={
+        "mallennlp": ["schema/*.sql", "assets/*.css", "assets/webfonts/fa-*"]
+    },
     install_requires=read_reqs_file("requirements.txt") + ["allennlp"],
     tests_require=read_reqs_file("requirements.dev.txt"),
     python_requires=">=3.6.1,<3.8",

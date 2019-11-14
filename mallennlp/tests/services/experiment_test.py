@@ -10,6 +10,7 @@ import pytest
 
 from mallennlp.domain.config import ProjectConfig, ServerConfig
 from mallennlp.services.config import Config
+from mallennlp.services.db import Tables
 from mallennlp.services.experiment import ExperimentService
 
 
@@ -128,3 +129,73 @@ def test_find_experiments(project):
     exps = list(ExperimentService.find_experiments(project))
     assert len(exps) == 1
     assert exps[0].e.path == (project / "test_experiment")
+
+
+@pytest.fixture(scope="module")
+def entries():
+    return [
+        ("greetings/copynet/run_001", "copynet seq2seq"),
+        ("greetings/copynet/run_002", "copynet seq2seq beam-search copy"),
+        ("greetings/seq2seq/run_001", "simple-seq2seq beam-search char-level"),
+    ]
+
+
+def test_add_experiments(db, entries):
+    ExperimentService.init_db_table(db=db, entries=entries)
+
+
+def test_custom_func_hasanytags(db):
+    rows = list(
+        db.execute(
+            f"SELECT * FROM {Tables.EXPERIMENTS.value} WHERE HasAnyTags(tags, 'copynet', 'copy')"
+        )
+    )
+    assert len(rows) == 2
+
+    rows = list(
+        db.execute(
+            f"SELECT * FROM {Tables.EXPERIMENTS.value} WHERE HasAnyTags(tags, 'copynet', 'beam-search')"
+        )
+    )
+    assert len(rows) == 3
+
+    rows = list(
+        db.execute(
+            f"SELECT * FROM {Tables.EXPERIMENTS.value} WHERE HasAnyTags(tags, 'simple')"
+        )
+    )
+    assert len(rows) == 0
+
+
+def test_custom_func_hasalltags(db):
+    rows = list(
+        db.execute(
+            f"SELECT * FROM {Tables.EXPERIMENTS.value} WHERE HasAllTags(tags, 'copynet', 'copy')"
+        )
+    )
+    assert len(rows) == 1
+
+    rows = list(
+        db.execute(
+            f"SELECT * FROM {Tables.EXPERIMENTS.value} WHERE HasAllTags(tags, 'copynet')"
+        )
+    )
+    assert len(rows) == 2
+
+
+def test_glob_by_path(db):
+    rows = list(
+        db.execute(
+            f"SELECT * FROM {Tables.EXPERIMENTS.value} WHERE path GLOB ?",
+            ("greetings/copynet/*",),
+        )
+    )
+    assert len(rows) == 2
+
+    rows = list(
+        db.execute(
+            f"SELECT * FROM {Tables.EXPERIMENTS.value} WHERE path GLOB ?",
+            ("greetings/*/run_001",),
+        )
+    )
+    assert len(rows) == 2

@@ -8,20 +8,59 @@ import attr
 @attr.s(slots=True, auto_attribs=True)
 class ProjectConfig:
     _path: Path
+    """
+    Root experiment directory.
+    """
+
     name: str = "my-project"
+    """
+    Name of directory / name of project.
+    """
+
     display_name: Optional[str] = None
+    """
+    Name to display in dashboard. Defaults to `name`.
+    """
+
     loglevel: str = "INFO"
+    """
+    Log level across CLI and dashboard.
+    """
 
 
 @attr.s(slots=True, auto_attribs=True)
 class ServerConfig:
     _path: Path
+    """
+    Root experiment directory.
+    """
+
     port: int = 5000
+    """
+    Port to bind to the server.
+    """
+
     secret: str = attr.ib(
         default=None, converter=lambda s: s or os.urandom(24).hex()  # type: ignore
     )
-    concurrency: int = 100
+    """
+    Used for security in the server.
+    """
+
+    workers: int = 2
+    """
+    Number of worker processes for handling requests.
+    """
+
+    worker_connections: int = 1000
+    """
+    Maximum number of simultaneous connections.
+    """
+
     imports: Optional[List[str]] = None
+    """
+    Additional packages to import.
+    """
 
     """
     Uppercase properties are mapped to the Flask config.

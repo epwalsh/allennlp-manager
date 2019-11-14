@@ -6,5 +6,6 @@ display_name = "My Project"
 [server]
 port = 5000
 secret = "c6bd1b93cb0cefb3b14e6b8ba60d239b19594f0c35691d33"
-concurrency = 100
+workers = 2
+worker_connections = 100
 imports = [ "hello_world",]

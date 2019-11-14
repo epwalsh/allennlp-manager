@@ -3,7 +3,7 @@ from typing import Optional, Tuple
 from werkzeug.security import check_password_hash, generate_password_hash
 
 from mallennlp.domain.user import User
-from mallennlp.services.db import get_db_from_app
+from mallennlp.services.db import get_db_from_app, Tables
 
 
 class UserService:
@@ -15,7 +15,9 @@ class UserService:
 
     def get(self, userid: str) -> Optional[User]:
         _id, alt_id = [int(x) for x in userid.split(" ")]
-        self.cursor.execute("SELECT * FROM user WHERE id=? AND alt_id=?", (_id, alt_id))
+        self.cursor.execute(
+            f"SELECT * FROM {Tables.USERS.value} WHERE id=? AND alt_id=?", (_id, alt_id)
+        )
         result = self.cursor.fetchone()
         if result:
             return User(**result)
@@ -24,7 +26,9 @@ class UserService:
     def find(
         self, username: str, password: str = None, check_password: bool = True
     ) -> Optional[User]:
-        self.cursor.execute("SELECT * FROM user WHERE username=?", (username,))
+        self.cursor.execute(
+            f"SELECT * FROM {Tables.USERS.value} WHERE username=?", (username,)
+        )
         result = self.cursor.fetchone()
         if not result:
             return None
@@ -35,7 +39,7 @@ class UserService:
     def create(self, username: str, password: str):
         password = generate_password_hash(password, method="sha256")
         self.cursor.execute(
-            "INSERT INTO user (alt_id, username, password) VALUES (?, ?, ?)",
+            f"INSERT INTO {Tables.USERS.value} (alt_id, username, password) VALUES (?, ?, ?)",
             (0, username, password),
         )
         self.db.commit()
@@ -51,7 +55,7 @@ class UserService:
     def changepw(self, username: str, password: str) -> bool:
         hashed_password = generate_password_hash(password, method="sha256")
         self.cursor.execute(
-            "UPDATE user SET password=?, alt_id = alt_id + 1 WHERE username=?",
+            f"UPDATE {Tables.USERS.value} SET password=?, alt_id = alt_id + 1 WHERE username=?",
             (hashed_password, username),
         )
         self.db.commit()

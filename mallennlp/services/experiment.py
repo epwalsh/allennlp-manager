@@ -1,11 +1,12 @@
 import json
 import os
 from pathlib import Path
-from typing import Any, Dict, Optional, List, Iterable, Set
+from typing import Any, Dict, Optional, List, Iterable, Set, Tuple
 
 from allennlp.common.params import Params
 
 from mallennlp.domain.experiment import Experiment, Epoch, Meta, FileData
+from mallennlp.services.db import Tables, get_db_from_app
 
 
 class ExperimentService:
@@ -23,6 +24,8 @@ class ExperimentService:
 
     DIRS_TO_IGNORE: Set[str] = {"vocabulary", "log"}
 
+    DB_FIELD_NAMES: Tuple[str, str] = ("path", "tags")
+
     def __init__(self, path: Path) -> None:
         self.e = Experiment(
             path=path,
@@ -33,6 +36,12 @@ class ExperimentService:
             stderr=FileData(path / self.STDERR_FNAME),
             epochs=[],
         )
+
+    def get_db_fields(self) -> Tuple[str, str]:
+        return str(self.get_path()), " ".join(self.get_tags())
+
+    def get_path(self) -> Path:
+        return self.e.path
 
     def get_config(self) -> Params:
         fd = self.e.config
@@ -48,6 +57,12 @@ class ExperimentService:
             with open(fd.path) as f:
                 fd.data = Meta(**json.load(f))
         return fd.data
+
+    def get_tags(self) -> List[str]:
+        meta = self.get_meta()
+        if meta:
+            return meta.tags
+        return []
 
     def get_metrics(self) -> Optional[Dict[str, Any]]:
         fd = self.e.metrics
@@ -93,8 +108,9 @@ class ExperimentService:
 
     @classmethod
     def find_experiments(
-        cls, root: Path, ignore_root: bool = True
+        cls, root: Path = None, ignore_root: bool = True
     ) -> Iterable["ExperimentService"]:
+        root = root or Path("./")
         root = root.resolve()
         for dirpath, dirnames, _ in os.walk(root):
             path = Path(dirpath).resolve()
@@ -109,3 +125,19 @@ class ExperimentService:
                 for d in dirnames
                 if d not in cls.DIRS_TO_IGNORE or not d.startswith(".")
             ]
+
+    @classmethod
+    def init_db_table(cls, db=None, entries: List[Tuple[str, str]] = None):
+        db = db or get_db_from_app()
+        entries = entries or [
+            experiment.get_db_fields() for experiment in cls.find_experiments()
+        ]
+        c = db.cursor()
+        field_names = cls.DB_FIELD_NAMES
+        insert_stmnt = (
+            f"INSERT OR REPLACE INTO {Tables.EXPERIMENTS.value} "
+            f"({', '.join(field_names)}) VALUES "
+            f"({','.join('?' for _ in field_names)})"
+        )
+        c.executemany(insert_stmnt, entries)
+        db.commit()

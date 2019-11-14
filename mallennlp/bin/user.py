@@ -1,17 +1,18 @@
 import click
 
 from mallennlp.bin.common import requires_config, validate_password
-from mallennlp.services.db import get_db_from_cli
-from mallennlp.services.user import UserService
 
 
 @click.group("user")
 @click.pass_context
 @requires_config
-def user(config, ctx):
+def user_group(config, ctx):
     """
     Manage dashboard users.
     """
+    from mallennlp.services.db import get_db_from_cli
+    from mallennlp.services.user import UserService
+
     db = get_db_from_cli(config)
     user_service = UserService(db=db)
     ctx.obj = user_service
@@ -46,4 +47,4 @@ def changepw(user_service, username, password):
     click.secho("Password successfully changed", fg="green")
 
 
-user.add_command(changepw)
+user_group.add_command(changepw)

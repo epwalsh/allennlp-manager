@@ -4,15 +4,17 @@ from pathlib import Path
 import click
 
 from mallennlp.bin.common import validate_password
-from mallennlp.domain.config import ProjectConfig, ServerConfig
-from mallennlp.services.db import init_db, get_db_from_cli
-from mallennlp.services.config import Config
-from mallennlp.services.user import UserService
 
 
 def init_project(
     verb: str, name: str, path: Path, username: str, password: str, **kwargs
 ):
+    from mallennlp.domain.config import ProjectConfig, ServerConfig
+    from mallennlp.services.db import init_db, get_db_from_cli
+    from mallennlp.services.experiment import ExperimentService
+    from mallennlp.services.config import Config
+    from mallennlp.services.user import UserService
+
     if (path / Config.CONFIG_PATH).exists():
         raise click.ClickException(click.style("project already exists", fg="red"))
 
@@ -38,6 +40,16 @@ def init_project(
     db = get_db_from_cli(config)
     user_service = UserService(db=db)
     user_service.create(username, password)
+
+    # Find existing experiments and add to database (does nothing if new project).
+    experiment_entries = [
+        s.get_db_fields() for s in ExperimentService.find_experiments()
+    ]
+    if experiment_entries:
+        click.echo(
+            f"Found {click.style(str(len(experiment_entries)), fg='green')} existing experiments"
+        )
+        ExperimentService.init_db_table(db=db, entries=experiment_entries)
 
     # Save the config to the 'Project.toml' file in the project directory.
     config.to_toml(path)
@@ -86,7 +98,8 @@ def validate_name(ctx, param, value):
 @click.option("--server-image", type=str)
 @click.option("--server-port", type=int)
 @click.option("--server-secret", type=str)
-@click.option("--server-concurrency", type=int)
+@click.option("--server-workers", type=int)
+@click.option("--server-worker-connections", type=int)
 @click.option("--server-memory", type=int)
 @click.option("--server-cpus", type=float)
 @click.option("--server-imports", type=str, multiple=True)
@@ -118,7 +131,8 @@ def new(name: str, username: str, password: str, **kwargs):
 @click.option("--server-image", type=str)
 @click.option("--server-port", type=int)
 @click.option("--server-secret", type=str)
-@click.option("--server-concurrency", type=int)
+@click.option("--server-workers", type=int)
+@click.option("--server-worker-connections", type=int)
 @click.option("--server-memory", type=int)
 @click.option("--server-cpus", type=float)
 @click.option("--server-imports", type=str, multiple=True)

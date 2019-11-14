@@ -9,8 +9,8 @@ jobs:
       - restore_cache:
           name: Restoring dependencies cache
           keys:
-            - deps-v1-{{ checksum "requirements.txt" }}-{{ checksum "requirements.dev.txt" }}
-            - deps-v1-
+            - deps-v1-py36-{{ checksum "requirements.txt" }}-{{ checksum "requirements.dev.txt" }}
+            - deps-v1-py36-
       - &setup_environment
         run:
           name: Installing dependencies
@@ -21,7 +21,7 @@ jobs:
             pip install -r requirements.dev.txt
       - save_cache:
           name: Saving dependencies cache
-          key: deps-v1-{{ checksum "requirements.txt" }}-{{ checksum "requirements.dev.txt" }}
+          key: deps-v1-py36-{{ checksum "requirements.txt" }}-{{ checksum "requirements.dev.txt" }}
           paths:
             - venv
       - &lint

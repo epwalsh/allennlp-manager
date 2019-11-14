@@ -3,11 +3,12 @@ import os
 import click
 
 from mallennlp.version import VERSION
+from mallennlp.bin.db import db_group
 from mallennlp.bin.serve import serve
 from mallennlp.bin.new import new, init
 from mallennlp.bin.edit import edit
 from mallennlp.bin.launch import launch
-from mallennlp.bin.user import user
+from mallennlp.bin.user import user_group
 
 
 @click.group()
@@ -30,7 +31,8 @@ main.add_command(new)
 main.add_command(init)
 main.add_command(edit)
 main.add_command(launch)
-main.add_command(user)
+main.add_command(user_group)
+main.add_command(db_group)
 
 
 if __name__ == "__main__":
