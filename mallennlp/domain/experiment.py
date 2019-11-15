@@ -4,6 +4,8 @@ from typing import Optional, Any, Dict, List, Generic, TypeVar
 import attr
 from allennlp.common.params import Params
 
+from mallennlp.services.serialization import serializable
+
 
 T = TypeVar("T")
 
@@ -35,7 +37,7 @@ class Epoch:
     """
 
 
-@attr.s(auto_attribs=True)
+@serializable
 class Meta:
     tags: List[str]
 

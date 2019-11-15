@@ -95,3 +95,24 @@ p {
 #log-stream-content > pre {
     margin-bottom: 0;
 }
+
+/* Add some padding around the table sorting chevrons. */
+.column-header--sort {
+    padding-right: 5px;
+}
+
+/* Left-align the table filter text and add some padding. */
+.dash-filter input {
+    text-align: left !important;
+    padding-left: 10px !important;
+}
+
+.dash-select-cell {
+    width: 40px !important;
+    max-width: 40px !important;
+}
+
+#experiments-table-actions .dropdown-toggle {
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+}

@@ -9,6 +9,15 @@ from mallennlp.domain.experiment import Experiment, Epoch, Meta, FileData
 from mallennlp.services.db import Tables, get_db_from_app
 
 
+def with_db_update(method):
+    def wrapped(self, *args, **kwargs):
+        out = method(self, *args, **kwargs)
+        self.update_db_entry()
+        return out
+
+    return wrapped
+
+
 class ExperimentService:
     CONFIG_FNAME: str = "config.json"
 
@@ -26,7 +35,8 @@ class ExperimentService:
 
     DB_FIELD_NAMES: Tuple[str, str] = ("path", "tags")
 
-    def __init__(self, path: Path) -> None:
+    def __init__(self, path: Path, db=None) -> None:
+        self._db = db
         self.e = Experiment(
             path=path,
             config=FileData(path / self.CONFIG_FNAME),
@@ -36,6 +46,10 @@ class ExperimentService:
             stderr=FileData(path / self.STDERR_FNAME),
             epochs=[],
         )
+
+    @property
+    def db(self):
+        return self._db or get_db_from_app()
 
     def get_db_fields(self) -> Tuple[str, str]:
         return str(self.get_path()), " ".join(self.get_tags())
@@ -51,18 +65,25 @@ class ExperimentService:
             raise FileNotFoundError
         return fd.data
 
-    def get_meta(self) -> Optional[Meta]:
+    def get_meta(self) -> Meta:
         fd = self.e.meta
         if fd.should_read():
             with open(fd.path) as f:
                 fd.data = Meta(**json.load(f))
+        if not fd.data:
+            fd.data = Meta([])
         return fd.data
 
     def get_tags(self) -> List[str]:
         meta = self.get_meta()
-        if meta:
-            return meta.tags
-        return []
+        return meta.tags
+
+    @with_db_update
+    def set_tags(self, tags: List[str]) -> None:
+        meta = self.get_meta()
+        meta.tags = tags
+        with open(self.e.meta.path, "w") as f:
+            f.write(meta.serialize())  # type: ignore
 
     def get_metrics(self) -> Optional[Dict[str, Any]]:
         fd = self.e.metrics
@@ -113,11 +134,11 @@ class ExperimentService:
         root = root or Path("./")
         root = root.resolve()
         for dirpath, dirnames, _ in os.walk(root):
-            path = Path(dirpath).resolve()
+            path = Path(dirpath)
             if cls.is_experiment(path) and (path != root or not ignore_root):
                 # If `path` is an experiment, we can ignore all subdirectories
                 # (experiments can't be nested).
-                yield cls(path)
+                yield cls(path.relative_to(root))
                 continue
             # Ignore hidden directories or directories in the explicit ignore list.
             dirnames[:] = [
@@ -125,6 +146,18 @@ class ExperimentService:
                 for d in dirnames
                 if d not in cls.DIRS_TO_IGNORE or not d.startswith(".")
             ]
+
+    def update_db_entry(self, db=None):
+        field_names = self.DB_FIELD_NAMES
+        fields = self.get_db_fields()
+        c = self.db.cursor()
+        insert_stmnt = (
+            f"INSERT OR REPLACE INTO {Tables.EXPERIMENTS.value} "
+            f"({', '.join(field_names)}) VALUES "
+            f"({','.join('?' for _ in field_names)})"
+        )
+        c.execute(insert_stmnt, fields)
+        self.db.commit()
 
     @classmethod
     def init_db_table(cls, db=None, entries: List[Tuple[str, str]] = None):

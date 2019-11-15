@@ -9,8 +9,9 @@ from allennlp.common.params import Params
 import pytest
 
 from mallennlp.domain.config import ProjectConfig, ServerConfig
+from mallennlp.domain.experiment import Meta
 from mallennlp.services.config import Config
-from mallennlp.services.db import Tables
+from mallennlp.services.db import Tables, init_tables
 from mallennlp.services.experiment import ExperimentService
 
 
@@ -51,8 +52,8 @@ def test_experiment_files_present(project):
 
 
 @pytest.fixture(scope="module")
-def experiment_service(project):
-    return ExperimentService(project / "test_experiment")
+def experiment_service(project, db):
+    return ExperimentService(project / "test_experiment", db)
 
 
 def initial_check(file_data):
@@ -78,10 +79,34 @@ def test_get_config(experiment_service):
     touch_and_check_again(experiment_service.e.config)
 
 
-@pytest.mark.skip()
 def test_get_meta(experiment_service):
-    # TODO
-    pass
+    meta = experiment_service.get_meta()
+    assert isinstance(meta, Meta)
+    assert meta.tags == []
+
+
+def test_get_tags(experiment_service):
+    assert experiment_service.get_tags() == []
+
+
+def test_set_tags(experiment_service, db):
+    experiment_service.set_tags(["copynet", "seq2seq"])
+    assert experiment_service.get_tags() == ["copynet", "seq2seq"]
+
+    # Should be written to file now.
+    assert experiment_service.e.meta.path.exists()
+    es2 = ExperimentService(experiment_service.get_path())
+    assert es2.get_tags() == ["copynet", "seq2seq"]
+
+    # Should be updated in database as well.
+    results = list(
+        db.execute(
+            f"SELECT * FROM {Tables.EXPERIMENTS.value} WHERE path = ?",
+            (str(experiment_service.get_path()),),
+        )
+    )
+    assert len(results) == 1
+    assert results[0]["tags"] == "copynet seq2seq"
 
 
 def test_get_metrics(experiment_service):
@@ -128,7 +153,7 @@ def test_get_epochs(experiment_service):
 def test_find_experiments(project):
     exps = list(ExperimentService.find_experiments(project))
     assert len(exps) == 1
-    assert exps[0].e.path == (project / "test_experiment")
+    assert exps[0].e.path == Path("test_experiment")
 
 
 @pytest.fixture(scope="module")
@@ -141,6 +166,7 @@ def entries():
 
 
 def test_add_experiments(db, entries):
+    init_tables(db, (Tables.EXPERIMENTS.value,))
     ExperimentService.init_db_table(db=db, entries=entries)
 
 

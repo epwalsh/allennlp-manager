@@ -21,7 +21,7 @@ The goal of this project is to build a customizable CLI and dashboard for runnin
 
 This was inspired by other open source projects such as the resource manager [**slurm**](https://slurm.schedmd.com/documentation.html) and visualization toolkit [**TensorBoard**](https://www.tensorflow.org/tensorboard), as well as commercial software such as [**Weights & Biases**](https://www.wandb.com/) and [**Foundations Atlas**](https://www.atlas.dessa.com/).
 
-**slurm** and **TensorBoard** are both excellent tools, but they fall short for NLP researchers in a number of ways. For example, **slurm** is difficult to set up and use - especially on your own desktop or server - unless you're an experienced sys admin, and **TensorBoard** has limited functionality for searching, organizing, tagging, and comparing models. And while the commercial options are fairly easy to use and come with a solid set of features, they were built as generic tools and therefore don't "understand" all of AllenNLP's features. They are also not customizable or extendable.
+**slurm** and **TensorBoard** are both excellent tools, but they fall short for NLP researchers in a number of ways. For example, **slurm** is difficult to set up and use - especially on your own desktop or server - unless you're an experienced sys admin, and **TensorBoard** has limited functionality for searching, organizing, tagging, and comparing models. This doesn't scale well when you have hundreds or even thousands of experiments. And while the commercial options are fairly easy to use and come with a solid set of features, they were built as generic tools and therefore don't "understand" all of AllenNLP's features. They are also not customizable or extendable.
 
 **allennlp-manager** aims to leverage all of the convenient pieces of AllenNLP to provide you with a dashboard that let's you
 - quickly search through all of your experiments based on properties like model type, training / validation set, or arbitrary tags,
@@ -198,6 +198,10 @@ The continuous integration for **allennlp-manager** is a lot like that of **Alle
 If this is your first time contributing to a project on GitHub, please see [this Gist](https://gist.github.com/epwalsh/9e1b77d46ec232d55e6e344bb649fb19) for an example workflow.
 
 ## Updates
+
+**11/15**
+
+Big updates. Implemented home page of dashboard with searchable table of all experiments. Uses server-side paging, caching, filtering, sorting, etc, so should scale well.
 
 **11/12**
 

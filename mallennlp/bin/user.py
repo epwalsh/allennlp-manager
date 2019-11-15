@@ -27,6 +27,17 @@ def validate_username(ctx, param, value):
     return value
 
 
+def validate_new_username(ctx, param, value):
+    user_service = ctx.obj
+    if user_service.find(value, check_password=False) is not None:
+        raise click.BadParameter(
+            click.style(
+                f"Username {click.style(value, bold=True)} already exists", fg="red"
+            )
+        )
+    return value
+
+
 @click.command("changepw")
 @click.argument("username", callback=validate_username)
 @click.option(
@@ -47,4 +58,25 @@ def changepw(user_service, username, password):
     click.secho("Password successfully changed", fg="green")
 
 
+@click.command("add")
+@click.argument("username", callback=validate_new_username)
+@click.option(
+    "--password",
+    prompt="Set dashboard password",
+    hide_input=True,
+    confirmation_prompt=True,
+    callback=validate_password,
+)
+@click.pass_obj
+def add(user_service, username, password):
+    """
+    Add a new dashboard user.
+    """
+    user_service.create(username, password)
+    click.secho(
+        f"User {click.style(username, bold=True)} successfully created", fg="green"
+    )
+
+
 user_group.add_command(changepw)
+user_group.add_command(add)

@@ -29,10 +29,11 @@ project :
 
 .PHONY : serve
 serve : project
-	mallennlp --wd $(PROJECT_PATH) serve
+	mallennlp --wd $(PROJECT) serve
 
 .PHONY : flask
 flask :
+	cd $(EXAMPLE_PROJECT) && mallennlp db reset experiments --force
 	cd $(EXAMPLE_PROJECT) && python ../$(MODULE)/app.py
 
 .PHONY : typecheck
