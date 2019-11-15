@@ -67,7 +67,7 @@ p {
     margin-left: 10px;
 }
 
-.dash-element-align-right {
+.dash-element-align-right, .dash-col-align-right {
     text-align: right;
 }
 

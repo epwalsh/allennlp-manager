@@ -12,6 +12,7 @@ from mallennlp.controllers.experiment import (
     render_dash_table,
     get_dash_table_data,
     get_all_tags,
+    PAGE_SIZE,
 )
 from mallennlp.dashboard.page import Page
 from mallennlp.dashboard.components import element
@@ -32,39 +33,93 @@ class IndexPage(Page):
     def get_elements(self):
         return [
             html.H3("Home"),
+            ####################################################################
+            # < Main content >
+            ####################################################################
             element(
                 [
-                    dbc.InputGroup(
+                    ############################################################
+                    # < Actions and settings row >
+                    ############################################################
+                    dbc.Row(
                         [
-                            dbc.InputGroupAddon(
-                                dbc.Checkbox(id="experiments-table-select-all"),
-                                addon_type="prepend",
+                            ####################################################
+                            # < Actions >
+                            ####################################################
+                            dbc.Col(
+                                dbc.InputGroup(
+                                    [
+                                        dbc.InputGroupAddon(
+                                            dbc.Checkbox(
+                                                id="experiments-table-select-all"
+                                            ),
+                                            addon_type="prepend",
+                                        ),
+                                        dbc.DropdownMenu(
+                                            [
+                                                dbc.DropdownMenuItem(
+                                                    "Open",
+                                                    id="experiments-table-open",
+                                                    disabled=True,
+                                                ),
+                                                dbc.DropdownMenuItem(
+                                                    "Edit tags",
+                                                    id="index-edit-tags-modal-open",
+                                                    disabled=True,
+                                                ),
+                                                html.Hr(),
+                                                dbc.DropdownMenuItem(
+                                                    "Compare",
+                                                    id="experiments-table-compare",
+                                                    disabled=True,
+                                                ),
+                                            ],
+                                            label="Actions",
+                                            id="experiments-table-actions",
+                                        ),
+                                    ],
+                                    className="mb-3",
+                                )
                             ),
-                            dbc.DropdownMenu(
-                                [
-                                    dbc.DropdownMenuItem(
-                                        "Open",
-                                        id="experiments-table-open",
-                                        disabled=True,
-                                    ),
-                                    dbc.DropdownMenuItem(
-                                        "Edit tags",
-                                        id="index-edit-tags-modal-open",
-                                        disabled=True,
-                                    ),
-                                    html.Hr(),
-                                    dbc.DropdownMenuItem(
-                                        "Compare",
-                                        id="experiments-table-compare",
-                                        disabled=True,
-                                    ),
-                                ],
-                                label="Actions",
-                                id="experiments-table-actions",
+                            ####################################################
+                            # </ Actions >
+                            ####################################################
+                            ####################################################
+                            # < Settings >
+                            ####################################################
+                            dbc.Col(
+                                dbc.InputGroup(
+                                    [
+                                        dbc.InputGroupAddon(
+                                            "Page size", addon_type="prepend"
+                                        ),
+                                        dbc.Input(
+                                            id="index-set-page-size",
+                                            type="number",
+                                            min=1,
+                                            step=1,
+                                            value=PAGE_SIZE,
+                                        ),
+                                    ],
+                                    #  className="mb-3",
+                                ),
+                                className="dash-col-align-right",
+                                lg=3,
+                                md=4,
+                                width=6,
                             ),
+                            ####################################################
+                            # </ Settings >
+                            ####################################################
                         ],
-                        className="mb-3",
+                        justify="between",
                     ),
+                    ############################################################
+                    # </ Actions and settings row >
+                    ############################################################
+                    ############################################################
+                    # < Edit tags modal pop out >
+                    ############################################################
                     dbc.Modal(
                         [
                             dbc.ModalHeader("Edit tags"),
@@ -95,12 +150,39 @@ class IndexPage(Page):
                         ],
                         id="index-edit-tags-modal",
                     ),
+                    ############################################################
+                    # </ Edit tags modal pop out >
+                    ############################################################
+                    ############################################################
+                    # < Main table >
+                    ############################################################
                     render_dash_table(),
+                    ############################################################
+                    # </ Main table >
+                    ############################################################
+                    ############################################################
+                    # < Notifications >
+                    ############################################################
                     html.Div(id="index-edit-tags-status"),
+                    ############################################################
+                    # </ Notifications >
+                    ############################################################
                 ],
                 width=True,
             ),
+            ####################################################################
+            # </ Main content >
+            ####################################################################
         ]
+
+    @Page.callback(
+        [Output("experiments-table", "page_size")],
+        [Input("index-set-page-size", "value")],
+    )
+    def update_page_size(self, value):
+        if not value:
+            raise PreventUpdate
+        return value
 
     @Page.callback(
         [Output("experiments-table", "data")],

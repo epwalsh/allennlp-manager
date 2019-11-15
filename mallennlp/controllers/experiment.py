@@ -52,7 +52,7 @@ def get_dash_table_data(
             f"FROM {Tables.EXPERIMENTS.value} "
             f"WHERE {where_clause} "
             f"ORDER BY {sort_field} {sort_direction} "
-            f"LIMIT {offset}, {PAGE_SIZE}",
+            f"LIMIT {offset}, {page_size}",
             args,
         )
     else:
@@ -60,7 +60,7 @@ def get_dash_table_data(
             f"SELECT * "
             f"FROM {Tables.EXPERIMENTS.value} "
             f"ORDER BY {sort_field} {sort_direction} "
-            f"LIMIT {offset}, {PAGE_SIZE}"
+            f"LIMIT {offset}, {page_size}"
         )
     return [{"path": row["path"], "tags": row["tags"]} for row in cursor]
 
