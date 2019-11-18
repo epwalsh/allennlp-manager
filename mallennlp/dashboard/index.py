@@ -30,6 +30,11 @@ class IndexPage(Page):
         Keep track of selected row(s).
         """
 
+        re_building: bool = False
+        """
+        True when the database is being re-built.
+        """
+
     def get_elements(self):
         return [
             html.H3("Home"),
@@ -67,11 +72,20 @@ class IndexPage(Page):
                                                     id="index-edit-tags-modal-open",
                                                     disabled=True,
                                                 ),
-                                                html.Hr(),
                                                 dbc.DropdownMenuItem(
                                                     "Compare",
                                                     id="experiments-table-compare",
                                                     disabled=True,
+                                                ),
+                                                html.Hr(),
+                                                dbc.DropdownMenuItem(
+                                                    [
+                                                        html.I(
+                                                            className="fas fa-tools"
+                                                        ),
+                                                        " Re-build database",
+                                                    ],
+                                                    id="re-build-database",
                                                 ),
                                             ],
                                             label="Actions",
@@ -163,7 +177,36 @@ class IndexPage(Page):
                     ############################################################
                     # < Notifications >
                     ############################################################
-                    html.Div(id="index-edit-tags-status"),
+                    dbc.Container(
+                        [
+                            dbc.Toast(
+                                "Tags successfully updated",
+                                id="index-edit-tags-noti",
+                                header="Success",
+                                dismissable=True,
+                                duration=4000,
+                                is_open=False,
+                                icon="success",
+                            ),
+                            html.Div(id="database-build-noti-container"),
+                            dbc.Toast(
+                                "Database successfully re-built",
+                                id="database-build-finish-noti",
+                                header="Success",
+                                dismissable=True,
+                                duration=4000,
+                                is_open=False,
+                                icon="success",
+                            ),
+                        ],
+                        id="index-notifications",
+                        style={
+                            "position": "fixed",
+                            "top": 66,
+                            "right": 10,
+                            "width": 350,
+                        },
+                    ),
                     ############################################################
                     # </ Notifications >
                     ############################################################
@@ -175,15 +218,17 @@ class IndexPage(Page):
             ####################################################################
         ]
 
+    @staticmethod
     @Page.callback(
         [Output("experiments-table", "page_size")],
         [Input("index-set-page-size", "value")],
     )
-    def update_page_size(self, value):
+    def update_page_size(value):
         if not value:
             raise PreventUpdate
         return value
 
+    @staticmethod
     @Page.callback(
         [Output("experiments-table", "data")],
         [
@@ -191,20 +236,21 @@ class IndexPage(Page):
             Input("experiments-table", "page_size"),
             Input("experiments-table", "sort_by"),
             Input("experiments-table", "filter_query"),
-            Input("index-edit-tags-status", "children"),
+            Input("index-edit-tags-noti", "is_open"),
         ],
     )
-    def render_table_data(self, page, page_size, sort_by, filter_expression, status):
+    def render_table_data(page, page_size, sort_by, filter_expression, tags_updated):
         if page is None or page_size is None:
             raise PreventUpdate
         return get_dash_table_data(page, page_size, sort_by, filter_expression)
 
+    @staticmethod
     @Page.callback(
         [Output("experiments-table", "selected_rows")],
         [Input("experiments-table-select-all", "checked")],
         [State("experiments-table", "page_size")],
     )
-    def select_all(self, checked, page_size):
+    def select_all(checked, page_size):
         if not page_size:
             raise PreventUpdate
         if not checked:
@@ -273,12 +319,13 @@ class IndexPage(Page):
             return will_open, tags
         return is_open, tags
 
+    @staticmethod
     @Page.callback(
         [Output("index-edit-tags-dropdown", "options")],
         [Input("index-edit-tags-dropdown", "search_value")],
         [State("index-edit-tags-dropdown", "value")],
     )
-    def update_tag_options(self, search, value):
+    def update_tag_options(search, value):
         if not search:
             raise PreventUpdate
         options = {t for t in get_all_tags() if t.startswith(search)}
@@ -288,7 +335,7 @@ class IndexPage(Page):
         return [{"label": t, "value": t} for t in options]
 
     @Page.callback(
-        [Output("index-edit-tags-status", "children")],
+        [Output("index-edit-tags-noti", "is_open")],
         [Input("index-edit-tags-save", "n_clicks")],
         [State("index-edit-tags-dropdown", "value")],
     )
@@ -302,12 +349,39 @@ class IndexPage(Page):
         if any(tag not in all_tags for tag in tags):
             # Need to clear the memoized cache for `get_all_tags` now.
             cache.delete_memoized(get_all_tags)
+        return True
+
+    @staticmethod
+    @Page.callback(
+        [Output("database-build-noti-container", "children")],
+        [Input("re-build-database", "n_clicks")],
+    )
+    def notify_re_build_database(n_clicks):
+        if not n_clicks:
+            raise PreventUpdate
         return dbc.Toast(
-            "Tags successfully updated",
-            id="index-edit-tags-status-toast",
-            header="Success",
-            dismissable=True,
-            duration=4000,
-            icon="success",
-            style={"position": "fixed", "top": 66, "right": 10, "width": 350},
+            [
+                dbc.Spinner(color="info", size="sm", style={"margin-right": "5px"}),
+                "Re-building database",
+            ],
+            id="database-build-noti",
+            header="In progress",
+            is_open=True,
+            icon="info",
         )
+
+    @staticmethod
+    @Page.callback(
+        [
+            Output("database-build-noti", "is_open"),
+            Output("database-build-finish-noti", "is_open"),
+        ],
+        [Input("re-build-database", "n_clicks")],
+    )
+    def re_build_database(n_clicks):
+        if not n_clicks:
+            raise PreventUpdate
+        import time
+
+        time.sleep(2)
+        return False, True

@@ -142,6 +142,34 @@ def init_dash(flask_app: Flask, config: Config):
             params = PageClass.Params(e=str(e))
             return PageClass.from_params(params).render()
 
+    def make_static_callback(PageClass, page_name, method_name, method):
+        outputs, inputs, states = method.callback_parameters
+        logger.debug(
+            "Page '%s' registered static callback '%s' (%s, %s) -> %s",
+            page_name,
+            method_name,
+            inputs,
+            states,
+            outputs,
+        )
+
+        def callback(*args):
+            result = getattr(PageClass, method_name)(*args)
+            logger.debug(
+                "Page '%s' received callback '%s': %s -> %s",
+                page_name,
+                method_name,
+                args,
+                result,
+            )
+            return result
+
+        if len(outputs) == 1:
+            outputs = outputs[0]
+        dash.callback(outputs, inputs, states)(callback)
+
+    make_class_callback = make_static_callback
+
     def make_callback(PageClass, page_name, method_name, method, callback_store_names):
         """
         Create a Dash callback from a Page callback.
@@ -204,13 +232,23 @@ def init_dash(flask_app: Flask, config: Config):
         ):
             if not getattr(method, "is_callback", False):
                 continue
-            # We need to do this by calling the function we made `make_callback` instead
-            # of doing all the work here in the loop so we don't run into a "late binding"
+            # We need to do this by calling the function we made `make_callback` / `make_static_callback`
+            # instead of doing all the work here in the loop so we don't run into a "late binding"
             # issue. See https://stackoverflow.com/questions/3431676/creating-functions-in-a-loop
             # for example.
-            make_callback(
-                PageClass, page_name, method_name, method, callback_store_names
-            )
+            if isinstance(inspect.getattr_static(PageClass, method_name), staticmethod):
+                # Callback is staticmethod.
+                make_static_callback(PageClass, page_name, method_name, method)
+            elif isinstance(
+                inspect.getattr_static(PageClass, method_name), classmethod
+            ):
+                # Callback is classmethod.
+                make_class_callback(PageClass, page_name, method_name, method)
+            else:
+                # Callback is instance method.
+                make_callback(
+                    PageClass, page_name, method_name, method, callback_store_names
+                )
         PageClass._callback_stores = callback_store_names
         if callback_store_names:
             dash.callback(

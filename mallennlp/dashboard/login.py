@@ -82,6 +82,7 @@ class LoginPage(Page):
             html.Div(id="login-state"),
         ]
 
+    @staticmethod
     @Page.callback(
         Output("login-button", "disabled"),
         [
@@ -89,11 +90,12 @@ class LoginPage(Page):
             Input("login-password-input", "value"),
         ],
     )
-    def update_login_button(self, username, password):
+    def update_login_button(username, password):
         if current_user.is_authenticated:
             return True
         return not all([username, password])
 
+    @staticmethod
     @Page.callback(
         [Output("login-state", "children")],
         [Input("login-button", "n_clicks")],
@@ -102,7 +104,7 @@ class LoginPage(Page):
             State("login-password-input", "value"),
         ],
     )
-    def try_log_in(self, n_clicks, username, password):
+    def try_log_in(n_clicks, username, password):
         if current_user.is_authenticated:
             return dbc.Toast(
                 "You are already logged in",
