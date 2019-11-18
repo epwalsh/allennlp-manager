@@ -388,5 +388,9 @@ class IndexPage(Page):
         import time
 
         time.sleep(2)
+
+        # Remove any deleted experiments, track new experiments added.
         ExperimentService.init_db_table()
+        # Clear the memoized cache for `get_all_tags` now.
+        cache.delete_memoized(get_all_tags)
         return False, True
