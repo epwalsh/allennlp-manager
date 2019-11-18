@@ -166,6 +166,7 @@ class ExperimentService:
             experiment.get_db_fields() for experiment in cls.find_experiments()
         ]
         c = db.cursor()
+        c.execute(f"DELETE FROM {Tables.EXPERIMENTS.value}")
         field_names = cls.DB_FIELD_NAMES
         insert_stmnt = (
             f"INSERT OR REPLACE INTO {Tables.EXPERIMENTS.value} "

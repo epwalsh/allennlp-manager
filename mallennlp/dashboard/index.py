@@ -237,9 +237,12 @@ class IndexPage(Page):
             Input("experiments-table", "sort_by"),
             Input("experiments-table", "filter_query"),
             Input("index-edit-tags-noti", "is_open"),
+            Input("database-build-finish-noti", "is_open"),
         ],
     )
-    def render_table_data(page, page_size, sort_by, filter_expression, tags_updated):
+    def render_table_data(
+        page, page_size, sort_by, filter_expression, tags_updated, db_updated
+    ):
         if page is None or page_size is None:
             raise PreventUpdate
         return get_dash_table_data(page, page_size, sort_by, filter_expression)
@@ -381,7 +384,9 @@ class IndexPage(Page):
     def re_build_database(n_clicks):
         if not n_clicks:
             raise PreventUpdate
+        # TODO: remove the sleep.
         import time
 
         time.sleep(2)
+        ExperimentService.init_db_table()
         return False, True
