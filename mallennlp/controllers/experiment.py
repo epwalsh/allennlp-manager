@@ -1,12 +1,20 @@
+from collections import OrderedDict
+import urllib.parse
 from typing import Any, List, Dict, Tuple, Set
 
+import dash_bootstrap_components as dbc
+import dash_core_components as dcc
+import dash_html_components as html
 import dash_table
 
+from mallennlp.domain.experiment import Status
 from mallennlp.services.cache import cache
 from mallennlp.services.db import Tables, get_db_from_app
+from mallennlp.services.experiment import ExperimentService
 
 
-PAGE_SIZE = 2
+PAGE_SIZE = 10
+MAX_TAG_BADGES = 10
 
 
 def parse_filters(filter_expression) -> Tuple[str, List[str]]:
@@ -28,6 +36,11 @@ def parse_filters(filter_expression) -> Tuple[str, List[str]]:
             tags = [t for t in value.split(" ") if t]
             filters.append(f"HasAllTags(tags, {', '.join('?' for _ in tags)})")
             filter_args.extend(tags)
+        elif col_name == "finished":
+            if value.lower() in ("yes", "finished", "done", "success"):
+                filters.append("finished = 1")
+            elif value.lower() == "no":
+                filters.append("finished = 0")
     return " AND ".join(filters), filter_args
 
 
@@ -62,14 +75,25 @@ def get_dash_table_data(
             f"ORDER BY {sort_field} {sort_direction} "
             f"LIMIT {offset}, {page_size}"
         )
-    return [{"path": row["path"], "tags": row["tags"]} for row in cursor]
+    return [
+        {
+            "path": row["path"],
+            "tags": row["tags"],
+            "finished": "Yes" if row["finished"] else "No",
+        }
+        for row in cursor
+    ]
 
 
-def render_dash_table():
+def render_dash_table(filter_query: str = ""):
     return dash_table.DataTable(
         id="experiments-table",
         data=get_dash_table_data(),
-        columns=[{"id": "path", "name": "Path"}, {"id": "tags", "name": "Tags"}],
+        columns=[
+            {"id": "path", "name": "Path"},
+            {"id": "tags", "name": "Tags"},
+            {"id": "finished", "name": "Finished"},
+        ],
         #  style_as_list_view=True,
         style_data={"textAlign": "left"},
         style_header={"textAlign": "left", "fontWeight": "bold"},
@@ -86,6 +110,12 @@ def render_dash_table():
                 "maxWidth": "200px",
             }
         ],
+        style_data_conditional=[
+            {
+                "if": {"filter_query": "{finished} eq 'Yes'", "column_id": "finished"},
+                "backgroundColor": "#a2ed95",
+            }
+        ],
         style_table={"overflowX": "scroll"},
         page_current=0,
         page_size=PAGE_SIZE,
@@ -94,7 +124,7 @@ def render_dash_table():
         sort_mode="single",
         sort_by=[],
         filter_action="custom",
-        filter_query="",
+        filter_query=filter_query,
         row_selectable="multi",
     )
 
@@ -104,3 +134,138 @@ def get_all_tags() -> Set[str]:
     db = get_db_from_app()
     cursor = db.execute(f"SELECT tags FROM {Tables.EXPERIMENTS.value}")
     return set(t for r in cursor for t in r["tags"].split(" ") if t)
+
+
+@cache.memoize(timeout=30)
+def get_status(es: ExperimentService) -> Status:
+    return es.get_status()
+
+
+def get_status_badge(status: Status):
+    if status == Status.FINISHED:
+        status_badge_color = "success"
+    elif status == Status.FAILED:
+        status_badge_color = "danger"
+    elif status == Status.IN_PROGRESS:
+        status_badge_color = "primary"
+    else:
+        status_badge_color = "secondary"
+    return dbc.Badge(
+        f"STATUS: {status.value}", className="ml-1", color=status_badge_color
+    )
+
+
+def get_tag_filter_query(t: str):
+    return urllib.parse.urlencode({"filter_query": "{tags} contains %s" % t})
+
+
+def edit_tags_modal(id_prefix: str):
+    return dbc.Modal(
+        [
+            dbc.ModalHeader("Edit tags"),
+            dbc.ModalBody(
+                [
+                    dcc.Dropdown(
+                        id=f"{id_prefix}-edit-tags-dropdown",
+                        multi=True,
+                        options=[{"label": t, "value": t} for t in get_all_tags()],
+                    )
+                ]
+            ),
+            dbc.ModalFooter(
+                [
+                    dbc.Button("Save", id=f"{id_prefix}-edit-tags-save", color="info"),
+                    dbc.Button(
+                        "Close",
+                        id=f"{id_prefix}-edit-tags-modal-close",
+                        className="ml-auto",
+                    ),
+                ]
+            ),
+        ],
+        id=f"{id_prefix}-edit-tags-modal",
+    )
+
+
+def display_tags(es: ExperimentService):
+    tags = es.get_tags()
+    tag_badges = [
+        dbc.Badge(
+            [t, html.I(className="fas fa-times-circle", style={"margin-left": "5px"})],
+            id=f"experiment-tag-{i}",
+            key=t,
+            color="info",
+            className="mr-1",
+            pill=True,
+            href="#",
+        )
+        for i, t in enumerate(tags[:MAX_TAG_BADGES])
+    ]
+    for i in range(len(tags), MAX_TAG_BADGES):
+        tag_badges.append(
+            dbc.Badge("", id=f"experiment-tag-{i}", href="#", style={"display": "none"})
+        )
+    if len(tags) > MAX_TAG_BADGES:
+        tag_badges.append(
+            dbc.Badge(
+                html.I(className="fas fa-ellipsis-h"),
+                id="experiment-edit-tags-modal-open",
+                color="info",
+                className="mr-1",
+                pill=True,
+                href="#",
+            )
+        )
+    else:
+        tag_badges.append(
+            dbc.Badge(
+                html.I(className="fas fa-edit", style={"margin-left": "3px"}),
+                id="experiment-edit-tags-modal-open",
+                color="info",
+                className="mr-1",
+                pill=True,
+                href="#",
+            )
+        )
+    return [
+        html.Span([html.Strong("Tags:", style={"margin-right": "5px"})] + tag_badges)
+    ]
+
+
+METRIC_GENERAL_DISPLAY_FIELDS = OrderedDict(
+    training_epochs="**Epochs:** `%d`", training_duration="**Training duration:** `%s`"
+)
+
+METRIC_EPOCH_DISPLAY_FIELDS = OrderedDict(
+    best_epoch="**Best epoch:** `%d`",
+    training_loss="**Training loss:** `%f`",
+    best_validation_loss="**Validation loss:** `%f`",
+)
+
+
+def display_metrics(es: ExperimentService):
+    metrics = es.get_metrics()
+    if metrics is None:
+        return dcc.Markdown("**No metrics to display**")
+    fields: List[str] = []
+    for field_name, formatter in METRIC_GENERAL_DISPLAY_FIELDS.items():
+        field_value = metrics.get(field_name)
+        if field_value is not None:
+            fields.append(formatter % field_value)
+    fields.append("---")
+    for field_name, formatter in METRIC_EPOCH_DISPLAY_FIELDS.items():
+        field_value = metrics.get(field_name)
+        if field_value is not None:
+            fields.append(formatter % field_value)
+    for other_field_name in metrics:
+        if (
+            other_field_name in METRIC_GENERAL_DISPLAY_FIELDS
+            or other_field_name in METRIC_EPOCH_DISPLAY_FIELDS
+        ):
+            continue
+        if other_field_name.startswith("best_validation_"):
+            field_value = metrics[other_field_name]
+            fields.append(
+                f"**Validation {other_field_name[16:].replace('_', ' ')}:** `{field_value}`"
+            )
+    return dcc.Markdown("\n\n".join(fields))

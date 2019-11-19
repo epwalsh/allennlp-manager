@@ -1,6 +1,5 @@
 import inspect
 import logging
-from typing import List
 
 from allennlp.common.util import import_submodules
 from allennlp.common.checks import ConfigurationError
@@ -19,6 +18,206 @@ from mallennlp.exceptions import InvalidPageParametersError
 from mallennlp.services import db, cache
 from mallennlp.services.config import Config
 from mallennlp.services.user import UserService
+
+
+def handle_callback_error(
+    PageClass, page_name, method, method_name, n_outputs: int, e: Exception
+):
+    """
+    Handle errors that occur during a callback.
+    """
+    noti = dbc.Toast(
+        str(e),
+        header=e.__class__.__name__,
+        icon="danger",
+        id=f"page-{page_name}-{method_name}-callback-error-noti",
+        dismissable=True,
+        duration=4000,
+    )
+    return tuple(None for _ in range(n_outputs)) + (noti,)
+
+
+def make_static_callback(PageClass, page_name, method, method_name, n_outputs):
+    """
+    Create a Dash callback from a staticmethod Page callback.
+    """
+
+    def callback(*args):
+        for hook in method.pre_hooks:
+            hook(page_name, method_name, args)
+        try:
+            result = getattr(PageClass, method_name)(*args)
+            for hook in method.post_hooks:
+                hook(page_name, method_name, args, result)
+        except PreventUpdate:
+            raise
+        except Exception as e:
+            for hook in method.err_hooks:
+                hook(page_name, method_name, args, e)
+            return handle_callback_error(
+                PageClass, page_name, method, method_name, n_outputs, e
+            )
+        if n_outputs == 0:
+            return (None,)
+        if not isinstance(result, tuple):
+            return (result, None)
+        return result + (None,)
+
+    return callback
+
+
+def make_class_callback(PageClass, page_name, method, method_name, n_outputs):
+    """
+    Create a Dash callback from a classmethod Page callback.
+    """
+
+    def callback(*args):
+        for hook in method.pre_hooks:
+            hook(page_name, method_name, args)
+        try:
+            result = getattr(PageClass, method_name)(*args)
+            for hook in method.post_hooks:
+                hook(page_name, method_name, args, result)
+        except PreventUpdate:
+            raise
+        except Exception as e:
+            for hook in method.err_hooks:
+                hook(page_name, method_name, args, e)
+            return handle_callback_error(
+                PageClass, page_name, method, method_name, n_outputs, e
+            )
+        if n_outputs == 0:
+            return (None,)
+        if not isinstance(result, tuple):
+            return (result, None)
+        return result + (None,)
+
+    return callback
+
+
+def make_non_mutating_callback(PageClass, page_name, method, method_name, n_outputs):
+    """
+    Create a Dash callback from a non-mutating Page callback.
+    """
+
+    def callback(*args):
+        args, store = args[:-1], args[-1]
+        for hook in method.pre_hooks:
+            hook(page_name, method_name, args)
+        try:
+            page = PageClass.from_store(store)
+            result = getattr(page, method_name)(*args)
+            for hook in method.post_hooks:
+                hook(page_name, method_name, args, result)
+        except PreventUpdate:
+            raise
+        except Exception as e:
+            for hook in method.err_hooks:
+                hook(page_name, method_name, args, e)
+            return handle_callback_error(
+                PageClass, page_name, method, method_name, n_outputs, e
+            )
+        if n_outputs == 0:
+            return (None,)
+        if not isinstance(result, tuple):
+            return (result, None)
+        return result + (None,)
+
+    return callback
+
+
+def make_mutating_callback(PageClass, page_name, method, method_name, n_outputs):
+    """
+    Create a Dash callback from a mutating Page callback.
+    """
+
+    def callback(*args):
+        args, store = args[:-1], args[-1]
+        for hook in method.pre_hooks:
+            hook(page_name, method_name, args)
+        try:
+            page = PageClass.from_store(store)
+            result = getattr(page, method_name)(*args)
+            new_store = page.to_store()
+            for hook in method.post_hooks:
+                hook(page_name, method_name, args, result)
+        except PreventUpdate:
+            raise
+        except Exception as e:
+            for hook in method.err_hooks:
+                hook(page_name, method_name, args, e)
+            return handle_callback_error(
+                PageClass, page_name, method, method_name, n_outputs, e
+            )
+        if n_outputs == 0:
+            return (new_store, None)
+        if not isinstance(result, tuple):
+            return (result, new_store, None)
+        return result + (new_store, None)
+
+    return callback
+
+
+def store_callback(*args):
+    """
+    Update the Page store from the latest Page callback store.
+    """
+    half = len(args) // 2
+    timestamps, datas = args[:half], args[half:]
+    latest_index = max(range(len(datas)), key=lambda i: timestamps[i] or -1)
+    latest = datas[latest_index]
+    if latest is None:
+        raise PreventUpdate
+    return latest
+
+
+def register_callbacks(dash, PageClass, page_name, method, method_name):
+    outputs, inputs, states = method.callback_parameters
+    n_outputs = len(outputs)
+    Page.logger.debug(
+        "Page '%s' registered callback '%s' (%s, %s) -> %s",
+        page_name,
+        method_name,
+        inputs,
+        states,
+        outputs,
+    )
+    if isinstance(inspect.getattr_static(PageClass, method_name), staticmethod):
+        # Callback is staticmethod.
+        callback = make_static_callback(
+            PageClass, page_name, method, method_name, n_outputs
+        )
+    elif isinstance(inspect.getattr_static(PageClass, method_name), classmethod):
+        # Callback is classmethod.
+        callback = make_class_callback(
+            PageClass, page_name, method, method_name, n_outputs
+        )
+    elif not method.is_mutating:
+        # Callback is non-mutating instance method.
+        callback = make_non_mutating_callback(
+            PageClass, page_name, method, method_name, n_outputs
+        )
+        # Add session store to states.
+        states.append(State(PageClass._store_name, "data"))
+    else:
+        # Callback is mutating instance method.
+        callback = make_mutating_callback(
+            PageClass, page_name, method, method_name, n_outputs
+        )
+        # Collect callback store and add to outputs.
+        callback_store_name = PageClass._store_name + f"-callback-{method_name}"
+        PageClass._callback_stores.append(callback_store_name)
+        outputs.append(Output(callback_store_name, "data"))
+        # Add session store to states.
+        states.append(State(PageClass._store_name, "data"))
+
+    # Collect callback's error div and add to the output.
+    error_div_name = f"page-{page_name}-error-div-{method_name}"
+    PageClass._callback_error_divs.append(error_div_name)
+    outputs.append(Output(error_div_name, "children"))
+
+    # Register callback.
+    dash.callback(outputs, inputs, states)(callback)
 
 
 def init_dash(flask_app: Flask, config: Config):
@@ -53,6 +252,16 @@ def init_dash(flask_app: Flask, config: Config):
                 color="#162328",
                 dark=True,
             ),
+            dcc.Store(id="current-path"),
+            dbc.Container(
+                id="notifications",
+                style={"position": "fixed", "top": 66, "right": 10, "width": 350},
+                children=[
+                    html.Div(id="page-loading-error"),
+                    html.Div(id="page-notifications"),
+                    html.Div(id="page-callback-errors"),
+                ],
+            ),
             dbc.Container(id="page-content"),
         ]
     )
@@ -70,6 +279,8 @@ def init_dash(flask_app: Flask, config: Config):
             additional_navlinks.append(
                 dbc.DropdownMenuItem(dcc.Link(PageClass.navlink_name, href=page_name))
             )
+
+    Page.logger = logger
 
     # Define callback to render navbar.
     @dash.callback(Output("navbar-content", "children"), [Input("url", "pathname")])
@@ -114,14 +325,32 @@ def init_dash(flask_app: Flask, config: Config):
     # Define callback to render pages. Takes the URL path and get the corresponding
     # page.
     @dash.callback(
-        Output("page-content", "children"),
+        [
+            Output("page-content", "children"),
+            Output("page-callback-errors", "children"),
+            Output("page-notifications", "children"),
+            Output("page-loading-error", "children"),
+            Output("current-path", "data"),
+        ],
         [Input("url", "pathname"), Input("url", "search")],
+        [State("current-path", "data")],
     )
-    def render_page(pathname: str, param_string: str) -> html.Div:
+    def render_page(pathname: str, param_string: str, current_path_data):
+        logger.debug("Attempting to render page %s", pathname)
         if pathname is None:
             raise PreventUpdate
-        if pathname != "/" and pathname.endswith("/"):
+        if pathname != "/" and pathname.endswith("/") or pathname.endswith("#"):
             pathname = pathname[:-1]
+        if current_path_data:
+            # If nothing in the path / param_string has changed, don't actually do anything.
+            # NOTE: this is kind of a hack, since sometimes we have buttons w/ href='#',
+            # and we don't want to actually re-render the pages content when clicked.
+            if (
+                current_path_data["pathname"] == pathname
+                and current_path_data["param_string"] == param_string
+            ):
+                raise PreventUpdate
+        updated_data = {"pathname": pathname, "param_string": param_string}
         try:
             PageClass = Page.by_name(pathname)
             if PageClass.requires_login and not current_user.is_authenticated:
@@ -129,132 +358,53 @@ def init_dash(flask_app: Flask, config: Config):
                 params = PageClass.Params(
                     next_pathname=pathname, next_params=param_string
                 )
-                return PageClass.from_params(params).render()
+                return PageClass.from_params(params).render() + (None, updated_data)
 
             params = PageClass.Params.from_url(param_string)
-            return PageClass.from_params(params).render()
+            return PageClass.from_params(params).render() + (None, updated_data)
         except ConfigurationError:
-            PageClass = Page.by_name("/404-not-found")
-            params = PageClass.Params()
-            return PageClass.from_params(params).render()
+            return (
+                [],
+                [],
+                dbc.Toast(f"Page {pathname} not found", header="404", icon="danger"),
+                updated_data,
+            )
         except InvalidPageParametersError as e:
-            PageClass = Page.by_name("/400-bad-request")
-            params = PageClass.Params(e=str(e))
-            return PageClass.from_params(params).render()
-
-    def make_static_callback(PageClass, page_name, method_name, method):
-        outputs, inputs, states = method.callback_parameters
-        logger.debug(
-            "Page '%s' registered static callback '%s' (%s, %s) -> %s",
-            page_name,
-            method_name,
-            inputs,
-            states,
-            outputs,
-        )
-
-        def callback(*args):
-            result = getattr(PageClass, method_name)(*args)
-            logger.debug(
-                "Page '%s' received callback '%s': %s -> %s",
-                page_name,
-                method_name,
-                args,
-                result,
+            return (
+                [],
+                [],
+                dbc.Toast(str(e), header="Bad page parameters", icon="danger"),
+                updated_data,
             )
-            return result
-
-        if len(outputs) == 1:
-            outputs = outputs[0]
-        dash.callback(outputs, inputs, states)(callback)
-
-    make_class_callback = make_static_callback
-
-    def make_callback(PageClass, page_name, method_name, method, callback_store_names):
-        """
-        Create a Dash callback from a Page callback.
-        """
-        outputs, inputs, states = method.callback_parameters
-        no_output = len(outputs) == 0
-        logger.debug(
-            "Page '%s' registered callback '%s' (%s, %s) -> %s",
-            page_name,
-            method_name,
-            inputs,
-            states,
-            outputs,
-        )
-
-        def callback(*args):
-            args, store = args[:-1], args[-1]
-            page = PageClass.from_store(store)
-            result = getattr(page, method_name)(*args)
-            new_store = page.to_store()
-            logger.debug(
-                "Page '%s' received callback '%s': %s, %s -> %s, %s",
-                page_name,
-                method_name,
-                args,
-                store,
-                result,
-                new_store,
+        except Exception as e:
+            logger.exception(e)
+            return (
+                [],
+                [],
+                dbc.Toast(str(e), header=e.__class__.__name__, icon="danger"),
+                updated_data,
             )
-            if no_output:
-                return (new_store,)
-            if not isinstance(result, tuple):
-                return (result, new_store)
-            return result + (new_store,)
-
-        callback_store_name = PageClass._store_name + f"-callback-{method_name}"
-        callback_store_names.append(callback_store_name)
-        outputs.append(Output(callback_store_name, "data"))
-        states.append(State(PageClass._store_name, "data"))
-        dash.callback(outputs, inputs, states)(callback)
-
-    def store_callback(*args):
-        """
-        Update the Page store from the latest Page callback store.
-        """
-        half = len(args) // 2
-        timestamps, datas = args[:half], args[half:]
-        latest_index = max(range(len(datas)), key=lambda i: timestamps[i] or -1)
-        latest = datas[latest_index]
-        return latest
 
     # Now we loop through all registered pages and register their callbacks
     # with the dashboard application.
     for page_name in Page.list_available():
         PageClass = Page.by_name(page_name)
+        PageClass.logger = logger
         PageClass._store_name = f"page-{page_name}-store"
-        callback_store_names: List[str] = []
+        PageClass._callback_stores = []
+        PageClass._callback_error_divs = []
         for method_name, method in filter(
             lambda x: callable(x[1]), inspect.getmembers(PageClass)
         ):
             if not getattr(method, "is_callback", False):
                 continue
-            # We need to do this by calling the function we made `make_callback` / `make_static_callback`
-            # instead of doing all the work here in the loop so we don't run into a "late binding"
-            # issue. See https://stackoverflow.com/questions/3431676/creating-functions-in-a-loop
-            # for example.
-            if isinstance(inspect.getattr_static(PageClass, method_name), staticmethod):
-                # Callback is staticmethod.
-                make_static_callback(PageClass, page_name, method_name, method)
-            elif isinstance(
-                inspect.getattr_static(PageClass, method_name), classmethod
-            ):
-                # Callback is classmethod.
-                make_class_callback(PageClass, page_name, method_name, method)
-            else:
-                # Callback is instance method.
-                make_callback(
-                    PageClass, page_name, method_name, method, callback_store_names
-                )
-        PageClass._callback_stores = callback_store_names
-        if callback_store_names:
+            register_callbacks(dash, PageClass, page_name, method, method_name)
+
+        if PageClass._callback_stores:
             dash.callback(
                 Output(PageClass._store_name, "data"),
-                [Input(s, "modified_timestamp") for s in callback_store_names],
-                [State(s, "data") for s in callback_store_names],
+                [Input(s, "modified_timestamp") for s in PageClass._callback_stores],
+                [State(s, "data") for s in PageClass._callback_stores],
             )(store_callback)
 
     return dash

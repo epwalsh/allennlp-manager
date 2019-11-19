@@ -156,12 +156,25 @@ def test_find_experiments(project):
     assert exps[0].e.path == Path("test_experiment")
 
 
+def test_remove_db_entry(experiment_service, db):
+    ExperimentService.remove_db_entry(experiment_service.get_path(), db=db)
+    assert len(list(db.execute(f"SELECT * FROM {Tables.EXPERIMENTS.value}"))) == 0
+
+
+@pytest.mark.parametrize(
+    "path, root, result",
+    [("./my-project/exp-1", "./my-project", "exp-1"), ("./exp-1", "./", "exp-1")],
+)
+def test_get_canonical_path(path, root, result):
+    assert str(ExperimentService.get_canonical_path(Path(path), Path(root))) == result
+
+
 @pytest.fixture(scope="module")
 def entries():
     return [
-        ("greetings/copynet/run_001", "copynet seq2seq"),
-        ("greetings/copynet/run_002", "copynet seq2seq beam-search copy"),
-        ("greetings/seq2seq/run_001", "simple-seq2seq beam-search char-level"),
+        ("greetings/copynet/run_001", "copynet seq2seq", 1),
+        ("greetings/copynet/run_002", "copynet seq2seq beam-search copy", 1),
+        ("greetings/seq2seq/run_001", "simple-seq2seq beam-search char-level", 1),
     ]
 
 

@@ -79,8 +79,10 @@ class LoginPage(Page):
                 width=True,
             ),
             html.Br(),
-            html.Div(id="login-state"),
         ]
+
+    def get_notifications(self):
+        return [html.Div(id="login-state")]
 
     @staticmethod
     @Page.callback(
@@ -111,7 +113,6 @@ class LoginPage(Page):
                 id="login-state-notification",
                 header="Success",
                 icon="success",
-                style={"position": "fixed", "top": 66, "right": 10, "width": 350},
             )
         if not n_clicks or not username or not password:
             raise PreventUpdate
@@ -123,7 +124,6 @@ class LoginPage(Page):
                 id="login-state-notification",
                 header="Success",
                 icon="success",
-                style={"position": "fixed", "top": 66, "right": 10, "width": 350},
             )
         return dbc.Toast(
             "Invalid username or password",
@@ -132,7 +132,6 @@ class LoginPage(Page):
             dismissable=True,
             duration=4000,
             icon="danger",
-            style={"position": "fixed", "top": 66, "right": 10, "width": 350},
         )
 
     @Page.callback(
@@ -143,6 +142,7 @@ class LoginPage(Page):
         ],
         [Input("login-state", "children")],
         [State("login-button", "n_clicks")],
+        mutating=False,
     )
     def redirect(self, state, n_clicks):
         if (not state and not n_clicks) or not current_user.is_authenticated:

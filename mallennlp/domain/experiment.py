@@ -1,3 +1,4 @@
+from enum import Enum
 from pathlib import Path
 from typing import Optional, Any, Dict, List, Generic, TypeVar
 
@@ -27,6 +28,13 @@ class FileData(Generic[T]):
                 self.lastmod = actual_lastmod
                 return True
         return False
+
+
+class Status(Enum):
+    UNKNOWN = "UNKNOWN"
+    IN_PROGRESS = "IN_PROGRESS"
+    FINISHED = "FINISHED"
+    FAILED = "FAILED"
 
 
 @attr.s(auto_attribs=True)

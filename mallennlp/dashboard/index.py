@@ -5,7 +5,6 @@ from typing import Optional, List, Any, Dict, NamedTuple
 from dash.dependencies import Output, Input, State
 from dash.exceptions import PreventUpdate
 import dash_bootstrap_components as dbc
-import dash_core_components as dcc
 import dash_html_components as html
 
 from mallennlp.controllers.experiment import (
@@ -13,12 +12,22 @@ from mallennlp.controllers.experiment import (
     get_dash_table_data,
     get_all_tags,
     PAGE_SIZE,
+    edit_tags_modal,
 )
 from mallennlp.dashboard.page import Page
 from mallennlp.dashboard.components import element
 from mallennlp.services.cache import cache
 from mallennlp.services.serialization import serializable
 from mallennlp.services.experiment import ExperimentService
+from mallennlp.services.url_parse import from_url
+
+
+class UpdateActionsOut(NamedTuple):
+    open_disabled: bool = True
+    open_href: Optional[str] = None
+    edit_tags_modal_disabled: bool = True
+    compare_disabled: bool = True
+    compare_href: Optional[str] = None
 
 
 @Page.register("/")
@@ -30,10 +39,10 @@ class IndexPage(Page):
         Keep track of selected row(s).
         """
 
-        re_building: bool = False
-        """
-        True when the database is being re-built.
-        """
+    @from_url
+    @serializable
+    class Params:
+        filter_query: str = ""
 
     def get_elements(self):
         return [
@@ -134,81 +143,16 @@ class IndexPage(Page):
                     ############################################################
                     # < Edit tags modal pop out >
                     ############################################################
-                    dbc.Modal(
-                        [
-                            dbc.ModalHeader("Edit tags"),
-                            dbc.ModalBody(
-                                [
-                                    dcc.Dropdown(
-                                        id="index-edit-tags-dropdown",
-                                        multi=True,
-                                        options=[
-                                            {"label": t, "value": t}
-                                            for t in get_all_tags()
-                                        ],
-                                    )
-                                ]
-                            ),
-                            dbc.ModalFooter(
-                                [
-                                    dbc.Button(
-                                        "Save", id="index-edit-tags-save", color="info"
-                                    ),
-                                    dbc.Button(
-                                        "Close",
-                                        id="index-edit-tags-modal-close",
-                                        className="ml-auto",
-                                    ),
-                                ]
-                            ),
-                        ],
-                        id="index-edit-tags-modal",
-                    ),
+                    edit_tags_modal("index"),
                     ############################################################
                     # </ Edit tags modal pop out >
                     ############################################################
                     ############################################################
                     # < Main table >
                     ############################################################
-                    render_dash_table(),
+                    render_dash_table(filter_query=self.p.filter_query),
                     ############################################################
                     # </ Main table >
-                    ############################################################
-                    ############################################################
-                    # < Notifications >
-                    ############################################################
-                    dbc.Container(
-                        [
-                            dbc.Toast(
-                                "Tags successfully updated",
-                                id="index-edit-tags-noti",
-                                header="Success",
-                                dismissable=True,
-                                duration=4000,
-                                is_open=False,
-                                icon="success",
-                            ),
-                            html.Div(id="database-build-noti-container"),
-                            dbc.Toast(
-                                "Database successfully re-built",
-                                id="database-build-finish-noti",
-                                header="Success",
-                                dismissable=True,
-                                duration=4000,
-                                is_open=False,
-                                icon="success",
-                            ),
-                        ],
-                        id="index-notifications",
-                        style={
-                            "position": "fixed",
-                            "top": 66,
-                            "right": 10,
-                            "width": 350,
-                        },
-                    ),
-                    ############################################################
-                    # </ Notifications >
                     ############################################################
                 ],
                 width=True,
@@ -216,6 +160,29 @@ class IndexPage(Page):
             ####################################################################
             # </ Main content >
             ####################################################################
+        ]
+
+    def get_notifications(self):
+        return [
+            dbc.Toast(
+                "Tags successfully updated",
+                id="index-edit-tags-noti",
+                header="Success",
+                dismissable=True,
+                duration=4000,
+                is_open=False,
+                icon="success",
+            ),
+            html.Div(id="database-build-noti-container"),
+            dbc.Toast(
+                "Database successfully re-built",
+                id="database-build-finish-noti",
+                header="Success",
+                dismissable=True,
+                duration=4000,
+                is_open=False,
+                icon="success",
+            ),
         ]
 
     @staticmethod
@@ -250,15 +217,17 @@ class IndexPage(Page):
     @staticmethod
     @Page.callback(
         [Output("experiments-table", "selected_rows")],
-        [Input("experiments-table-select-all", "checked")],
-        [State("experiments-table", "page_size")],
+        [
+            Input("experiments-table-select-all", "checked"),
+            Input("experiments-table", "data"),
+        ],
     )
-    def select_all(checked, page_size):
-        if not page_size:
+    def select_all(checked, data):
+        if not data:
             raise PreventUpdate
         if not checked:
             return []
-        return list(range(page_size))
+        return list(range(len(data)))
 
     @Page.callback(
         [
@@ -277,25 +246,18 @@ class IndexPage(Page):
         ],
     )
     def update_actions(self, data, selected):
-        class Output(NamedTuple):
-            open_disabled: bool = True
-            open_href: Optional[str] = None
-            edit_tags_modal_disabled: bool = True
-            compare_disabled: bool = True
-            compare_href: Optional[str] = None
-
         if not data or not selected:
-            return Output()
-        self.s.selected = [data[i] for i in selected]
+            return UpdateActionsOut()
+        self.s.selected = [data[i] for i in selected if i < len(data)]
         if len(self.s.selected) > 1:
-            return Output(
+            return UpdateActionsOut(
                 compare_disabled=False,
                 compare_href="/compare?"
                 + urllib.parse.urlencode(
-                    {"path": [r["path"] for r in self.s.selected]}, doseq=True
+                    {"paths": [r["path"] for r in self.s.selected]}, doseq=True
                 ),
             )
-        return Output(
+        return UpdateActionsOut(
             open_disabled=False,
             open_href="/experiment?"
             + urllib.parse.urlencode({"path": self.s.selected[0]["path"]}),
@@ -356,6 +318,14 @@ class IndexPage(Page):
 
     @staticmethod
     @Page.callback(
+        [Output("re-build-database", "disabled")],
+        [Input("database-build-noti", "is_open")],
+    )
+    def update_build_button(build_in_progress):
+        return build_in_progress
+
+    @staticmethod
+    @Page.callback(
         [Output("database-build-noti-container", "children")],
         [Input("re-build-database", "n_clicks")],
     )
@@ -387,7 +357,7 @@ class IndexPage(Page):
         # TODO: remove the sleep.
         import time
 
-        time.sleep(2)
+        time.sleep(1)
 
         # Remove any deleted experiments, track new experiments added.
         ExperimentService.init_db_table()

@@ -46,6 +46,7 @@ class HelloWorld(Page):
     @Page.callback(
         [Output("hello-name-output", "children")],
         [Input("hello-name-trigger-output", "n_clicks")],
+        mutating=False,  # callback doesn't mutate state
     )
     def render_hello_output(self, n_clicks):
         if not n_clicks:

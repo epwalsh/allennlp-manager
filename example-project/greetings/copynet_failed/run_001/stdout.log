@@ -1,0 +1,8 @@
+2019-11-18 11:28:15,115 - INFO - allennlp.common.params - random_seed = 13370
+2019-11-18 11:28:15,115 - INFO - allennlp.common.params - numpy_seed = 1337
+2019-11-18 11:28:15,115 - INFO - allennlp.common.params - pytorch_seed = 133
+2019-11-18 11:28:15,144 - INFO - allennlp.common.checks - Pytorch version: 1.2.0
+2019-11-18 11:28:15,145 - INFO - allennlp.common.params - evaluate_on_test = False
+2019-11-18 11:28:15,145 - INFO - allennlp.common.params - validation_dataset_reader = None
+2019-11-18 11:28:15,145 - INFO - allennlp.common.from_params - instantiating class <class 'allennlp.data.dataset_readers.dataset_reader.DatasetReader'> from params {'source_token_indexers': {'token_characters': {'type': 'characters'}, 'tokens': {'namespace': 'source_tokens', 'type': 'single_id'}}, 'target_namespace': 'target_tokens', 'type': 'copynet_seq2se'} and extras set()
+2019-11-18 11:28:15,146 - INFO - allennlp.common.params - dataset_reader.type = copynet_seq2se

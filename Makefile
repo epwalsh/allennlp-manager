@@ -11,9 +11,9 @@ PYTEST_COMMAND    = python -m pytest -v --color=yes
 
 .PHONY : clean
 clean :
-	@rm -rf ./allennlp_manager.egg-info/
-	@rm -rf ./.mypy_cache/
-	@rm -rf ./.pytest_cache/
+	@find . \
+		| grep -E "(__pycache__|\.mypy_cache|\.pytest_cache|\.pyc|\.pyo$$)" \
+		| xargs rm -rf
 	@rm -rf $(PROJECT)
 
 .PHONY : project
@@ -79,4 +79,5 @@ install :
 
 .PHONY : uninstall
 uninstall :
-	python setup.py develop --uninstall && rm -f $(INSTALLED_BINARY)
+	@rm -rf ./allennlp_manager.egg-info/
+	@python setup.py develop --uninstall && rm -f $(INSTALLED_BINARY)

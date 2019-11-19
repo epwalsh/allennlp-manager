@@ -1,0 +1,93 @@
+{
+    "dataset_reader": {
+        "type": "copynet_seq2se",
+        "source_token_indexers": {
+            "token_characters": {
+                "type": "characters"
+            },
+            "tokens": {
+                "type": "single_id",
+                "namespace": "source_tokens"
+            }
+        },
+        "target_namespace": "target_tokens"
+    },
+    "iterator": {
+        "type": "bucket",
+        "batch_size": 32,
+        "padding_noise": 0,
+        "sorting_keys": [
+            [
+                "source_tokens",
+                "num_tokens"
+            ]
+        ]
+    },
+    "model": {
+        "type": "copynet_seq2seq",
+        "attention": {
+            "type": "bilinear",
+            "matrix_dim": 200,
+            "vector_dim": 200
+        },
+        "beam_size": 3,
+        "encoder": {
+            "type": "lstm",
+            "bidirectional": true,
+            "dropout": 0,
+            "hidden_size": 100,
+            "input_size": 45,
+            "num_layers": 2
+        },
+        "max_decoding_steps": 20,
+        "source_embedder": {
+            "token_characters": {
+                "type": "character_encoding",
+                "embedding": {
+                    "embedding_dim": 10
+                },
+                "encoder": {
+                    "type": "lstm",
+                    "bidirectional": true,
+                    "dropout": 0,
+                    "hidden_size": 10,
+                    "input_size": 10,
+                    "num_layers": 2
+                }
+            },
+            "tokens": {
+                "type": "embedding",
+                "embedding_dim": 25,
+                "trainable": true,
+                "vocab_namespace": "source_tokens"
+            }
+        },
+        "target_embedding_dim": 10,
+        "token_based_metric": {
+            "type": "token_sequence_accuracy"
+        }
+    },
+    "train_data_path": "data/greetings/train.tsv",
+    "validation_data_path": "data/greetings/validation.tsv",
+    "trainer": {
+        "cuda_device": 0,
+        "learning_rate_scheduler": {
+            "type": "cosine",
+            "eta_mul": 0.9,
+            "t_initial": 5
+        },
+        "num_epochs": 10,
+        "optimizer": {
+            "type": "sgd",
+            "lr": 0.1
+        },
+        "should_log_learning_rate": true,
+        "should_log_parameter_statistics": false
+    },
+    "vocabulary": {
+        "min_count": {
+            "source_tokens": 4,
+            "target_tokens": 4
+        }
+    }
+}
