@@ -200,6 +200,10 @@ If this is your first time contributing to a project on GitHub, please see [this
 
 ## Updates
 
+**11/19**
+
+Numerous bug fixes and improvements. Added configurable pre/post/error callback hooks.
+
 **11/18**
 
 Added support for static/class method callbacks. Improved index page with notifications and implemented the "Re-build database" button.
