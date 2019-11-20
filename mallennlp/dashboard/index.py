@@ -47,6 +47,10 @@ class IndexPage(Page):
     def get_elements(self):
         return [
             html.H3("Home"),
+            # Dummy divs used to trigger the `render_table_data` callback
+            # after other callbacks that modify the data.
+            html.Div(id="index-tags-edited-success"),
+            html.Div(id="index-database-rebuilt-success"),
             ####################################################################
             # < Main content >
             ####################################################################
@@ -203,8 +207,8 @@ class IndexPage(Page):
             Input("experiments-table", "page_size"),
             Input("experiments-table", "sort_by"),
             Input("experiments-table", "filter_query"),
-            Input("index-edit-tags-noti", "is_open"),
-            Input("database-build-finish-noti", "is_open"),
+            Input("index-tags-edited-success", "children"),
+            Input("index-database-rebuilt-success", "children"),
         ],
     )
     def render_table_data(
@@ -300,7 +304,10 @@ class IndexPage(Page):
         return [{"label": t, "value": t} for t in options]
 
     @Page.callback(
-        [Output("index-edit-tags-noti", "is_open")],
+        [
+            Output("index-edit-tags-noti", "is_open"),
+            Output("index-tags-edited-success", "children"),
+        ],
         [Input("index-edit-tags-save", "n_clicks")],
         [State("index-edit-tags-dropdown", "value")],
     )
@@ -314,7 +321,7 @@ class IndexPage(Page):
         if any(tag not in all_tags for tag in tags):
             # Need to clear the memoized cache for `get_all_tags` now.
             cache.delete_memoized(get_all_tags)
-        return True
+        return True, None
 
     @staticmethod
     @Page.callback(
@@ -348,6 +355,7 @@ class IndexPage(Page):
         [
             Output("database-build-noti", "is_open"),
             Output("database-build-finish-noti", "is_open"),
+            Output("index-database-rebuilt-success", "children"),
         ],
         [Input("re-build-database", "n_clicks")],
     )
@@ -363,4 +371,4 @@ class IndexPage(Page):
         ExperimentService.init_db_table()
         # Clear the memoized cache for `get_all_tags` now.
         cache.delete_memoized(get_all_tags)
-        return False, True
+        return False, True, None
