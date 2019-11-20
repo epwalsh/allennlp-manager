@@ -7,15 +7,15 @@ Your manager for [AllenNLP](https://github.com/allenai/allennlp) experiments.
 
 ### Table of contents
 
+- [**Motivation**](#motivation)
 - [**Road map**](#road-map) :car:
 - [**Dependencies**](#dependencies)
 - [**Installation**](#installation)
 - [**Quick start**](#quick-start) :rocket:
 - [**Configuration**](#configuration)
 - [**Contributing**](#for-potential-contributors)
-- [**Updates**](#updates) :tada: :tada: :tada:
 
-## Road map
+## Motivation
 
 The goal of this project is to build a customizable CLI and dashboard for running, queueing, tracking, and comparing experiments.
 
@@ -31,7 +31,9 @@ This was inspired by other open source projects such as the resource manager [**
 
 In addition to the dashboard, there is a multi-purpose CLI with commands for serving the dashboard, updating to the latest version, and programmatically submitting training runs.
 
-For the first release I intend to have all of the features implemented except for, possibly, the **slurm**-like resource manager and job queueing system, as that may become quite complex.
+## Road map
+
+For the first release I intend to have all of the features implemented except for, possibly, the **slurm**-like resource manager and job queueing system, as that may become quite complex. To keep up with the progress check out the [Initial Release](https://github.com/epwalsh/allennlp-manager/projects/1) project board.
 
 ## Dependencies
 
@@ -197,41 +199,3 @@ I chose to implement this project entirely in Python to make it as easy possible
 The continuous integration for **allennlp-manager** is a lot like that of **AllenNLP**. Unit tests are run with [pytest](https://docs.pytest.org/en/latest/), code is type-checked with [mypy](http://mypy-lang.org/), linted with [flake8](http://flake8.pycqa.org/en/latest/), and formatted with [black](https://pypi.org/project/black/). You can run all of the CI-steps locally with `make test`.
 
 If this is your first time contributing to a project on GitHub, please see [this Gist](https://gist.github.com/epwalsh/9e1b77d46ec232d55e6e344bb649fb19) for an example workflow.
-
-## Updates
-
-**11/19**
-
-Numerous bug fixes and improvements. Added configurable pre/post/error callback hooks.
-
-**11/18**
-
-Added support for static/class method callbacks. Improved index page with notifications and implemented the "Re-build database" button.
-
-**11/15**
-
-Big updates. Implemented home page of dashboard with searchable table of all experiments. Uses server-side paging, caching, filtering, sorting, etc, so should scale well.
-
-**11/12**
-
-Adding customizable typed parameter parsing to `Page` class.
-
-**11/8**
-
-Made dashboard extendable, improved statefulness of `Page` class. Added caching to webserver.
-
-**11/7**
-
-Big improvements to the CLI and dashboard. Added [system info page](https://user-images.githubusercontent.com/8812459/68428301-c01f8200-0160-11ea-871a-7d9a83b21637.png) to dashboard.
-
-**11/6**
-
-Added sqlite database and implemented login / authentication system.
-
-**11/5**
-
-Dashboard skeleton implemented with `Page` abstraction.
-
-**11/4**
-
-CLI implemented (using click). Project can be created with `mallennlp new [PROJECT NAME]` and dashboard can be served with `mallennlp serve` from within the project directory (dashboard just returns 'Hello from AllenNLP manager' at the moment).
