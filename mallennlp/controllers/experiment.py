@@ -201,6 +201,10 @@ def display_tags(es: ExperimentService):
         )
         for i, t in enumerate(tags[:MAX_TAG_BADGES])
     ]
+    tooltips = [
+        dbc.Tooltip(f"""Remove "{t}" tag""", target=f"experiment-tag-{i}")
+        for i, t in enumerate(tags[:MAX_TAG_BADGES])
+    ]
     for i in range(len(tags), MAX_TAG_BADGES):
         tag_badges.append(
             dbc.Badge("", id=f"experiment-tag-{i}", href="#", style={"display": "none"})
@@ -216,6 +220,11 @@ def display_tags(es: ExperimentService):
                 href="#",
             )
         )
+        tooltips.append(
+            dbc.Tooltip(
+                "See all tags or edit", target="experiment-edit-tags-modal-open"
+            )
+        )
     else:
         tag_badges.append(
             dbc.Badge(
@@ -227,8 +236,12 @@ def display_tags(es: ExperimentService):
                 href="#",
             )
         )
+        tooltips.append(
+            dbc.Tooltip("Edit tags", target="experiment-edit-tags-modal-open")
+        )
     return [
-        html.Span([html.Strong("Tags:", style={"margin-right": "5px"})] + tag_badges)
+        html.Span([html.Strong("Tags:", style={"margin-right": "5px"})] + tag_badges),
+        html.Div(children=tooltips),
     ]
 
 

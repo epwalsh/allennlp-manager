@@ -96,9 +96,26 @@ class IndexPage(Page):
                                                         html.I(
                                                             className="fas fa-tools"
                                                         ),
-                                                        " Re-build database",
+                                                        " Re-build database (",
+                                                        html.Span(
+                                                            "?",
+                                                            id="re-build-database-help",
+                                                            style={
+                                                                "textDecoration": "underline"
+                                                            },
+                                                        ),
+                                                        ")",
                                                     ],
                                                     id="re-build-database",
+                                                ),
+                                                dbc.Tooltip(
+                                                    "If you've added or removed experiments through a method "
+                                                    "other than the AllenNLP Manager CLI or Dashboard "
+                                                    "since starting the server, you may need to re-build the "
+                                                    "database of experiments in order for the manager to get "
+                                                    "up-to-date.",
+                                                    target="re-build-database-help",
+                                                    placement="right",
                                                 ),
                                             ],
                                             label="Actions",
