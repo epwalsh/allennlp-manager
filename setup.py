@@ -11,7 +11,7 @@ def read_reqs_file(path: str) -> List[str]:
     with open(path, "r") as reqs_file:
         for line in reqs_file:
             line = line.strip()
-            if not line or line.startswith("#") or line.startswith("-e"):
+            if not line or line.startswith("#"):
                 continue
             reqs.append(line)
     return reqs
@@ -26,7 +26,7 @@ setup(
     package_data={
         "mallennlp": ["schema/*.sql", "assets/*.css", "assets/webfonts/fa-*"]
     },
-    install_requires=read_reqs_file("requirements.txt") + ["allennlp"],
+    install_requires=read_reqs_file("requirements.txt"),
     tests_require=read_reqs_file("requirements.dev.txt"),
     python_requires=">=3.6.1,<3.8",
     include_package_data=True,
