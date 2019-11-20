@@ -1,5 +1,5 @@
 from logging import Logger
-from typing import Any, Dict, List, Optional, Tuple, Callable, Iterable
+from typing import Any, Dict, List, Optional, Tuple, Callable, Iterable, Type, TypeVar
 
 from allennlp.common.registrable import Registrable
 from dash.dependencies import Input, Output, State
@@ -10,9 +10,103 @@ from mallennlp.services.serialization import serializable
 from mallennlp.services.url_parse import from_url
 
 
-PreHookType = Callable[[str, str, List[Any]], None]
-PostHookType = Callable[[str, str, List[Any], Any], None]
-ErrHookType = Callable[[str, str, List[Any], Exception], None]
+T = TypeVar("T", bound="Page")
+
+
+PreHookType = Callable[[Type[T], str, str, Tuple[Any, ...]], None]
+"""
+A callable that accepts the following parameters:
+
+PageClass : ``Type[T]``
+    The class of the page.
+method_name : ``str``
+    The method name of the callback.
+callback_id : ``str``
+    A unique ID assigns to the invocation of the callback.
+callback_args : ``Tuple[Any, ...]``
+    The arguments of the callback invocation.
+"""
+
+PostHookType = Callable[[Type[T], str, str, Tuple[Any, ...], float, Any], None]
+"""
+A callable that accepts the following parameters:
+
+PageClass : ``Type[T]``
+    The class of the page.
+method_name : ``str``
+    The method name of the callback.
+callback_id : ``str``
+    A unique ID assigns to the invocation of the callback.
+callback_args : ``Tuple[Any, ...]``
+    The arguments of the callback invocation.
+elapsed_time : ``float``
+    The time (in seconds) it took the callback to execute.
+retval : ``Any``
+    The value returned by the callback.
+"""
+
+ErrHookType = Callable[[Type[T], str, str, Tuple[Any, ...], Exception], None]
+"""
+A callable that accepts the following parameters:
+
+PageClass : ``Type[T]``
+    The class of the page.
+method_name : ``str``
+    The method name of the callback.
+callback_id : ``str``
+    A unique ID assigns to the invocation of the callback.
+callback_args : ``Tuple[Any, ...]``
+    The arguments of the callback invocation.
+error : ``Exception``
+    The exception that was raised during the callback invocation.
+"""
+
+
+def log_received(
+    PageClass: Type[T], method_name: str, callback_id: str, args: Tuple[Any, ...]
+):
+    PageClass.logger.info(
+        "received callback %s.%s[%s]", PageClass.__name__, method_name, callback_id
+    )
+
+
+DEFAULT_PRE_HOOKS: Tuple[PreHookType, ...] = (log_received,)
+
+
+def log_success(
+    PageClass: Type[T],
+    method_name: str,
+    callback_id: str,
+    args: Tuple[Any, ...],
+    elapsed_time: float,
+    retval: Any,
+):
+    PageClass.logger.info(
+        "callback %s.%s[%s] succeeded in %.4f seconds",
+        PageClass.__name__,
+        method_name,
+        callback_id,
+        elapsed_time,
+    )
+
+
+DEFAULT_POST_HOOKS: Tuple[PostHookType, ...] = (log_success,)
+
+
+def log_err(
+    PageClass: Type[T],
+    method_name: str,
+    callback_id: str,
+    args: Tuple[Any, ...],
+    e: Exception,
+):
+    PageClass.logger.exception(e)
+    PageClass.logger.info(
+        "callback %s.%s[%s] failed", PageClass.__name__, method_name, callback_id
+    )
+
+
+DEFAULT_ERR_HOOKS: Tuple[ErrHookType, ...] = (log_err,)
 
 
 class Page(Registrable):
@@ -24,6 +118,11 @@ class Page(Registrable):
     navlink_name: Optional[str] = None
     """
     If set, this page will have a link in the navbar by this name.
+    """
+
+    route: str
+    """
+    The route the Page is registered under.
     """
 
     logger: Logger
@@ -92,44 +191,15 @@ class Page(Registrable):
         return {"s": self.s.serialize(), "p": self.p.serialize()}
 
     @classmethod
-    def default_pre_hooks(cls) -> Tuple[PreHookType, ...]:
-        def debug(page_name: str, method_name: str, args: List[Any]):
-            cls.logger.debug(
-                "Page '%s' received callback %s%s", page_name, method_name, args
-            )
-
-        return (debug,)
-
-    @classmethod
-    def default_post_hooks(cls) -> Tuple[PostHookType, ...]:
-        def debug(page_name: str, method_name: str, args: List[Any], retval: Any):
-            cls.logger.debug(
-                "Page '%s' handled callback %s%s -> %s",
-                page_name,
-                method_name,
-                args,
-                retval,
-            )
-
-        return (debug,)
-
-    @classmethod
-    def default_err_hooks(cls) -> Tuple[ErrHookType, ...]:
-        def debug(page_name: str, method_name: str, args: List[Any], e: Exception):
-            cls.logger.exception(e)
-
-        return (debug,)
-
-    @classmethod
     def callback(
-        cls,
+        cls: Type[T],
         outputs: List[Output] = None,
         inputs: List[Input] = None,
         states: List[State] = None,
         mutating: bool = True,
-        pre_hooks: Iterable[PreHookType] = None,
-        post_hooks: Iterable[PostHookType] = None,
-        err_hooks: Iterable[ErrHookType] = None,
+        pre_hooks: Iterable[PreHookType] = DEFAULT_PRE_HOOKS,
+        post_hooks: Iterable[PostHookType] = DEFAULT_POST_HOOKS,
+        err_hooks: Iterable[ErrHookType] = DEFAULT_ERR_HOOKS,
     ):
         """
         Register a Page callback.
@@ -153,13 +223,13 @@ class Page(Registrable):
             Only relevant to an instance method callback. If ``True``, the ``Page``'s
             session state will be updated after the callback method returns.
 
-        pre_hooks : ``Iterable[PreHookType]``
+        pre_hooks : ``Iterable[PreHookType]``, default = DEFAULT_PRE_HOOKS
             Functions to run right before a callback executes.
 
-        post_hooks : ``Iterable[PostHookType]``
+        post_hooks : ``Iterable[PostHookType]``, default = DEFAULT_POST_HOOKS
             Functions to run right after a callback successfully executes.
 
-        err_hooks : ``Iterable[ErrHookType]``
+        err_hooks : ``Iterable[ErrHookType]``, default = DEFAULT_ERR_HOOKS
             Functions to run after a callback fails.
 
         """
@@ -169,10 +239,6 @@ class Page(Registrable):
             outputs = [outputs]
         inputs = inputs or []
         states = states or []
-
-        pre_hooks = cls.default_pre_hooks() if pre_hooks is None else pre_hooks
-        post_hooks = cls.default_post_hooks() if post_hooks is None else post_hooks
-        err_hooks = cls.default_err_hooks() if err_hooks is None else err_hooks
 
         def mark_callback(method):
             method.is_callback = True
