@@ -218,7 +218,6 @@ def store_callback(*args):
     latest = datas[latest_index]
     if latest is None:
         raise PreventUpdate
-    print("updating session state")
     return latest
 
 
