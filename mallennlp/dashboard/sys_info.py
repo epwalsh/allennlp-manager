@@ -54,6 +54,7 @@ class SysInfoPage(Page):
             Input("device-selection", "value"),
             Input("sys-info-update-interval", "n_intervals"),
         ],
+        mutating=True,
     )
     def render_gpu_utilization_info(self, device_id, _):
         if device_id is None:

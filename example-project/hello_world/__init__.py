@@ -36,7 +36,10 @@ class HelloWorld(Page):
         ]
 
     @Page.callback(
-        [], [Input("hello-name-save", "n_clicks")], [State("hello-name-input", "value")]
+        [],
+        [Input("hello-name-save", "n_clicks")],
+        [State("hello-name-input", "value")],
+        mutating=True,  # callback mutates the state.
     )
     def save_name(self, n_clicks, value):
         if not n_clicks or not value:
@@ -46,7 +49,7 @@ class HelloWorld(Page):
     @Page.callback(
         [Output("hello-name-output", "children")],
         [Input("hello-name-trigger-output", "n_clicks")],
-        mutating=False,  # callback doesn't mutate state
+        mutating=False,  # callback doesn't mutate state.
     )
     def render_hello_output(self, n_clicks):
         if not n_clicks:

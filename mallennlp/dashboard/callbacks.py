@@ -187,6 +187,9 @@ def make_mutating_callback(
             page = PageClass.from_store(store)
             result = getattr(page, method_name)(*args)
             new_store = page.to_store()
+            if new_store == store:
+                # Callback did not mutate the session state, no need to update the store.
+                new_store = None
             elapsed_time = time.time() - start_time
             dispatch_post_hooks(
                 PageClass, method, method_name, callback_id, args, elapsed_time, result
@@ -215,6 +218,7 @@ def store_callback(*args):
     latest = datas[latest_index]
     if latest is None:
         raise PreventUpdate
+    print("updating session state")
     return latest
 
 

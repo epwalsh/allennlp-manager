@@ -65,6 +65,7 @@ class LogStream(Page):
     @Page.callback(
         [Output("log-stream-content", "children")],
         [Input("log-stream-update-interval", "n_intervals")],
+        mutating=True,
     )
     def render_log_stream_content(self, _):
         if not self.s.stream.should_read():

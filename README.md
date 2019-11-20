@@ -163,7 +163,10 @@ class HelloWorld(Page):
         ]
 
     @Page.callback(
-        [], [Input("hello-name-save", "n_clicks")], [State("hello-name-input", "value")]
+        [],
+        [Input("hello-name-save", "n_clicks")],
+        [State("hello-name-input", "value")],
+        mutating=True,  # callback changes the session state.
     )
     def save_name(self, n_clicks, value):
         if not n_clicks or not value:

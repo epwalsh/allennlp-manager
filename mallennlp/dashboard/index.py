@@ -248,6 +248,7 @@ class IndexPage(Page):
             Input("experiments-table", "data"),
             Input("experiments-table", "selected_rows"),
         ],
+        mutating=True,
     )
     def update_actions(self, data, selected):
         if not data or not selected:
@@ -278,6 +279,7 @@ class IndexPage(Page):
             Input("index-edit-tags-modal-close", "n_clicks"),
         ],
         [State("index-edit-tags-modal", "is_open")],
+        mutating=False,
     )
     def toggle_modal(self, n1, n2, is_open):
         tags: Optional[List[str]] = None
@@ -310,6 +312,7 @@ class IndexPage(Page):
         ],
         [Input("index-edit-tags-save", "n_clicks")],
         [State("index-edit-tags-dropdown", "value")],
+        mutating=True,
     )
     def save_tags(self, n_clicks, tags):
         if not n_clicks or not self.s.selected or not len(self.s.selected) == 1:
