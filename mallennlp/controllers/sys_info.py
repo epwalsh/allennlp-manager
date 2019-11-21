@@ -2,6 +2,7 @@ from typing import List, Any, Dict, Optional, Tuple
 
 import dash_core_components as dcc
 import dash_bootstrap_components as dbc
+import dash_html_components as html
 
 from mallennlp.exceptions import CudaUnavailableError
 from mallennlp.domain.sys_info import SysInfo, GpuInfo
@@ -19,11 +20,13 @@ def retrieve_gpu_info() -> Tuple[Optional[str], Optional[List[GpuInfo]]]:
     return sys_info_service.get_gpu_info()
 
 
-def retrieve_platform_components() -> List[Any]:
+def retrieve_platform_components(info: SysInfo) -> List[Any]:
     info = retrieve_sys_info()
     components: List[Any] = [dcc.Markdown(f"**Platform:** `{info.platform}`")]
     if not info.gpus or not info.driver_version:
-        components.append(dbc.Alert("No GPU devices available", color="danger"))
+        components.extend(
+            [html.Br(), dbc.Alert("No GPU devices available", color="danger")]
+        )
         return components
     components.append(
         dcc.Markdown(
@@ -39,18 +42,15 @@ def retrieve_platform_components() -> List[Any]:
     return components
 
 
-def get_gpu_device_dropdown():
-    info = retrieve_sys_info()
-    if not info.gpus:
-        return dbc.Alert("No GPU devices available", color="danger")
+def get_gpu_device_dropdown(info: SysInfo):
     options = [
         {
             "label": f"[{gpu.id}] {gpu.name}, {gpu.mem_capacity} {gpu.mem_units}",
             "value": gpu.id,
         }
-        for gpu in info.gpus
+        for gpu in info.gpus or []
     ]
-    if len(info.gpus) > 1:
+    if info.gpus and len(info.gpus) > 1:
         options.insert(0, {"label": "All (average)", "value": -1})
     return dcc.Dropdown(id="device-selection", value=0, options=options)
 

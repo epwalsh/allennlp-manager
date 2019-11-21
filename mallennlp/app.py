@@ -54,6 +54,7 @@ def init_dash(flask_app: Flask, config: Config):
                 dark=True,
             ),
             dcc.Store(id="current-path"),
+            dbc.Container(id="page-content"),
             dbc.Container(
                 id="notifications",
                 style={"position": "fixed", "top": 66, "right": 10, "width": 350},
@@ -63,7 +64,6 @@ def init_dash(flask_app: Flask, config: Config):
                     html.Div(id="page-callback-errors"),
                 ],
             ),
-            dbc.Container(id="page-content"),
         ]
     )
 

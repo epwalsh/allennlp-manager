@@ -139,3 +139,7 @@ p {
 .sidebar-nav .nav-link.active:hover {
     border-left: 2px solid #3A4A65;
 }
+
+#notifications {
+    z-index: 99;
+}

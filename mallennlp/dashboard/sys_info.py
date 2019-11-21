@@ -3,10 +3,12 @@ from typing import List, Dict, Any, Optional
 
 import attr
 from dash.dependencies import Input, Output
+import dash_bootstrap_components as dbc
 import dash_core_components as dcc
 import dash_html_components as html
 
 from mallennlp.controllers.sys_info import (
+    retrieve_sys_info,
     retrieve_platform_components,
     get_gpu_device_dropdown,
     render_device_util_plot,
@@ -43,29 +45,47 @@ class SysInfoPage(Page):
     class Params:
         active: str = "platform"
 
-    _sidebar_entries = OrderedDict(
-        [
-            ("platform", SidebarEntry("Platform", retrieve_platform_components())),
-            (
-                "gpu",
-                SidebarEntry(
-                    "GPU info",
-                    [
-                        dcc.Interval(
-                            id="sys-info-update-interval", interval=1500, n_intervals=0
-                        ),
-                        get_gpu_device_dropdown(),
-                        html.Br(),
-                        html.Div(id="gpu-util-info"),
-                        dcc.Graph(id="gpu-util-plot", config={"displayModeBar": False}),
-                    ],
-                ),
-            ),
-        ]
-    )
-
     def get_elements(self):
-        return SidebarLayout("System info", self._sidebar_entries, self.p.active)
+        info = retrieve_sys_info()
+        sidebar_entries = [
+            ("platform", SidebarEntry("Platform", retrieve_platform_components(info)))
+        ]
+        if info.gpus:
+            sidebar_entries.append(
+                (
+                    "gpu",
+                    SidebarEntry(
+                        "GPU info",
+                        [
+                            dcc.Interval(
+                                id="sys-info-update-interval",
+                                interval=1500,
+                                n_intervals=0,
+                            ),
+                            get_gpu_device_dropdown(info),
+                            html.Br(),
+                            html.Div(id="gpu-util-info"),
+                            dcc.Graph(
+                                id="gpu-util-plot", config={"displayModeBar": False}
+                            ),
+                        ],
+                    ),
+                )
+            )
+        else:
+            sidebar_entries.append(
+                (
+                    "gpu",
+                    SidebarEntry(
+                        "GPU info",
+                        [
+                            html.Br(),
+                            dbc.Alert("No GPU devices available", color="danger"),
+                        ],
+                    ),
+                )
+            )
+        return SidebarLayout("System info", OrderedDict(sidebar_entries), self.p.active)
 
     @Page.callback(
         [Output("gpu-util-info", "children"), Output("gpu-util-plot", "figure")],
