@@ -1,4 +1,4 @@
-from typing import Union, Any, Optional, Dict
+from typing import Union, Any, Optional, Dict, NamedTuple, List
 
 import dash_bootstrap_components as dbc
 import dash_core_components as dcc
@@ -12,6 +12,7 @@ def element_col(
     hover: bool = False,
     side: str = "left",
     style: Optional[Dict[str, str]] = None,
+    md: int = None,
 ):
     class_names = ["dash-element"]
     if pad:
@@ -22,7 +23,9 @@ def element_col(
         class_names.append("dash-element-no-hover")
     if side == "right":
         class_names.append("dash-element-align-right")
-    return dbc.Col(children, className=" ".join(class_names), width=width, style=style)
+    return dbc.Col(
+        children, className=" ".join(class_names), width=width, style=style, md=md
+    )
 
 
 def element(
@@ -123,3 +126,37 @@ def collapse(title: Any, content: Any, button_id: str, content_id: str) -> html.
             ),
         ]
     )
+
+
+class SidebarEntry(NamedTuple):
+    heading: str
+    contents: List[Any]
+
+
+def SidebarItem(heading, location, is_active):
+    return dbc.NavItem(dbc.NavLink(heading, href=location, active=is_active))
+
+
+def Sidebar(header: str, entries: Dict[str, SidebarEntry], active_item: str):
+    items = [
+        SidebarItem(entry.heading, f"?active={entry_id}", active_item == entry_id)
+        for entry_id, entry in entries.items()
+    ]
+    return [html.H3(header), dbc.Nav(items, className="sidebar-nav")]
+
+
+def SidebarLayout(header: str, entries: Dict[str, SidebarEntry], active_item: str):
+    if active_item not in entries:
+        active_item = list(entries.keys())[0]
+    return [
+        dbc.Row(
+            [
+                dbc.Col(Sidebar(header, entries, active_item), md=3),
+                dbc.Col(
+                    entries[active_item].contents,
+                    md=9,
+                    className="dash-padded-element dash-element-no-hover",
+                ),
+            ]
+        )
+    ]

@@ -6,6 +6,9 @@ from mallennlp.domain.user import User
 from mallennlp.services.db import get_db_from_app, Tables
 
 
+MIN_PASSWORD_LENGTH = 8
+
+
 class UserService:
     def __init__(self, db=None):
         if not db:
@@ -22,6 +25,10 @@ class UserService:
         if result:
             return User(**result)
         return None
+
+    @staticmethod
+    def check_password(user: User, password: str) -> bool:
+        return check_password_hash(user.password, password)
 
     def find(
         self, username: str, password: str = None, check_password: bool = True
@@ -46,10 +53,10 @@ class UserService:
 
     @staticmethod
     def validate_password(password: str) -> Tuple[bool, Optional[str]]:
-        if len(password) < 8:
-            return False, "password must be at least 8 characters"
-        if "password" in password:
-            return False, "password cannot contain the word 'password'"
+        if len(password) < MIN_PASSWORD_LENGTH:
+            return False, "password not long enough"
+        if password.isalpha() or password.isnumeric():
+            return False, "password must be a mix of letters and numbers and/or symbols"
         return True, None
 
     def changepw(self, username: str, password: str) -> bool:

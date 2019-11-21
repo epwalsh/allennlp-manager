@@ -1,3 +1,4 @@
+from collections import OrderedDict
 from typing import List, Dict, Any, Optional
 
 import attr
@@ -6,16 +7,18 @@ import dash_core_components as dcc
 import dash_html_components as html
 
 from mallennlp.controllers.sys_info import (
-    retrieve_sys_info_components,
+    retrieve_platform_components,
+    get_gpu_device_dropdown,
     render_device_util_plot,
     update_device_history,
     render_device_info,
 )
-from mallennlp.dashboard.components import element
+from mallennlp.dashboard.components import SidebarEntry, SidebarLayout
 from mallennlp.dashboard.page import Page
 from mallennlp.domain.sys_info import GpuInfo
 from mallennlp.exceptions import CudaUnavailableError
 from mallennlp.services.serialization import serializable
+from mallennlp.services.url_parse import from_url
 
 
 MAX_DEVICE_HISTORY = 20
@@ -35,20 +38,34 @@ class SysInfoPage(Page):
             default=attr.Factory(empty_device_history)
         )
 
-    def get_elements(self):
-        return [
-            dcc.Interval(id="sys-info-update-interval", interval=1500),
-            html.H3("System Info"),
-            element(
-                [
-                    html.Div(id="system-info", children=retrieve_sys_info_components()),
-                    html.Br(),
-                    html.Div(id="gpu-util-info"),
-                    dcc.Graph(id="gpu-util-plot", config={"displayModeBar": False}),
-                ],
-                width=True,
+    @from_url
+    @serializable
+    class Params:
+        active: str = "platform"
+
+    _sidebar_entries = OrderedDict(
+        [
+            ("platform", SidebarEntry("Platform", retrieve_platform_components())),
+            (
+                "gpu",
+                SidebarEntry(
+                    "GPU info",
+                    [
+                        dcc.Interval(
+                            id="sys-info-update-interval", interval=1500, n_intervals=0
+                        ),
+                        get_gpu_device_dropdown(),
+                        html.Br(),
+                        html.Div(id="gpu-util-info"),
+                        dcc.Graph(id="gpu-util-plot", config={"displayModeBar": False}),
+                    ],
+                ),
             ),
         ]
+    )
+
+    def get_elements(self):
+        return SidebarLayout("System info", self._sidebar_entries, self.p.active)
 
     @Page.callback(
         [Output("gpu-util-info", "children"), Output("gpu-util-plot", "figure")],

@@ -116,3 +116,26 @@ p {
     border-top-left-radius: 0;
     border-bottom-left-radius: 0;
 }
+
+.sidebar-nav {
+    display: block;
+}
+
+.sidebar-nav .nav-link {
+    color: #888;
+    border-left: 2px solid transparent;
+}
+
+.sidebar-nav .nav-link:hover {
+    color: #777;
+    border-left: 2px solid #aaa;
+}
+
+.sidebar-nav .nav-link.active {
+    color: #666;
+    border-left: 2px solid #3A4A65;
+}
+
+.sidebar-nav .nav-link.active:hover {
+    border-left: 2px solid #3A4A65;
+}

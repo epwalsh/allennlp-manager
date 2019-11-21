@@ -99,7 +99,7 @@ def init_dash(flask_app: Flask, config: Config):
                 ),
                 html.Hr(),
                 dbc.DropdownMenuItem(dcc.Link("Home", href="/")),
-                dbc.DropdownMenuItem(dcc.Link("System Info", href="/sys-info")),
+                dbc.DropdownMenuItem(dcc.Link("System info", href="/sys-info")),
             ]
             if additional_navlinks:
                 menu_items.append(html.Hr())
@@ -107,6 +107,7 @@ def init_dash(flask_app: Flask, config: Config):
             menu_items.extend(
                 [
                     html.Hr(),
+                    dbc.DropdownMenuItem(dcc.Link("Settings", href="/settings")),
                     dbc.DropdownMenuItem(
                         dcc.Link("Logout", href="/logout", refresh=True)
                     ),

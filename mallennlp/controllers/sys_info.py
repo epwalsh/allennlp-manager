@@ -19,12 +19,30 @@ def retrieve_gpu_info() -> Tuple[Optional[str], Optional[List[GpuInfo]]]:
     return sys_info_service.get_gpu_info()
 
 
-def retrieve_sys_info_components() -> List[Any]:
+def retrieve_platform_components() -> List[Any]:
     info = retrieve_sys_info()
     components: List[Any] = [dcc.Markdown(f"**Platform:** `{info.platform}`")]
     if not info.gpus or not info.driver_version:
         components.append(dbc.Alert("No GPU devices available", color="danger"))
         return components
+    components.append(
+        dcc.Markdown(
+            f"""
+**Nvidia driver version:** `{info.driver_version}`
+
+**CUDA version:** `{info.cuda_version}`
+
+**GPU devices available:** `{len(info.gpus)}`
+            """.strip()
+        )
+    )
+    return components
+
+
+def get_gpu_device_dropdown():
+    info = retrieve_sys_info()
+    if not info.gpus:
+        return dbc.Alert("No GPU devices available", color="danger")
     options = [
         {
             "label": f"[{gpu.id}] {gpu.name}, {gpu.mem_capacity} {gpu.mem_units}",
@@ -34,23 +52,7 @@ def retrieve_sys_info_components() -> List[Any]:
     ]
     if len(info.gpus) > 1:
         options.insert(0, {"label": "All (average)", "value": -1})
-    components.extend(
-        [
-            dcc.Markdown(
-                f"""
-**Nvidia driver version:** `{info.driver_version}`
-
-**CUDA version:** `{info.cuda_version}`
-
-**GPU devices available:** `{len(info.gpus)}`
-
----
-            """.strip()
-            ),
-            dcc.Dropdown(id="device-selection", value=0, options=options),
-        ]
-    )
-    return components
+    return dcc.Dropdown(id="device-selection", value=0, options=options)
 
 
 def update_device_history(
