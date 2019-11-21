@@ -42,14 +42,16 @@ class SysInfoPage(Page):
             element(
                 [
                     html.Div(id="system-info", children=retrieve_sys_info_components()),
+                    html.Br(),
                     html.Div(id="gpu-util-info"),
+                    dcc.Graph(id="gpu-util-plot", config={"displayModeBar": False}),
                 ],
                 width=True,
             ),
         ]
 
     @Page.callback(
-        [Output("gpu-util-info", "children")],
+        [Output("gpu-util-info", "children"), Output("gpu-util-plot", "figure")],
         [
             Input("device-selection", "value"),
             Input("sys-info-update-interval", "n_intervals"),
@@ -58,7 +60,8 @@ class SysInfoPage(Page):
     )
     def render_gpu_utilization_info(self, device_id, _):
         if device_id is None:
-            return None
+            self.s.device_history = empty_device_history()
+            return None, render_device_util_plot(self.s.device_history, device_id)
         if device_id != self.s.device_id:
             self.s.device_id = device_id
             self.s.device_history = empty_device_history()
@@ -70,9 +73,8 @@ class SysInfoPage(Page):
         except CudaUnavailableError:
             self.s.device_history = empty_device_history()
         if device_info:
-            return [
-                html.Br(),
+            return (
                 render_device_info(device_info),
-                render_device_util_plot(self.s.device_history, self.s.device_id),
-            ]
-        return [render_device_util_plot(self.s.device_history, self.s.device_id)]
+                render_device_util_plot(self.s.device_history, device_id),
+            )
+        return None, render_device_util_plot(self.s.device_history, device_id)

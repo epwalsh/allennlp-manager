@@ -5,18 +5,18 @@ import dash_bootstrap_components as dbc
 
 from mallennlp.exceptions import CudaUnavailableError
 from mallennlp.domain.sys_info import SysInfo, GpuInfo
+from mallennlp.services import sys_info as sys_info_service
 from mallennlp.services.cache import cache
-from mallennlp.services.sys_info import SysInfoService
 
 
 @cache.memoize(timeout=60)
 def retrieve_sys_info() -> SysInfo:
-    return SysInfoService.get()
+    return sys_info_service.get_sys_info()
 
 
 @cache.memoize(timeout=1)
 def retrieve_gpu_info() -> Tuple[Optional[str], Optional[List[GpuInfo]]]:
-    return SysInfoService.get_gpu_info()
+    return sys_info_service.get_gpu_info()
 
 
 def retrieve_sys_info_components() -> List[Any]:
@@ -87,40 +87,37 @@ def render_device_info(device: GpuInfo):
     )
 
 
-def render_device_util_plot(history: List[Dict[str, int]], device_id: int):
-    return dcc.Graph(
-        id="gpu-util-plot",
-        figure={
-            "data": [
-                {
-                    "name": "Memory",
-                    "x": list(range(len(history))),
-                    "y": [y["mem"] for y in history],
-                    "text": [f"{y['mem']}%" for y in history],
-                    "hoverinfo": "text",
-                    "mode": "lines",
-                    "line": {"color": "rgb(58,74,101)", "shape": "hv"},
-                },
-                {
-                    "name": "GPU",
-                    "x": list(range(len(history))),
-                    "y": [y["util"] for y in history],
-                    "text": [f"{y['util']}%" for y in history],
-                    "hoverinfo": "text",
-                    "mode": "lines",
-                    "line": {"color": "rgb(114,192,185)", "shape": "hv"},
-                },
-            ],
-            "layout": {
-                "clickmode": "event+select",
-                "xaxis": {
-                    "range": [0, len(history) - 1],
-                    "tickvals": list(range(0, len(history))),
-                    "ticktext": ["" for i in range(0, len(history))],
-                },
-                "yaxis": {"range": [0, 100]},
-                "margin": {"l": 40, "b": 30, "t": 20, "pad": 2},
+def render_device_util_plot(history: List[Dict[str, int]], device_id: Optional[int]):
+    return {
+        "data": [
+            {
+                "name": "Memory",
+                "x": list(range(len(history))),
+                "y": [y["mem"] for y in history],
+                "text": [f"{y['mem']}%" for y in history],
+                "hoverinfo": "text",
+                "mode": "lines",
+                "line": {"color": "rgb(58,74,101)", "shape": "hv"},
             },
+            {
+                "name": "GPU",
+                "x": list(range(len(history))),
+                "y": [y["util"] for y in history],
+                "text": [f"{y['util']}%" for y in history],
+                "hoverinfo": "text",
+                "mode": "lines",
+                "line": {"color": "rgb(114,192,185)", "shape": "hv"},
+            },
+        ],
+        "layout": {
+            "clickmode": "event+select",
+            "xaxis": {
+                "range": [0, len(history) - 1],
+                "tickvals": list(range(0, len(history))),
+                "ticktext": ["" for i in range(0, len(history))],
+            },
+            "yaxis": {"range": [0, 100]},
+            "margin": {"l": 40, "b": 30, "t": 20, "pad": 2},
+            "uirevision": True,
         },
-        config={"displayModeBar": False},
-    )
+    }

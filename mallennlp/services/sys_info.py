@@ -3,89 +3,100 @@ import re
 from subprocess import check_output
 from typing import Optional, Tuple, List
 
+import py3nvml.py3nvml as nvml
+
 from mallennlp.domain.sys_info import SysInfo, GpuInfo
 
 
-class SysInfoService:
-    query_timeout = 3
+QUERY_TIMEOUT = 3
 
-    gpu_query = [
-        "nvidia-smi",
-        "--query-gpu="
-        + ",".join(
-            [
-                "index",
-                "name",
-                "driver_version",
-                "memory.used",
-                "memory.total",
-                "utilization.gpu",
-                "temperature.gpu",
-                "fan.speed",
-            ]
-        ),
-        "--format=csv,nounits,noheader",
-    ]
+CUDA_VERSION_QUERY = ["nvidia-smi"]
 
-    cuda_version_query = ["nvidia-smi"]
+CUDA_VERSION_REGEX = re.compile(r"CUDA Version:\s([0-9.]+)")
 
-    cuda_version_regex = re.compile(r"CUDA Version:\s([0-9.]+)")
 
-    @classmethod
-    def get_gpu_query_output(cls) -> str:
-        return check_output(
-            cls.gpu_query, universal_newlines=True, timeout=cls.query_timeout
+def _get_cuda_version_query_output() -> str:
+    return check_output(
+        CUDA_VERSION_QUERY, universal_newlines=True, timeout=QUERY_TIMEOUT
+    )
+
+
+def get_cuda_version() -> Optional[str]:
+    try:
+        output = _get_cuda_version_query_output()
+        cuda_version_match = CUDA_VERSION_REGEX.search(output)
+        if cuda_version_match:
+            return cuda_version_match.group(1)
+        return None
+    except FileNotFoundError:
+        # `nvidia-smi` doesn't exit.
+        return None
+
+
+def try_get_info(f, h, default=None):
+    try:
+        return f(h)
+    except nvml.NVMLError_NotSupported:
+        return default
+
+
+def get_gpu_info() -> Tuple[Optional[str], Optional[List[GpuInfo]]]:
+    """
+    Get driver version and list of ``GpuInfo``, if available.
+    """
+    try:
+        nvml.nvmlInit()
+    except nvml.NVMLError:
+        # Not available.
+        return None, None
+
+    driver_version: str = nvml.nvmlSystemGetDriverVersion()
+    gpus: List[GpuInfo] = []
+
+    device_count: int = nvml.nvmlDeviceGetCount()
+    for i in range(device_count):
+        handle = nvml.nvmlDeviceGetHandleByIndex(i)
+        name = try_get_info(nvml.nvmlDeviceGetName, handle)
+        fan_speed = try_get_info(nvml.nvmlDeviceGetFanSpeed, handle, default=0)
+        temp = try_get_info(
+            lambda h: nvml.nvmlDeviceGetTemperature(h, nvml.NVML_TEMPERATURE_GPU),
+            handle,
+            default=0,
+        )
+        mem_info = try_get_info(nvml.nvmlDeviceGetMemoryInfo, handle)
+        if mem_info:
+            mem_used = mem_info.used >> 20
+            mem_total = mem_info.total >> 20
+        else:
+            mem_used = 0
+            mem_total = 0
+        util = try_get_info(nvml.nvmlDeviceGetUtilizationRates, handle)
+        if util:
+            gpu_util = util.gpu
+        else:
+            gpu_util = 0
+        gpus.append(
+            GpuInfo(
+                id=i,
+                name=name,
+                mem_usage=mem_used,
+                mem_capacity=mem_total,
+                utilization=gpu_util,
+                temp=temp,
+                fan=fan_speed,
+            )
         )
 
-    @classmethod
-    def get_cuda_version_query_output(cls) -> str:
-        return check_output(
-            cls.cuda_version_query, universal_newlines=True, timeout=cls.query_timeout
-        )
+    nvml.nvmlShutdown()
 
-    @classmethod
-    def get_gpu_info(cls) -> Tuple[Optional[str], Optional[List[GpuInfo]]]:
-        try:
-            driver_version = None
-            gpus = []
-            output = cls.get_gpu_query_output()
-            devices = [l.strip() for l in output.strip().split("\n")]
-            for device in devices:
-                values = device.split(", ")
-                driver_version = values[2]
-                gpus.append(
-                    GpuInfo(
-                        id=int(values[0]),
-                        name=values[1],
-                        mem_usage=int(values[3]),
-                        mem_capacity=int(values[4]),
-                        utilization=int(values[5]),
-                        temp=int(values[6]),
-                        fan=int(values[7]),
-                    )
-                )
-            return driver_version, sorted(gpus, key=lambda x: x.id)
-        except FileNotFoundError:
-            # `nvidia-smi` doesn't exit.
-            return None, None
+    return driver_version, gpus
 
-    @classmethod
-    def get_cuda_version(cls) -> Optional[str]:
-        try:
-            output = cls.get_cuda_version_query_output()
-            cuda_version_match = cls.cuda_version_regex.search(output)
-            if cuda_version_match:
-                return cuda_version_match.group(1)
-            return None
-        except FileNotFoundError:
-            # `nvidia-smi` doesn't exit.
-            return None
 
-    @classmethod
-    def get(cls) -> SysInfo:
-        info = SysInfo(platform.platform())
-        driver_version, gpus = cls.get_gpu_info()
-        info.driver_version = driver_version
-        info.gpus = gpus
-        info.cuda_version = cls.get_cuda_version()
-        return info
+def get_sys_info() -> SysInfo:
+    driver_version, gpus = get_gpu_info()
+    return SysInfo(
+        platform.platform(),
+        driver_version=driver_version,
+        gpus=gpus,
+        cuda_version=get_cuda_version(),
+    )
