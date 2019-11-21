@@ -85,7 +85,9 @@ class SysInfoPage(Page):
                     ),
                 )
             )
-        return SidebarLayout("System info", OrderedDict(sidebar_entries), self.p.active)
+        return SidebarLayout(
+            "System info", OrderedDict(sidebar_entries), self.p.active, self.p.to_dict()
+        )
 
     @Page.callback(
         [Output("gpu-util-info", "children"), Output("gpu-util-plot", "figure")],

@@ -1,3 +1,4 @@
+from collections import OrderedDict
 from pathlib import Path
 from typing import Optional, List
 
@@ -10,7 +11,7 @@ import dash_core_components as dcc
 import dash_html_components as html
 
 import mallennlp.controllers.experiment as ec
-from mallennlp.dashboard.components import breadcrumb, element
+from mallennlp.dashboard.components import SidebarEntry, SidebarLayout
 from mallennlp.dashboard.page import Page
 from mallennlp.domain.experiment import Status
 from mallennlp.exceptions import InvalidPageParametersError
@@ -26,6 +27,7 @@ class ExperimentPage(Page):
     @serializable
     class Params:
         path: str = attr.ib()
+        active: str = "overview"
 
         @path.validator
         def check_path_valid(self, attribute, value):
@@ -46,75 +48,40 @@ class ExperimentPage(Page):
     def __init__(self, state, params):
         super().__init__(state, params)
         self.path = ExperimentService.get_canonical_path(Path(self.p.path))
-        self.es: Optional[ExperimentService] = None
-        if ExperimentService.is_experiment(self.path):
-            self.es = ExperimentService(self.path)
+        self.es = ExperimentService(self.path)
+
+    def get_overview_elements(self):
+        status = ec.get_status(self.es)
+        elements = [
+            html.H5(
+                [
+                    f"{str(self.path)}",
+                    html.Span(
+                        id="experiment-status-badge",
+                        children=ec.get_status_badge(status),
+                    ),
+                ]
+            ),
+            html.Div(id="experiment-tags", children=ec.display_tags(self.es)),
+            ec.edit_tags_modal("experiment"),
+            html.Hr(),
+            html.Div(id="experiment-metrics", children=ec.display_metrics(self.es)),
+        ]
+        if status not in (Status.FINISHED, Status.FAILED):
+            # If experiment is not finished or failed, then we should periodically update.
+            elements.append(
+                dcc.Interval(id="experiment-update-interval", interval=1000 * 30)
+            )
+        return elements
 
     def get_elements(self):
-        elements = [breadcrumb("Home", "/")]
-        if self.es is not None:
-            # Update database entry.
-            self.es.update_db_entry()
-            status = ec.get_status(self.es)
-            if status not in (Status.FINISHED, Status.FAILED):
-                # If experiment is not finished or failed, then we should periodically update.
-                elements.append(
-                    dcc.Interval(id="experiment-update-interval", interval=1000 * 30)
-                )
-            elements.extend(
-                [
-                    html.H3(
-                        [
-                            f"{str(self.path)}",
-                            html.Span(
-                                id="experiment-status-badge",
-                                children=ec.get_status_badge(status),
-                            ),
-                        ]
-                    ),
-                    ############################################################
-                    # < Main content >
-                    ############################################################
-                    element(
-                        [
-                            html.Div(
-                                id="experiment-tags", children=ec.display_tags(self.es)
-                            ),
-                            ec.edit_tags_modal("experiment"),
-                        ],
-                        width=True,
-                    ),
-                    element(
-                        html.Div(
-                            id="experiment-metrics",
-                            children=ec.display_metrics(self.es),
-                        ),
-                        width=True,
-                    ),
-                    ############################################################
-                    # </ Main content >
-                    ############################################################
-                    ############################################################
-                    # < Notifications >
-                    ############################################################
-                    dbc.Container(
-                        children=[],
-                        id="experiment-notifications",
-                        style={
-                            "position": "fixed",
-                            "top": 66,
-                            "right": 10,
-                            "width": 350,
-                        },
-                    ),
-                    ############################################################
-                    # </ Notifications >
-                    ############################################################
-                ]
-            )
-        else:
-            elements.append(html.H3(f"{self.p.path}"))
-        return elements
+        # Update database entry.
+        self.es.update_db_entry()
+        # Create sidebar entries.
+        entries = OrderedDict(
+            [("overview", SidebarEntry("Overview", self.get_overview_elements()))]
+        )
+        return SidebarLayout("Experiment", entries, self.p.active, self.p.to_dict())
 
     def get_notifications(self):
         return [
@@ -135,8 +102,6 @@ class ExperimentPage(Page):
         mutating=False,
     )
     def update_status_badge(self, _):
-        if self.es is None:
-            raise PreventUpdate
         # Update database entry.
         self.es.update_db_entry()
         status = ec.get_status(self.es)
@@ -148,8 +113,6 @@ class ExperimentPage(Page):
         mutating=False,
     )
     def update_metrics(self, _):
-        if self.es is None:
-            raise PreventUpdate
         return ec.display_metrics(self.es)
 
     @Page.callback(
@@ -163,8 +126,6 @@ class ExperimentPage(Page):
         ctx = dash.callback_context
         if not ctx.triggered:
             raise PreventUpdate
-        if self.es is None:
-            return [html.Strong("Tags:")]
         button_id = ctx.triggered[0]["prop_id"].split(".")[0]
         if button_id.startswith("experiment-tag-"):
             # Try deleting tag.
@@ -219,7 +180,7 @@ class ExperimentPage(Page):
         mutating=False,
     )
     def save_tags(self, n_clicks, tags):
-        if not n_clicks or not self.es:
+        if not n_clicks:
             raise PreventUpdate
         self.es.set_tags(tags)
         all_tags = ec.get_all_tags()

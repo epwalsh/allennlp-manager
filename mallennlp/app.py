@@ -168,11 +168,13 @@ def init_dash(flask_app: Flask, config: Config):
             return (
                 [],
                 [],
+                [],
                 dbc.Toast(f"Page {pathname} not found", header="404", icon="danger"),
                 updated_data,
             )
         except InvalidPageParametersError as e:
             return (
+                [],
                 [],
                 [],
                 dbc.Toast(str(e), header="Bad page parameters", icon="danger"),
@@ -181,6 +183,7 @@ def init_dash(flask_app: Flask, config: Config):
         except Exception as e:
             logger.exception(e)
             return (
+                [],
                 [],
                 [],
                 dbc.Toast(str(e), header=e.__class__.__name__, icon="danger"),

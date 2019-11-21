@@ -54,6 +54,10 @@ def from_default(ObjType: Type[T], default: Any) -> T:
     return ObjType(**params)  # type: ignore
 
 
+def to_dict(self) -> Dict[str, Any]:
+    return attr.asdict(self, retain_collection_types=False)
+
+
 def serialize(self) -> str:
     """
     Encode a serializable object into a str.
@@ -75,5 +79,6 @@ def serializable(cls):
     Class decorator for creating serializable classes.
     """
     cls.serialize = serialize
+    cls.to_dict = to_dict
     cls.deserialize = deserialize
     return attr.s(auto_attribs=True, slots=True)(cls)

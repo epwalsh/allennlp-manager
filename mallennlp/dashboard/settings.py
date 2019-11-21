@@ -92,7 +92,9 @@ class SettingsPage(Page):
     )
 
     def get_elements(self):
-        return SidebarLayout("Settings", self._sidebar_entries, self.p.active)
+        return SidebarLayout(
+            "Settings", self._sidebar_entries, self.p.active, self.p.to_dict()
+        )
 
     def get_notifications(self):
         return [

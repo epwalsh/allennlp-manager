@@ -1,4 +1,6 @@
+from collections import OrderedDict
 from pathlib import Path
+import time
 import urllib.parse
 from typing import Optional, List, Any, Dict, NamedTuple
 
@@ -15,7 +17,7 @@ from mallennlp.controllers.experiment import (
     edit_tags_modal,
 )
 from mallennlp.dashboard.page import Page
-from mallennlp.dashboard.components import element
+from mallennlp.dashboard.components import SidebarEntry, SidebarLayout
 from mallennlp.services.cache import cache
 from mallennlp.services.serialization import serializable
 from mallennlp.services.experiment import ExperimentService
@@ -43,145 +45,148 @@ class IndexPage(Page):
     @serializable
     class Params:
         filter_query: str = ""
+        active: str = "browse-experiments"
 
     def get_elements(self):
-        return [
-            html.H3("Home"),
-            # Dummy divs used to trigger the `render_table_data` callback
-            # after other callbacks that modify the data.
-            html.Div(id="index-tags-edited-success"),
-            html.Div(id="index-database-rebuilt-success"),
-            ####################################################################
-            # < Main content >
-            ####################################################################
-            element(
-                [
-                    ############################################################
-                    # < Actions and settings row >
-                    ############################################################
-                    dbc.Row(
+        entries = OrderedDict(
+            [
+                (
+                    "browse-experiments",
+                    SidebarEntry(
+                        "Browse experiments",
                         [
-                            ####################################################
-                            # < Actions >
-                            ####################################################
-                            dbc.Col(
-                                dbc.InputGroup(
-                                    [
-                                        dbc.InputGroupAddon(
-                                            dbc.Checkbox(
-                                                id="experiments-table-select-all"
-                                            ),
-                                            addon_type="prepend",
-                                        ),
-                                        dbc.DropdownMenu(
+                            # Dummy divs used to trigger the `render_table_data` callback
+                            # after other callbacks that modify the data.
+                            html.Div(id="index-tags-edited-success"),
+                            ############################################################
+                            # < Actions and settings row >
+                            ############################################################
+                            dbc.Row(
+                                [
+                                    ####################################################
+                                    # < Actions >
+                                    ####################################################
+                                    dbc.Col(
+                                        dbc.InputGroup(
                                             [
-                                                dbc.DropdownMenuItem(
-                                                    "Open",
-                                                    id="experiments-table-open",
-                                                    disabled=True,
+                                                dbc.InputGroupAddon(
+                                                    dbc.Checkbox(
+                                                        id="experiments-table-select-all"
+                                                    ),
+                                                    addon_type="prepend",
                                                 ),
-                                                dbc.DropdownMenuItem(
-                                                    "Edit tags",
-                                                    id="index-edit-tags-modal-open",
-                                                    disabled=True,
-                                                ),
-                                                dbc.DropdownMenuItem(
-                                                    "Compare",
-                                                    id="experiments-table-compare",
-                                                    disabled=True,
-                                                ),
-                                                html.Hr(),
-                                                dbc.DropdownMenuItem(
+                                                dbc.DropdownMenu(
                                                     [
-                                                        html.I(
-                                                            className="fas fa-tools"
+                                                        dbc.DropdownMenuItem(
+                                                            "Open",
+                                                            id="experiments-table-open",
+                                                            disabled=True,
                                                         ),
-                                                        " Re-build database (",
-                                                        html.Span(
-                                                            "?",
-                                                            id="re-build-database-help",
-                                                            style={
-                                                                "textDecoration": "underline"
-                                                            },
+                                                        dbc.DropdownMenuItem(
+                                                            "Edit tags",
+                                                            id="index-edit-tags-modal-open",
+                                                            disabled=True,
                                                         ),
-                                                        ")",
+                                                        dbc.DropdownMenuItem(
+                                                            "Compare",
+                                                            id="experiments-table-compare",
+                                                            disabled=True,
+                                                        ),
+                                                        html.Hr(),
+                                                        dbc.DropdownMenuItem(
+                                                            [
+                                                                html.I(
+                                                                    className="fas fa-tools"
+                                                                ),
+                                                                " Re-build database (",
+                                                                html.Span(
+                                                                    "?",
+                                                                    id="re-build-database-help",
+                                                                    style={
+                                                                        "textDecoration": "underline"
+                                                                    },
+                                                                ),
+                                                                ")",
+                                                            ],
+                                                            id="re-build-database",
+                                                        ),
+                                                        dbc.Tooltip(
+                                                            "If you've added or removed experiments through a "
+                                                            "method "
+                                                            "other than the AllenNLP Manager CLI or Dashboard "
+                                                            "since starting the server, you may need to re-build "
+                                                            "the "
+                                                            "database of experiments in order for the manager to "
+                                                            "get "
+                                                            "up-to-date.",
+                                                            target="re-build-database-help",
+                                                            placement="right",
+                                                        ),
                                                     ],
-                                                    id="re-build-database",
-                                                ),
-                                                dbc.Tooltip(
-                                                    "If you've added or removed experiments through a method "
-                                                    "other than the AllenNLP Manager CLI or Dashboard "
-                                                    "since starting the server, you may need to re-build the "
-                                                    "database of experiments in order for the manager to get "
-                                                    "up-to-date.",
-                                                    target="re-build-database-help",
-                                                    placement="right",
+                                                    label="Actions",
+                                                    id="experiments-table-actions",
                                                 ),
                                             ],
-                                            label="Actions",
-                                            id="experiments-table-actions",
+                                            className="mb-3",
+                                        )
+                                    ),
+                                    ####################################################
+                                    # </ Actions >
+                                    ####################################################
+                                    ####################################################
+                                    # < Settings >
+                                    ####################################################
+                                    dbc.Col(
+                                        dbc.InputGroup(
+                                            [
+                                                dbc.InputGroupAddon(
+                                                    "Page size", addon_type="prepend"
+                                                ),
+                                                dbc.Input(
+                                                    id="index-set-page-size",
+                                                    type="number",
+                                                    min=1,
+                                                    step=1,
+                                                    value=PAGE_SIZE,
+                                                ),
+                                            ],
+                                            #  className="mb-3",
                                         ),
-                                    ],
-                                    className="mb-3",
-                                )
+                                        className="dash-col-align-right",
+                                        lg=3,
+                                        md=4,
+                                        width=6,
+                                    ),
+                                    ####################################################
+                                    # </ Settings >
+                                    ####################################################
+                                ],
+                                justify="between",
                             ),
-                            ####################################################
-                            # </ Actions >
-                            ####################################################
-                            ####################################################
-                            # < Settings >
-                            ####################################################
-                            dbc.Col(
-                                dbc.InputGroup(
-                                    [
-                                        dbc.InputGroupAddon(
-                                            "Page size", addon_type="prepend"
-                                        ),
-                                        dbc.Input(
-                                            id="index-set-page-size",
-                                            type="number",
-                                            min=1,
-                                            step=1,
-                                            value=PAGE_SIZE,
-                                        ),
-                                    ],
-                                    #  className="mb-3",
-                                ),
-                                className="dash-col-align-right",
-                                lg=3,
-                                md=4,
-                                width=6,
-                            ),
-                            ####################################################
-                            # </ Settings >
-                            ####################################################
+                            ############################################################
+                            # </ Actions and settings row >
+                            ############################################################
+                            ############################################################
+                            # < Edit tags modal pop out >
+                            ############################################################
+                            edit_tags_modal("index"),
+                            ############################################################
+                            # </ Edit tags modal pop out >
+                            ############################################################
+                            ############################################################
+                            # < Main table >
+                            ############################################################
+                            render_dash_table(filter_query=self.p.filter_query),
+                            ############################################################
+                            # </ Main table >
+                            ############################################################
+                            html.Div(id="index-database-rebuilt-success"),
                         ],
-                        justify="between",
                     ),
-                    ############################################################
-                    # </ Actions and settings row >
-                    ############################################################
-                    ############################################################
-                    # < Edit tags modal pop out >
-                    ############################################################
-                    edit_tags_modal("index"),
-                    ############################################################
-                    # </ Edit tags modal pop out >
-                    ############################################################
-                    ############################################################
-                    # < Main table >
-                    ############################################################
-                    render_dash_table(filter_query=self.p.filter_query),
-                    ############################################################
-                    # </ Main table >
-                    ############################################################
-                ],
-                width=True,
-            ),
-            ####################################################################
-            # </ Main content >
-            ####################################################################
-        ]
+                )
+            ]
+        )
+        return SidebarLayout("Home", entries, self.p.active, self.p.to_dict())
 
     def get_notifications(self):
         return [
@@ -382,13 +387,13 @@ class IndexPage(Page):
     def re_build_database(n_clicks):
         if not n_clicks:
             raise PreventUpdate
-        # TODO: remove the sleep.
-        import time
-
-        time.sleep(1)
-
+        start_time = time.time()
         # Remove any deleted experiments, track new experiments added.
         ExperimentService.init_db_table()
         # Clear the memoized cache for `get_all_tags` now.
         cache.delete_memoized(get_all_tags)
+        # Ensure this takes at least 1 second so that the spinner notification has
+        # time to display (it looks cool).
+        if (time.time() - start_time) < 1:
+            time.sleep(1)
         return False, True, None
