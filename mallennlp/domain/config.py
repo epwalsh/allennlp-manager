@@ -1,3 +1,4 @@
+from multiprocessing import cpu_count
 import os
 from pathlib import Path
 from typing import Optional, List
@@ -47,12 +48,12 @@ class ServerConfig:
     Used for security in the server.
     """
 
-    workers: int = 2
+    workers: int = attr.ib(default=cpu_count())
     """
-    Number of worker processes for handling requests.
+    Number of worker processes for handling requests. Defaults to CPU count.
     """
 
-    worker_connections: int = 1000
+    worker_connections: int = 10000
     """
     Maximum number of simultaneous connections.
     """
