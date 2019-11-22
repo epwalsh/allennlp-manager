@@ -37,27 +37,21 @@ class LoginPage(Page):
                 [
                     dbc.FormGroup(
                         [
-                            dbc.Label(
-                                "Username:", html_for="login-username-input", width=2
-                            ),
                             dbc.Input(
                                 placeholder="Enter your username",
                                 type="text",
                                 id="login-username-input",
-                            ),
+                            )
                         ],
                         row=False,
                     ),
                     dbc.FormGroup(
                         [
-                            dbc.Label(
-                                "Password:", html_for="login-password-input", width=2
-                            ),
                             dbc.Input(
                                 placeholder="Enter your password",
                                 type="password",
                                 id="login-password-input",
-                            ),
+                            )
                         ],
                         row=False,
                     ),

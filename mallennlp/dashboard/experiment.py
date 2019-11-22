@@ -74,12 +74,22 @@ class ExperimentPage(Page):
             )
         return elements
 
+    def get_epochs_elements(self):
+        return ["Coming soon"]
+
+    def get_metrics_elements(self):
+        return ["Coming soon"]
+
     def get_elements(self):
         # Update database entry.
         self.es.update_db_entry()
         # Create sidebar entries.
         entries = OrderedDict(
-            [("overview", SidebarEntry("Overview", self.get_overview_elements()))]
+            [
+                ("overview", SidebarEntry("Overview", self.get_overview_elements())),
+                ("epochs", SidebarEntry("Epochs", self.get_epochs_elements())),
+                ("metrics", SidebarEntry("Metrics", self.get_metrics_elements())),
+            ]
         )
         return SidebarLayout("Experiment", entries, self.p.active, self.p.to_dict())
 
