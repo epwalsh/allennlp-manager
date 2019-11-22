@@ -19,82 +19,78 @@ class SettingsPage(Page):
     class Params:
         active: str = "change-pw"
 
-    _sidebar_entries = OrderedDict(
-        [
-            (
-                "change-pw",
-                SidebarEntry(
-                    "Change password",
-                    [
-                        dbc.Form(
-                            [
-                                dbc.FormGroup(
-                                    [
-                                        dbc.Input(
-                                            placeholder="Enter current password",
-                                            type="password",
-                                            id="settings-current-pw",
-                                        )
-                                    ],
-                                    row=False,
-                                ),
-                                dbc.FormGroup(
-                                    [
-                                        dbc.Input(
-                                            placeholder="Enter new password",
-                                            type="password",
-                                            id="settings-new-pw",
-                                        ),
-                                        dbc.FormText(
-                                            f"New password must be at least {MIN_PASSWORD_LENGTH} characters long."
-                                        ),
-                                        dbc.FormFeedback(
-                                            "Wow! That looks like a great password :)",
-                                            id="settings-new-pw-valid-feedback",
-                                            valid=True,
-                                        ),
-                                        dbc.FormFeedback(
-                                            id="settings-new-pw-invalid-feedback",
-                                            valid=False,
-                                        ),
-                                    ],
-                                    row=False,
-                                ),
-                                dbc.FormGroup(
-                                    [
-                                        dbc.Input(
-                                            placeholder="Confirm new password",
-                                            type="password",
-                                            id="settings-confirm-new-pw",
-                                        ),
-                                        dbc.FormFeedback(
-                                            "Doesn't match :(",
-                                            id="settings-confirm-new-pw-invalid-feedback",
-                                            valid=False,
-                                        ),
-                                    ],
-                                    row=False,
-                                ),
-                                dbc.Button(
-                                    "Save",
-                                    n_clicks=0,
-                                    id="settings-save-new-pw",
-                                    disabled=True,
-                                    color="primary",
-                                ),
-                            ]
-                        )
-                    ],
-                ),
-            ),
-            ("notifications", SidebarEntry("Notifications", ["Coming soon"])),
+    def get_change_pw_elements(self):
+        return [
+            dbc.Form(
+                [
+                    dbc.FormGroup(
+                        [
+                            dbc.Input(
+                                placeholder="Enter current password",
+                                type="password",
+                                id="settings-current-pw",
+                            )
+                        ],
+                        row=False,
+                    ),
+                    dbc.FormGroup(
+                        [
+                            dbc.Input(
+                                placeholder="Enter new password",
+                                type="password",
+                                id="settings-new-pw",
+                            ),
+                            dbc.FormText(
+                                f"New password must be at least {MIN_PASSWORD_LENGTH} characters long."
+                            ),
+                            dbc.FormFeedback(
+                                "Wow! That looks like a great password :)",
+                                id="settings-new-pw-valid-feedback",
+                                valid=True,
+                            ),
+                            dbc.FormFeedback(
+                                id="settings-new-pw-invalid-feedback", valid=False
+                            ),
+                        ],
+                        row=False,
+                    ),
+                    dbc.FormGroup(
+                        [
+                            dbc.Input(
+                                placeholder="Confirm new password",
+                                type="password",
+                                id="settings-confirm-new-pw",
+                            ),
+                            dbc.FormFeedback(
+                                "Doesn't match :(",
+                                id="settings-confirm-new-pw-invalid-feedback",
+                                valid=False,
+                            ),
+                        ],
+                        row=False,
+                    ),
+                    dbc.Button(
+                        "Save",
+                        n_clicks=0,
+                        id="settings-save-new-pw",
+                        disabled=True,
+                        color="primary",
+                    ),
+                ]
+            )
         ]
-    )
 
     def get_elements(self):
-        return SidebarLayout(
-            "Settings", self._sidebar_entries, self.p.active, self.p.to_dict()
+        entries = OrderedDict(
+            [
+                (
+                    "change-pw",
+                    SidebarEntry("Change password", self.get_change_pw_elements()),
+                ),
+                ("notifications", SidebarEntry("Notifications", ["Coming soon"])),
+            ]
         )
+        return SidebarLayout("Settings", entries, self.p.active, self.p.to_dict())
 
     def get_notifications(self):
         return [

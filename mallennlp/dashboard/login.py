@@ -1,3 +1,4 @@
+from collections import OrderedDict
 import time
 
 import attr
@@ -8,7 +9,7 @@ import dash_core_components as dcc
 import dash_html_components as html
 from flask_login import login_user, current_user
 
-from mallennlp.dashboard.components import element
+from mallennlp.dashboard.components import SidebarEntry, SidebarLayout
 from mallennlp.dashboard.page import Page
 from mallennlp.services.user import UserService
 from mallennlp.services.serialization import serializable
@@ -27,59 +28,59 @@ class LoginPage(Page):
             default="?_refresh=true",
             converter=lambda p: p if p else "?_refresh=true",  # type: ignore
         )
+        active: str = "sign-in"
 
-    def get_elements(self):
+    def get_sign_in_elements(self):
         return [
             dcc.Location(id="login-url", refresh=True),
-            element(html.H3("Sign in"), pad=False, hover=True),
-            element(
+            dbc.Form(
                 [
-                    dbc.Form(
+                    dbc.FormGroup(
                         [
-                            dbc.FormGroup(
-                                [
-                                    dbc.Label(
-                                        "Username:",
-                                        html_for="login-username-input",
-                                        width=2,
-                                    ),
-                                    dbc.Input(
-                                        placeholder="Enter your username",
-                                        type="text",
-                                        id="login-username-input",
-                                    ),
-                                ],
-                                row=False,
+                            dbc.Label(
+                                "Username:", html_for="login-username-input", width=2
                             ),
-                            dbc.FormGroup(
-                                [
-                                    dbc.Label(
-                                        "Password:",
-                                        html_for="login-password-input",
-                                        width=2,
-                                    ),
-                                    dbc.Input(
-                                        placeholder="Enter your password",
-                                        type="password",
-                                        id="login-password-input",
-                                    ),
-                                ],
-                                row=False,
+                            dbc.Input(
+                                placeholder="Enter your username",
+                                type="text",
+                                id="login-username-input",
                             ),
-                            dbc.Button(
-                                "Sign in",
-                                n_clicks=0,
-                                id="login-button",
-                                disabled=True,
-                                color="primary",
+                        ],
+                        row=False,
+                    ),
+                    dbc.FormGroup(
+                        [
+                            dbc.Label(
+                                "Password:", html_for="login-password-input", width=2
                             ),
-                        ]
-                    )
-                ],
-                width=True,
+                            dbc.Input(
+                                placeholder="Enter your password",
+                                type="password",
+                                id="login-password-input",
+                            ),
+                        ],
+                        row=False,
+                    ),
+                    dbc.Button(
+                        "Sign in",
+                        n_clicks=0,
+                        id="login-button",
+                        disabled=True,
+                        color="primary",
+                    ),
+                ]
             ),
-            html.Br(),
         ]
+
+    def get_elements(self):
+        return SidebarLayout(
+            "Sign in",
+            OrderedDict(
+                [("sign-in", SidebarEntry("Sign in", self.get_sign_in_elements()))]
+            ),
+            self.p.active,
+            self.p.to_dict(),
+        )
 
     def get_notifications(self):
         return [html.Div(id="login-state")]
@@ -150,4 +151,6 @@ class LoginPage(Page):
         time.sleep(1)
         next_pathname = self.p.next_pathname
         next_params = self.p.next_params
+        if "_refresh=true" not in next_params:
+            next_params = next_params + "&_refresh=true"
         return next_pathname, next_pathname, next_params

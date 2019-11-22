@@ -47,143 +47,148 @@ class IndexPage(Page):
         filter_query: str = ""
         active: str = "browse-experiments"
 
+    def get_browse_experiments_elements(self):
+        return [
+            # Dummy divs used to trigger the `render_table_data` callback
+            # after other callbacks that modify the data.
+            html.Div(id="index-tags-edited-success"),
+            ############################################################
+            # < Actions and settings row >
+            ############################################################
+            dbc.Row(
+                [
+                    ####################################################
+                    # < Actions >
+                    ####################################################
+                    dbc.Col(
+                        dbc.InputGroup(
+                            [
+                                dbc.InputGroupAddon(
+                                    dbc.Checkbox(id="experiments-table-select-all"),
+                                    addon_type="prepend",
+                                ),
+                                dbc.DropdownMenu(
+                                    [
+                                        dbc.DropdownMenuItem(
+                                            "Open",
+                                            id="experiments-table-open",
+                                            disabled=True,
+                                        ),
+                                        dbc.DropdownMenuItem(
+                                            "Edit tags",
+                                            id="index-edit-tags-modal-open",
+                                            disabled=True,
+                                        ),
+                                        dbc.DropdownMenuItem(
+                                            "Compare",
+                                            id="experiments-table-compare",
+                                            disabled=True,
+                                        ),
+                                        html.Hr(),
+                                        dbc.DropdownMenuItem(
+                                            [
+                                                html.I(className="fas fa-tools"),
+                                                " Re-build database (",
+                                                html.Span(
+                                                    "?",
+                                                    id="re-build-database-help",
+                                                    style={
+                                                        "textDecoration": "underline"
+                                                    },
+                                                ),
+                                                ")",
+                                            ],
+                                            id="re-build-database",
+                                        ),
+                                        dbc.Tooltip(
+                                            "If you've added or removed experiments through a "
+                                            "method "
+                                            "other than the AllenNLP Manager CLI or Dashboard "
+                                            "since starting the server, you may need to re-build "
+                                            "the "
+                                            "database of experiments in order for the manager to "
+                                            "get "
+                                            "up-to-date.",
+                                            target="re-build-database-help",
+                                            placement="right",
+                                        ),
+                                    ],
+                                    label="Actions",
+                                    id="experiments-table-actions",
+                                ),
+                            ],
+                            className="mb-3",
+                        )
+                    ),
+                    ####################################################
+                    # </ Actions >
+                    ####################################################
+                    ####################################################
+                    # < Settings >
+                    ####################################################
+                    dbc.Col(
+                        dbc.InputGroup(
+                            [
+                                dbc.InputGroupAddon("Page size", addon_type="prepend"),
+                                dbc.Input(
+                                    id="index-set-page-size",
+                                    type="number",
+                                    min=1,
+                                    step=1,
+                                    value=PAGE_SIZE,
+                                ),
+                            ],
+                            #  className="mb-3",
+                        ),
+                        className="dash-col-align-right",
+                        lg=3,
+                        md=4,
+                        width=6,
+                    ),
+                    ####################################################
+                    # </ Settings >
+                    ####################################################
+                ],
+                justify="between",
+            ),
+            ############################################################
+            # </ Actions and settings row >
+            ############################################################
+            ############################################################
+            # < Edit tags modal pop out >
+            ############################################################
+            edit_tags_modal("index"),
+            ############################################################
+            # </ Edit tags modal pop out >
+            ############################################################
+            ############################################################
+            # < Main table >
+            ############################################################
+            render_dash_table(filter_query=self.p.filter_query),
+            ############################################################
+            # </ Main table >
+            ############################################################
+            html.Div(id="index-database-rebuilt-success"),
+        ]
+
+    def get_run_experiment_elements(self):
+        return ["Coming soon"]
+
     def get_elements(self):
         entries = OrderedDict(
             [
                 (
                     "browse-experiments",
                     SidebarEntry(
-                        "Browse experiments",
-                        [
-                            # Dummy divs used to trigger the `render_table_data` callback
-                            # after other callbacks that modify the data.
-                            html.Div(id="index-tags-edited-success"),
-                            ############################################################
-                            # < Actions and settings row >
-                            ############################################################
-                            dbc.Row(
-                                [
-                                    ####################################################
-                                    # < Actions >
-                                    ####################################################
-                                    dbc.Col(
-                                        dbc.InputGroup(
-                                            [
-                                                dbc.InputGroupAddon(
-                                                    dbc.Checkbox(
-                                                        id="experiments-table-select-all"
-                                                    ),
-                                                    addon_type="prepend",
-                                                ),
-                                                dbc.DropdownMenu(
-                                                    [
-                                                        dbc.DropdownMenuItem(
-                                                            "Open",
-                                                            id="experiments-table-open",
-                                                            disabled=True,
-                                                        ),
-                                                        dbc.DropdownMenuItem(
-                                                            "Edit tags",
-                                                            id="index-edit-tags-modal-open",
-                                                            disabled=True,
-                                                        ),
-                                                        dbc.DropdownMenuItem(
-                                                            "Compare",
-                                                            id="experiments-table-compare",
-                                                            disabled=True,
-                                                        ),
-                                                        html.Hr(),
-                                                        dbc.DropdownMenuItem(
-                                                            [
-                                                                html.I(
-                                                                    className="fas fa-tools"
-                                                                ),
-                                                                " Re-build database (",
-                                                                html.Span(
-                                                                    "?",
-                                                                    id="re-build-database-help",
-                                                                    style={
-                                                                        "textDecoration": "underline"
-                                                                    },
-                                                                ),
-                                                                ")",
-                                                            ],
-                                                            id="re-build-database",
-                                                        ),
-                                                        dbc.Tooltip(
-                                                            "If you've added or removed experiments through a "
-                                                            "method "
-                                                            "other than the AllenNLP Manager CLI or Dashboard "
-                                                            "since starting the server, you may need to re-build "
-                                                            "the "
-                                                            "database of experiments in order for the manager to "
-                                                            "get "
-                                                            "up-to-date.",
-                                                            target="re-build-database-help",
-                                                            placement="right",
-                                                        ),
-                                                    ],
-                                                    label="Actions",
-                                                    id="experiments-table-actions",
-                                                ),
-                                            ],
-                                            className="mb-3",
-                                        )
-                                    ),
-                                    ####################################################
-                                    # </ Actions >
-                                    ####################################################
-                                    ####################################################
-                                    # < Settings >
-                                    ####################################################
-                                    dbc.Col(
-                                        dbc.InputGroup(
-                                            [
-                                                dbc.InputGroupAddon(
-                                                    "Page size", addon_type="prepend"
-                                                ),
-                                                dbc.Input(
-                                                    id="index-set-page-size",
-                                                    type="number",
-                                                    min=1,
-                                                    step=1,
-                                                    value=PAGE_SIZE,
-                                                ),
-                                            ],
-                                            #  className="mb-3",
-                                        ),
-                                        className="dash-col-align-right",
-                                        lg=3,
-                                        md=4,
-                                        width=6,
-                                    ),
-                                    ####################################################
-                                    # </ Settings >
-                                    ####################################################
-                                ],
-                                justify="between",
-                            ),
-                            ############################################################
-                            # </ Actions and settings row >
-                            ############################################################
-                            ############################################################
-                            # < Edit tags modal pop out >
-                            ############################################################
-                            edit_tags_modal("index"),
-                            ############################################################
-                            # </ Edit tags modal pop out >
-                            ############################################################
-                            ############################################################
-                            # < Main table >
-                            ############################################################
-                            render_dash_table(filter_query=self.p.filter_query),
-                            ############################################################
-                            # </ Main table >
-                            ############################################################
-                            html.Div(id="index-database-rebuilt-success"),
-                        ],
+                        "Browse experiments", self.get_browse_experiments_elements()
                     ),
-                )
+                ),
+                (
+                    "run-experiment",
+                    SidebarEntry(
+                        "Run an experiment", self.get_run_experiment_elements()
+                    ),
+                ),
             ]
         )
         return SidebarLayout("Home", entries, self.p.active, self.p.to_dict())

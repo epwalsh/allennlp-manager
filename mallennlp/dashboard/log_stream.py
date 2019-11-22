@@ -3,11 +3,11 @@ from pathlib import Path
 import attr
 from dash.exceptions import PreventUpdate
 from dash.dependencies import Input, Output
+import dash_bootstrap_components as dbc
 import dash_core_components as dcc
 import dash_html_components as html
 
 from mallennlp.controllers.log_stream import format_log_line
-from mallennlp.dashboard.components import element
 from mallennlp.dashboard.page import Page
 from mallennlp.exceptions import InvalidPageParametersError
 from mallennlp.services.log_stream import LogStreamService
@@ -45,16 +45,21 @@ class LogStream(Page):
 
     def get_elements(self):
         elements = [
-            html.H3(self.s.stream.path),
-            element(
-                html.Div(
-                    id="log-stream-content",
-                    children=[
-                        format_log_line(line) for line in self.s.stream.readlines()
-                    ],
-                ),
-                width=True,
-            ),
+            dbc.Row(
+                [
+                    dbc.Col(
+                        html.Div(
+                            id="log-stream-content",
+                            children=[
+                                format_log_line(line)
+                                for line in self.s.stream.readlines()
+                            ],
+                        ),
+                        width=True,
+                        className="dash-padded-element dash-element-no-hover",
+                    )
+                ]
+            )
         ]
         if self.p.live:
             elements.append(
