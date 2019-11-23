@@ -86,8 +86,8 @@ def make_static_callback(
     def callback(*args):
         callback_id = uuid()
         start_time = time.time()
-        dispatch_pre_hooks(PageClass, method, method_name, callback_id, args)
         try:
+            dispatch_pre_hooks(PageClass, method, method_name, callback_id, args)
             result = getattr(PageClass, method_name)(*args)
             elapsed_time = time.time() - start_time
             dispatch_post_hooks(
@@ -117,8 +117,8 @@ def make_class_callback(
     def callback(*args):
         callback_id = uuid()
         start_time = time.time()
-        dispatch_pre_hooks(PageClass, method, method_name, callback_id, args)
         try:
+            dispatch_pre_hooks(PageClass, method, method_name, callback_id, args)
             result = getattr(PageClass, method_name)(*args)
             elapsed_time = time.time() - start_time
             dispatch_post_hooks(
@@ -149,8 +149,8 @@ def make_non_mutating_callback(
         args, store = args[:-1], args[-1]
         callback_id = uuid()
         start_time = time.time()
-        dispatch_pre_hooks(PageClass, method, method_name, callback_id, args)
         try:
+            dispatch_pre_hooks(PageClass, method, method_name, callback_id, args)
             page = PageClass.from_store(store)
             result = getattr(page, method_name)(*args)
             elapsed_time = time.time() - start_time
@@ -182,8 +182,8 @@ def make_mutating_callback(
         args, store = args[:-1], args[-1]
         callback_id = uuid()
         start_time = time.time()
-        dispatch_pre_hooks(PageClass, method, method_name, callback_id, args)
         try:
+            dispatch_pre_hooks(PageClass, method, method_name, callback_id, args)
             page = PageClass.from_store(store)
             result = getattr(page, method_name)(*args)
             new_store = page.to_store()

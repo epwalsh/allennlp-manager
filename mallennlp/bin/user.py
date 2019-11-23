@@ -3,6 +3,9 @@ import click
 from mallennlp.bin.common import requires_config, validate_password
 
 
+PERMISSIONS = ["READ", "READ_WRITE", "ADMIN"]
+
+
 @click.group("user")
 @click.pass_context
 @requires_config
@@ -67,16 +70,38 @@ def changepw(user_service, username, password):
     confirmation_prompt=True,
     callback=validate_password,
 )
+@click.option("--permissions", type=click.Choice(PERMISSIONS), default="READ")
 @click.pass_obj
-def add(user_service, username, password):
+def add(user_service, username, password, permissions):
     """
     Add a new dashboard user.
     """
-    user_service.create(username, password)
-    click.secho(
-        f"User {click.style(username, bold=True)} successfully created", fg="green"
+    from mallennlp.domain.user import Permissions
+
+    permissions = getattr(Permissions, permissions)
+    user_service.create(username, password, permissions=permissions)
+    click.echo(
+        f"User {click.style(username, bold=True, fg='green')} successfully created"
+    )
+
+
+@click.command("set-permissions")
+@click.argument("username", callback=validate_username)
+@click.argument("permissions", type=click.Choice(PERMISSIONS))
+@click.pass_obj
+def set_permissions(user_service, username, permissions):
+    from mallennlp.domain.user import Permissions
+
+    permissions = getattr(Permissions, permissions)
+    user = user_service.set_permissions(username, permissions)
+    if not user:
+        raise click.ClickException(click.style("failed to set permissions", fg="red"))
+    click.echo(
+        f"User {click.style(username, bold=True, fg='green')} "
+        f"permissions now {click.style(permissions.name, bold=True)}"
     )
 
 
 user_group.add_command(changepw)
 user_group.add_command(add)
+user_group.add_command(set_permissions)

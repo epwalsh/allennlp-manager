@@ -18,6 +18,7 @@ from mallennlp.controllers.experiment import (
 )
 from mallennlp.dashboard.page import Page
 from mallennlp.dashboard.components import SidebarEntry, SidebarLayout
+from mallennlp.domain.user import Permissions
 from mallennlp.services.cache import cache
 from mallennlp.services.serialization import serializable
 from mallennlp.services.experiment import ExperimentService
@@ -174,6 +175,9 @@ class IndexPage(Page):
     def get_run_experiment_elements(self):
         return ["Coming soon"]
 
+    def get_upload_experiment_elements(self):
+        return ["Coming soon"]
+
     def get_elements(self):
         entries = OrderedDict(
             [
@@ -187,6 +191,12 @@ class IndexPage(Page):
                     "run-experiment",
                     SidebarEntry(
                         "Run an experiment", self.get_run_experiment_elements()
+                    ),
+                ),
+                (
+                    "upload-experiment",
+                    SidebarEntry(
+                        "Upload an experiment", self.get_upload_experiment_elements()
                     ),
                 ),
             ]
@@ -307,6 +317,7 @@ class IndexPage(Page):
         ],
         [State("index-edit-tags-modal", "is_open")],
         mutating=False,
+        permissions=Permissions.READ_WRITE,
     )
     def toggle_modal(self, n1, n2, is_open):
         tags: Optional[List[str]] = None
@@ -365,6 +376,7 @@ class IndexPage(Page):
     @Page.callback(
         [Output("database-build-noti-container", "children")],
         [Input("re-build-database", "n_clicks")],
+        permissions=Permissions.READ_WRITE,
     )
     def notify_re_build_database(n_clicks):
         if not n_clicks:
@@ -388,6 +400,7 @@ class IndexPage(Page):
             Output("index-database-rebuilt-success", "children"),
         ],
         [Input("re-build-database", "n_clicks")],
+        permissions=Permissions.READ_WRITE,
     )
     def re_build_database(n_clicks):
         if not n_clicks:

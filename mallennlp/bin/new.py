@@ -10,6 +10,7 @@ def init_project(
     verb: str, name: str, path: Path, username: str, password: str, **kwargs
 ):
     from mallennlp.domain.config import ProjectConfig, ServerConfig
+    from mallennlp.domain.user import Permissions
     from mallennlp.services.db import init_db, get_db_from_cli
     from mallennlp.services.experiment import ExperimentService
     from mallennlp.services.config import Config
@@ -39,7 +40,7 @@ def init_project(
     # Add the user to the database.
     db = get_db_from_cli(config)
     user_service = UserService(db=db)
-    user_service.create(username, password)
+    user_service.create(username, password, permissions=Permissions.ADMIN)
 
     # Find existing experiments and add to database (does nothing if new project).
     experiment_entries = [
@@ -83,12 +84,12 @@ def validate_name(ctx, param, value):
 @click.argument("name", callback=validate_name)
 @click.option(
     "--username",
-    prompt="Set dashboard username",
+    prompt="Set a dashboard admin username",
     default=lambda: os.environ.get("USER", "admin"),
 )
 @click.option(
     "--password",
-    prompt="Set dashboard password",
+    prompt="Set the password for the admin",
     hide_input=True,
     confirmation_prompt=True,
     callback=validate_password,
@@ -116,12 +117,12 @@ def new(name: str, username: str, password: str, **kwargs):
 @click.command()
 @click.option(
     "--username",
-    prompt="Set dashboard username",
+    prompt="Set a dashboard admin username",
     default=lambda: os.environ.get("USER", "admin"),
 )
 @click.option(
     "--password",
-    prompt="Set dashboard password",
+    prompt="Set the password for the admin",
     hide_input=True,
     confirmation_prompt=True,
     callback=validate_password,

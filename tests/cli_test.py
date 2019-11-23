@@ -5,6 +5,7 @@ from click.testing import CliRunner
 import pytest
 
 from mallennlp.bin.main import main
+from mallennlp.domain.user import Permissions
 from mallennlp.services.db import get_db_from_cli
 from mallennlp.services.config import Config
 from mallennlp.services.user import UserService
@@ -131,6 +132,7 @@ def test_user_created(user_service):
     user = user_service.find(USERNAME, PASSWORD)
     assert user is not None
     assert user.alt_id == 0
+    assert user.permissions == Permissions.ADMIN
 
 
 def test_change_password(runner):

@@ -14,6 +14,7 @@ import mallennlp.controllers.experiment as ec
 from mallennlp.dashboard.components import SidebarEntry, SidebarLayout
 from mallennlp.dashboard.page import Page
 from mallennlp.domain.experiment import Status
+from mallennlp.domain.user import Permissions
 from mallennlp.exceptions import InvalidPageParametersError
 from mallennlp.services.cache import cache
 from mallennlp.services.experiment import ExperimentService
@@ -80,6 +81,9 @@ class ExperimentPage(Page):
     def get_metrics_elements(self):
         return ["Coming soon"]
 
+    def get_download_elements(self):
+        return ["Coming soon"]
+
     def get_elements(self):
         # Update database entry.
         self.es.update_db_entry()
@@ -89,6 +93,7 @@ class ExperimentPage(Page):
                 ("overview", SidebarEntry("Overview", self.get_overview_elements())),
                 ("epochs", SidebarEntry("Epochs", self.get_epochs_elements())),
                 ("metrics", SidebarEntry("Metrics", self.get_metrics_elements())),
+                ("download", SidebarEntry("Download", self.get_download_elements())),
             ]
         )
         return SidebarLayout("Experiment", entries, self.p.active, self.p.to_dict())
@@ -131,6 +136,7 @@ class ExperimentPage(Page):
         + [Input("experiment-edit-tags-noti", "is_open")],
         [State(f"experiment-tag-{i}", "key") for i in range(ec.MAX_TAG_BADGES)],
         mutating=False,
+        permissions=Permissions.READ_WRITE,
     )
     def update_tags(self, *args):
         ctx = dash.callback_context
@@ -158,6 +164,7 @@ class ExperimentPage(Page):
         ],
         [State("experiment-edit-tags-modal", "is_open")],
         mutating=False,
+        permissions=Permissions.READ_WRITE,
     )
     def toggle_modal(self, n1, n2, is_open):
         tags: Optional[List[str]] = None

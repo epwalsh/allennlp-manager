@@ -141,3 +141,14 @@ p {
 #notifications {
     z-index: 99;
 }
+
+.sidebar-nav-section-heading {
+    padding-top: 10px;
+    color: #444;
+}
+
+#settings-select-user,
+#settings-set-user-permissions {
+    width: 350px;
+    padding-right: 10px;
+}

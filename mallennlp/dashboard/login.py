@@ -24,10 +24,7 @@ class LoginPage(Page):
         next_pathname: str = attr.ib(
             default="/", converter=lambda p: "/" if p == "/login" else p  # type: ignore
         )
-        next_params: str = attr.ib(
-            default="?_refresh=true",
-            converter=lambda p: p if p else "?_refresh=true",  # type: ignore
-        )
+        next_params: str = ""
         active: str = "sign-in"
 
     def get_sign_in_elements(self):
@@ -145,6 +142,8 @@ class LoginPage(Page):
         time.sleep(1)
         next_pathname = self.p.next_pathname
         next_params = self.p.next_params
-        if "_refresh=true" not in next_params:
-            next_params = next_params + "&_refresh=true"
+        if not next_params:
+            next_params = "?_r=0"
+        else:
+            next_params = next_params + "&_r=0"
         return next_pathname, next_pathname, next_params

@@ -15,3 +15,7 @@ class CudaUnavailableError(Error):
 
 class InvalidPageParametersError(Error):
     pass
+
+
+class NotPermittedError(Error):
+    pass

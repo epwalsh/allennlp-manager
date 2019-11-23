@@ -5,7 +5,9 @@ from allennlp.common.registrable import Registrable
 from dash.dependencies import Input, Output, State
 import dash_core_components as dcc
 import dash_html_components as html
+from flask_login import current_user
 
+from mallennlp.exceptions import NotPermittedError
 from mallennlp.services.serialization import serializable
 from mallennlp.services.url_parse import from_url
 
@@ -65,12 +67,24 @@ error : ``Exception``
 def log_received(
     PageClass: Type[T], method_name: str, callback_id: str, args: Tuple[Any, ...]
 ):
-    PageClass.logger.info(
+    PageClass.logger.debug(
         "received callback %s.%s[%s]", PageClass.__name__, method_name, callback_id
     )
 
 
-DEFAULT_PRE_HOOKS: Tuple[PreHookType, ...] = (log_received,)
+def ensure_permissions(
+    PageClass: Type[T], method_name: str, callback_id: str, args: Tuple[Any, ...]
+):
+    method = getattr(PageClass, method_name)
+    permissions = getattr(method, "permissions")
+    if permissions is not None and current_user.permissions < permissions:
+        raise NotPermittedError(
+            f"Callback {PageClass.__name__}.{method_name}[{callback_id}] "
+            f"not permitted. You do not have adequate permissions"
+        )
+
+
+DEFAULT_PRE_HOOKS: Tuple[PreHookType, ...] = (log_received, ensure_permissions)
 
 
 def log_success(
@@ -81,7 +95,7 @@ def log_success(
     elapsed_time: float,
     retval: Any,
 ):
-    PageClass.logger.info(
+    PageClass.logger.debug(
         "callback %s.%s[%s] succeeded in %.4f seconds",
         PageClass.__name__,
         method_name,
@@ -101,7 +115,7 @@ def log_err(
     e: Exception,
 ):
     PageClass.logger.exception(e)
-    PageClass.logger.info(
+    PageClass.logger.error(
         "callback %s.%s[%s] failed", PageClass.__name__, method_name, callback_id
     )
 
@@ -200,6 +214,7 @@ class Page(Registrable):
         pre_hooks: Iterable[PreHookType] = DEFAULT_PRE_HOOKS,
         post_hooks: Iterable[PostHookType] = DEFAULT_POST_HOOKS,
         err_hooks: Iterable[ErrHookType] = DEFAULT_ERR_HOOKS,
+        permissions: Optional[int] = None,
     ):
         """
         Register a Page callback.
@@ -232,6 +247,10 @@ class Page(Registrable):
         err_hooks : ``Iterable[ErrHookType]``, default = DEFAULT_ERR_HOOKS
             Functions to run after a callback fails.
 
+        permissions : ``Optional[int]``, default = None
+            Required permission level of the user in the active session in order
+            to execute the callback.
+
         """
         if not outputs:
             outputs = []
@@ -247,6 +266,7 @@ class Page(Registrable):
             method.pre_hooks = pre_hooks
             method.post_hooks = post_hooks
             method.err_hooks = err_hooks
+            method.permissions = permissions
             return method
 
         return mark_callback
