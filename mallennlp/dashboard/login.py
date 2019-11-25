@@ -13,14 +13,14 @@ from mallennlp.dashboard.components import SidebarEntry, SidebarLayout
 from mallennlp.dashboard.page import Page
 from mallennlp.services.user import UserService
 from mallennlp.services.serialization import serializable
-from mallennlp.services.url_parse import from_url
+from mallennlp.services.url_parse import url_params
 
 
 @Page.register("/login")
 class LoginPage(Page):
     permissions = 0
 
-    @from_url
+    @url_params
     @serializable
     class Params:
         next_pathname: str = attr.ib(

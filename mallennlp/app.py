@@ -19,6 +19,7 @@ from mallennlp.exceptions import InvalidPageParametersError, NotPermittedError
 from mallennlp.services import db, cache
 from mallennlp.services.config import Config
 from mallennlp.services.user import UserService
+from mallennlp.services.url_parse import from_url
 
 
 def init_dash(flask_app: Flask, config: Config):
@@ -167,7 +168,7 @@ def init_dash(flask_app: Flask, config: Config):
                         "You do not have adequate permissions to view this page"
                     )
 
-            params = PageClass.Params.from_url(param_string)
+            params = from_url(PageClass.Params, param_string)
             return PageClass.from_params(params).render() + (None, updated_data)
         except ConfigurationError:
             return (

@@ -1,9 +1,12 @@
-from typing import Dict, List, Any, Union
+from typing import Dict, List, Any, Union, TypeVar, Type
 
 import attr
 import urllib.parse as urlparse
 
 from mallennlp.exceptions import InvalidPageParametersError
+
+
+T = TypeVar("T")
 
 
 class ParamParser:
@@ -119,22 +122,13 @@ class ParamParser:
         return self.params_cls(**init_params)
 
 
-def from_url(maybe_cls=None, ignore_unknown: bool = True):
-    def wrap(cls):
-        if not attr.has(cls):
-            cls = attr.s(auto_attribs=True, slots=True)(cls)
-        parser = ParamParser(cls, ignore_unknown=ignore_unknown)
+def from_url(cls: Type[T], url: str, ignore_unknown: bool = True) -> T:
+    raw_params: Dict[str, List[str]] = urlparse.parse_qs(urlparse.urlparse(url).query)
+    parser = ParamParser(cls, ignore_unknown=ignore_unknown)
+    return parser.parse(raw_params)
 
-        @classmethod  # type: ignore
-        def from_url(cls, url: str):
-            raw_params: Dict[str, List[str]] = urlparse.parse_qs(
-                urlparse.urlparse(url).query
-            )
-            return parser.parse(raw_params)
 
-        cls.from_url = from_url
-        return cls
-
-    if maybe_cls is None:
-        return wrap
-    return wrap(maybe_cls)
+def url_params(cls):
+    if not attr.has(cls):
+        cls = attr.s(auto_attribs=True, slots=True)(cls)
+    return cls

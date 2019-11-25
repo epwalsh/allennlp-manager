@@ -22,7 +22,7 @@ from mallennlp.domain.user import Permissions
 from mallennlp.services.cache import cache
 from mallennlp.services.serialization import serializable
 from mallennlp.services.experiment import ExperimentService
-from mallennlp.services.url_parse import from_url
+from mallennlp.services.url_parse import url_params
 
 
 class UpdateActionsOut(NamedTuple):
@@ -42,7 +42,7 @@ class IndexPage(Page):
         Keep track of selected row(s).
         """
 
-    @from_url
+    @url_params
     @serializable
     class Params:
         filter_query: str = ""

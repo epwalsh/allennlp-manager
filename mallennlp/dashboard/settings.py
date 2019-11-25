@@ -11,14 +11,14 @@ from flask_login import current_user, logout_user
 from mallennlp.dashboard.components import SidebarEntry, SidebarLayout
 from mallennlp.dashboard.page import Page
 from mallennlp.domain.user import Permissions
-from mallennlp.services.url_parse import from_url
+from mallennlp.services.url_parse import url_params
 from mallennlp.services.user import MIN_PASSWORD_LENGTH, UserService
 from mallennlp.services.serialization import serializable
 
 
 @Page.register("/settings")
 class SettingsPage(Page):
-    @from_url
+    @url_params
     @serializable
     class Params:
         active: str = "profile"

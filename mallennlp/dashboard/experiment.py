@@ -19,12 +19,12 @@ from mallennlp.exceptions import InvalidPageParametersError
 from mallennlp.services.cache import cache
 from mallennlp.services.experiment import ExperimentService
 from mallennlp.services.serialization import serializable
-from mallennlp.services.url_parse import from_url
+from mallennlp.services.url_parse import url_params
 
 
 @Page.register("/experiment")
 class ExperimentPage(Page):
-    @from_url
+    @url_params
     @serializable
     class Params:
         path: str = attr.ib()

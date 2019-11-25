@@ -12,7 +12,7 @@ from mallennlp.dashboard.page import Page
 from mallennlp.exceptions import InvalidPageParametersError
 from mallennlp.services.log_stream import LogStreamService
 from mallennlp.services.serialization import serializable
-from mallennlp.services.url_parse import from_url
+from mallennlp.services.url_parse import url_params
 
 
 @Page.register("/log-stream")
@@ -21,7 +21,7 @@ class LogStream(Page):
     class SessionState:
         stream: LogStreamService
 
-    @from_url
+    @url_params
     @serializable
     class Params:
         path: str = attr.ib()

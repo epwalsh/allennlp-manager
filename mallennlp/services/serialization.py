@@ -54,19 +54,18 @@ def from_default(ObjType: Type[T], default: Any) -> T:
     return ObjType(**params)  # type: ignore
 
 
-def to_dict(self) -> Dict[str, Any]:
-    return attr.asdict(self, retain_collection_types=False)
+def to_dict(o: T) -> Dict[str, Any]:
+    return attr.asdict(o, retain_collection_types=False)
 
 
-def serialize(self) -> str:
+def serialize(o: T) -> str:
     """
     Encode a serializable object into a str.
     """
-    return JsonSerializer().encode(self)
+    return JsonSerializer().encode(o)
 
 
-@classmethod  # type: ignore
-def deserialize(cls, s: str):
+def deserialize(cls: Type[T], s: str) -> T:
     """
     Decode a serializable object from a str.
     """
@@ -78,7 +77,6 @@ def serializable(cls):
     """
     Class decorator for creating serializable classes.
     """
-    cls.serialize = serialize
-    cls.to_dict = to_dict
-    cls.deserialize = deserialize
-    return attr.s(auto_attribs=True, slots=True)(cls)
+    if not attr.has(cls):
+        cls = attr.s(auto_attribs=True, slots=True)(cls)
+    return cls

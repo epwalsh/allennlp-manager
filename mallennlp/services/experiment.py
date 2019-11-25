@@ -7,6 +7,7 @@ from allennlp.common.params import Params
 
 from mallennlp.domain.experiment import Experiment, Epoch, Meta, FileData, Status
 from mallennlp.services.db import Tables, get_db_from_app
+from mallennlp.services.serialization import serialize
 
 
 def with_db_update(method):
@@ -104,7 +105,7 @@ class ExperimentService:
         meta = self.get_meta()
         meta.tags = tags
         with open(self.e.meta.path, "w") as f:
-            f.write(meta.serialize())  # type: ignore
+            f.write(serialize(meta))  # type: ignore
 
     def get_metrics(self) -> Optional[Dict[str, Any]]:
         fd = self.e.metrics

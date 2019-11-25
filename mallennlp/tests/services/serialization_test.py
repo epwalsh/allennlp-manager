@@ -1,6 +1,6 @@
 from typing import List
 
-from mallennlp.services.serialization import serializable
+from mallennlp.services.serialization import serializable, serialize, deserialize
 
 
 @serializable
@@ -21,5 +21,5 @@ def test_encode_and_decode():
     assert o.a == 1
     assert o.b.x == "1"
     assert o.b._y == "2"
-    s = o.serialize()  # type: ignore
-    assert Outer.deserialize(s) == o  # type: ignore
+    s = serialize(o)  # type: ignore
+    assert deserialize(Outer, s) == o  # type: ignore

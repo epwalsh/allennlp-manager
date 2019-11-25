@@ -8,8 +8,8 @@ import dash_html_components as html
 from flask_login import current_user
 
 from mallennlp.exceptions import NotPermittedError
-from mallennlp.services.serialization import serializable
-from mallennlp.services.url_parse import from_url
+from mallennlp.services.serialization import serializable, serialize, deserialize
+from mallennlp.services.url_parse import url_params
 
 
 T = TypeVar("T", bound="Page")
@@ -151,7 +151,7 @@ class Page(Registrable):
 
         pass
 
-    @from_url
+    @url_params
     @serializable
     class Params:
         """
@@ -198,12 +198,12 @@ class Page(Registrable):
 
     @classmethod
     def from_store(cls, data: Dict[str, Any]):
-        s = cls.SessionState.deserialize(data["s"])  # type: ignore
-        p = cls.Params.deserialize(data["p"])  # type: ignore
+        s = deserialize(cls.SessionState, data["s"])  # type: ignore
+        p = deserialize(cls.Params, data["p"])  # type: ignore
         return cls(s, p)
 
     def to_store(self) -> Dict[str, Any]:
-        return {"s": self.s.serialize(), "p": self.p.serialize()}
+        return {"s": serialize(self.s), "p": serialize(self.p)}
 
     @classmethod
     def callback(

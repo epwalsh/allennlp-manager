@@ -95,7 +95,7 @@ You can put the `hello_world` module in the root of your project directory, or j
 ```python
 from mallennlp.dashboard.page import Page
 from mallennlp.services.serialization import serializable
-from mallennlp.services.url_parse import from_url
+from mallennlp.services.url_parse import url_params
 
 @Page.register("/hello-world")
 class HelloWorld(Page):
@@ -104,7 +104,7 @@ class HelloWorld(Page):
     class SessionState:
         name: str = "World!"
 
-    @from_url
+    @url_params
     @serializable
     class Params:
         initial_message: str = "Hello, World!"

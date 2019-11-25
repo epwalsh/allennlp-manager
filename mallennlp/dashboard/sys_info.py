@@ -20,7 +20,7 @@ from mallennlp.dashboard.page import Page
 from mallennlp.domain.sys_info import GpuInfo
 from mallennlp.exceptions import CudaUnavailableError
 from mallennlp.services.serialization import serializable
-from mallennlp.services.url_parse import from_url
+from mallennlp.services.url_parse import url_params
 
 
 MAX_DEVICE_HISTORY = 20
@@ -40,7 +40,7 @@ class SysInfoPage(Page):
             default=attr.Factory(empty_device_history)
         )
 
-    @from_url
+    @url_params
     @serializable
     class Params:
         active: str = "platform"
