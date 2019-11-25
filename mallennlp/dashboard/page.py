@@ -124,9 +124,10 @@ DEFAULT_ERR_HOOKS: Tuple[ErrHookType, ...] = (log_err,)
 
 
 class Page(Registrable):
-    requires_login = True
+    permissions: int = 1
     """
-    Should the page require that the user be logged in to view it?
+    The minimum permissions level required to view the page. Defaults = 1 (any authenticated
+    user).
     """
 
     navlink_name: Optional[str] = None

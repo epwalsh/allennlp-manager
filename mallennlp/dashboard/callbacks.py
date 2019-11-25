@@ -2,7 +2,6 @@ from uuid import uuid4
 import inspect
 import time
 from typing import Type, Callable, Any, Tuple, Iterable
-
 from dash import Dash
 from dash.dependencies import Output, State
 from dash.exceptions import PreventUpdate
@@ -226,7 +225,7 @@ def register_callbacks(dash: Dash, PageClass: Type[Page], method: Callable[..., 
     n_outputs = len(outputs)
     method_name = method.__name__
     Page.logger.debug(
-        "registered callback %s.%s (%s, %s) -> %s",
+        "registering callback %s.%s (%s, %s) -> %s",
         PageClass.__name__,
         method_name,
         inputs,

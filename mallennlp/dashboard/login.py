@@ -18,6 +18,8 @@ from mallennlp.services.url_parse import from_url
 
 @Page.register("/login")
 class LoginPage(Page):
+    permissions = 0
+
     @from_url
     @serializable
     class Params:

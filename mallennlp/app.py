@@ -15,7 +15,7 @@ from flask_login import LoginManager, login_required, logout_user, current_user
 from mallennlp.dashboard.callbacks import register_callbacks, store_callback
 from mallennlp.dashboard.page import Page
 from mallennlp.domain.user import AnonymousUser
-from mallennlp.exceptions import InvalidPageParametersError
+from mallennlp.exceptions import InvalidPageParametersError, NotPermittedError
 from mallennlp.services import db, cache
 from mallennlp.services.config import Config
 from mallennlp.services.user import UserService
@@ -155,12 +155,17 @@ def init_dash(flask_app: Flask, config: Config):
         updated_data = {"pathname": pathname, "param_string": param_string}
         try:
             PageClass = Page.by_name(pathname)
-            if PageClass.requires_login and not current_user.is_authenticated:
-                PageClass = Page.by_name("/login")
-                params = PageClass.Params(
-                    next_pathname=pathname, next_params=param_string
-                )
-                return PageClass.from_params(params).render() + (None, updated_data)
+            if PageClass.permissions:
+                if not current_user.is_authenticated:
+                    PageClass = Page.by_name("/login")
+                    params = PageClass.Params(
+                        next_pathname=pathname, next_params=param_string
+                    )
+                    return PageClass.from_params(params).render() + (None, updated_data)
+                if PageClass.permissions > current_user.permissions:
+                    raise NotPermittedError(
+                        "You do not have adequate permissions to view this page"
+                    )
 
             params = PageClass.Params.from_url(param_string)
             return PageClass.from_params(params).render() + (None, updated_data)
