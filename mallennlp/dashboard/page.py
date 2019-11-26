@@ -1,11 +1,11 @@
 from logging import Logger
 from typing import Any, Dict, List, Optional, Tuple, Callable, Iterable, Type, TypeVar
 
-from allennlp.common.registrable import Registrable
 from dash.dependencies import Input, Output, State
 import dash_core_components as dcc
 import dash_html_components as html
 from flask_login import current_user
+from registrable import Registrable
 
 from mallennlp.exceptions import NotPermittedError
 from mallennlp.services.serialization import serializable, serialize, deserialize

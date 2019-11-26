@@ -1,6 +1,6 @@
 version: 2
 jobs:
-  test:
+  test_py36:
     docker:
       - image: circleci/python:3.6
     working_directory: ~/allennlp-manager
@@ -101,6 +101,6 @@ workflows:
   version: 2
   test:
     jobs:
-      - test
+      - test_py36
       - test_py37
       # - test_py38
