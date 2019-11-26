@@ -2,7 +2,6 @@ import inspect
 import logging
 
 from allennlp.common.util import import_submodules
-from allennlp.common.checks import ConfigurationError
 from dash import Dash
 from dash.dependencies import Input, Output, State
 from dash.exceptions import PreventUpdate
@@ -11,6 +10,7 @@ import dash_core_components as dcc
 import dash_html_components as html
 from flask import Flask, redirect
 from flask_login import LoginManager, login_required, logout_user, current_user
+from registrable.exceptions import RegistrationError
 
 from mallennlp.dashboard.callbacks import register_callbacks, store_callback
 from mallennlp.dashboard.page import Page
@@ -170,7 +170,7 @@ def init_dash(flask_app: Flask, config: Config):
 
             params = from_url(PageClass.Params, param_string)
             return PageClass.from_params(params).render() + (None, updated_data)
-        except ConfigurationError:
+        except RegistrationError:
             return (
                 [],
                 [],
