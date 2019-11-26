@@ -82,7 +82,8 @@ delete-branch :
 		&& git checkout master \
 		&& git pull \
 		&& echo "Deleting branch $$BRANCH" \
-		&& git branch -d $$BRANCH
+		&& git branch -d $$BRANCH \
+		&& git remote prune origin
 
 .PHONY : install
 install :
