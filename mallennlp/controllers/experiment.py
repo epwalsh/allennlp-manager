@@ -1,5 +1,6 @@
 from collections import OrderedDict
 import urllib.parse
+from pathlib import Path
 from typing import Any, List, Dict, Tuple, Set
 
 import dash_bootstrap_components as dbc
@@ -155,7 +156,7 @@ def get_status_badge(status: Status):
     else:
         status_badge_color = "secondary"
     return dbc.Badge(
-        f"STATUS: {status.value}", className="ml-1", color=status_badge_color
+        status.value, color=status_badge_color, className="experiment-status-badge"
     )
 
 
@@ -286,3 +287,27 @@ def display_metrics(es: ExperimentService):
                 f"**Validation {other_field_name[16:].replace('_', ' ')}:** `{field_value}`"
             )
     return dcc.Markdown("\n\n".join(fields))
+
+
+def get_path_breadcrumbs(path: Path):
+    parts: List[Any] = [
+        dcc.Link(href="/", children=html.I(className="fas fa-home")),
+        html.I("/", className="path-divider"),
+    ]
+    base_path = ""
+    for part in path.parts[:-1]:
+        base_path = base_path + part + "/"
+        parts.extend(
+            [
+                dcc.Link(
+                    href="/?"
+                    + urllib.parse.urlencode(
+                        {"filter_query": "{path} contains " + base_path + "*"}
+                    ),
+                    children=part,
+                ),
+                html.I("/", className="path-divider"),
+            ]
+        )
+    parts.extend([path.parts[-1], html.I("/", className="path-divider")])
+    return parts

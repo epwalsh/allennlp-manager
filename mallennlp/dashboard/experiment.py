@@ -1,3 +1,4 @@
+import urllib.parse
 from collections import OrderedDict
 from pathlib import Path
 from typing import Optional, List
@@ -54,14 +55,10 @@ class ExperimentPage(Page):
     def get_overview_elements(self):
         status = ec.get_status(self.es)
         elements = [
-            html.H5(
-                [
-                    f"{str(self.path)}",
-                    html.Span(
-                        id="experiment-status-badge",
-                        children=ec.get_status_badge(status),
-                    ),
-                ]
+            html.H5(ec.get_path_breadcrumbs(self.path)),
+            html.Span(
+                id="experiment-status-badge",
+                children=[html.Strong("Status:"), ec.get_status_badge(status)],
             ),
             html.Div(id="experiment-tags", children=ec.display_tags(self.es)),
             ec.edit_tags_modal("experiment"),
