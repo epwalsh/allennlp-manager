@@ -1,6 +1,6 @@
 [project]
 name = "example-project"
-loglevel = "INFO"
+loglevel = "DEBUG"
 display_name = "My Project"
 
 [server]

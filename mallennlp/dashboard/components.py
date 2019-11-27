@@ -51,7 +51,8 @@ def SidebarLayout(
         raise InvalidPageParametersError("Bad sidebar option")
     if other_params:
         param_string = urllib.parse.urlencode(
-            {k: v for k, v in other_params.items() if k != "active"}, doseq=True
+            {k: v for k, v in other_params.items() if k != "active" and v is not None},
+            doseq=True,
         )
         if param_string:
             param_string = param_string + "&"

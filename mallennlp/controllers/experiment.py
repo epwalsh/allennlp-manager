@@ -58,7 +58,7 @@ def get_dash_table_data(
     else:
         sort_field = "path"
         sort_direction = "ASC"
-    if filter_expression:
+    if filter_expression and " contains " in filter_expression:
         where_clause, args = parse_filters(filter_expression)
         cursor = db.execute(
             f"SELECT * "
@@ -85,10 +85,11 @@ def get_dash_table_data(
     ]
 
 
-def render_dash_table(filter_query: str = ""):
+def render_dash_table(filter_query: str = None):
+    filter_query = filter_query or "{path} contains *"
     return dash_table.DataTable(
         id="experiments-table",
-        data=get_dash_table_data(),
+        #  data=get_dash_table_data(filter_expression=filter_query),
         columns=[
             {"id": "path", "name": "Path"},
             {"id": "tags", "name": "Tags"},
@@ -117,15 +118,18 @@ def render_dash_table(filter_query: str = ""):
             }
         ],
         style_table={"overflowX": "scroll"},
-        page_current=0,
-        page_size=PAGE_SIZE,
+        #  page_current=0,
+        #  page_size=PAGE_SIZE,
         page_action="custom",
         sort_action="custom",
         sort_mode="single",
-        sort_by=[],
+        #  sort_by=[],
         filter_action="custom",
         filter_query=filter_query,
         row_selectable="multi",
+        persistence=True,
+        persistence_type="memory",
+        #  persisted_props=["selected", "page_size", "filter_query"],
     )
 
 

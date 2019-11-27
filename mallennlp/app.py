@@ -139,9 +139,9 @@ def init_dash(flask_app: Flask, config: Config):
         [State("current-path", "data")],
     )
     def render_page(pathname: str, param_string: str, current_path_data):
-        logger.debug("Attempting to render page %s", pathname)
         if pathname is None:
             raise PreventUpdate
+        logger.debug("Attempting to render page %s", pathname)
         if pathname != "/" and pathname.endswith("/") or pathname.endswith("#"):
             pathname = pathname[:-1]
         if current_path_data:

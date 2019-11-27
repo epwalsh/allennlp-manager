@@ -68,7 +68,7 @@ def log_received(
     PageClass: Type[T], method_name: str, callback_id: str, args: Tuple[Any, ...]
 ):
     PageClass.logger.debug(
-        "received callback %s.%s[%s]", PageClass.__name__, method_name, callback_id
+        "callback %s.%s[%s] received", PageClass.__name__, method_name, callback_id
     )
 
 

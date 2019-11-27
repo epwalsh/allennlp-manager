@@ -45,7 +45,7 @@ class IndexPage(Page):
     @url_params
     @serializable
     class Params:
-        filter_query: str = ""
+        filter_query: Optional[str] = None
         active: str = "browse-experiments"
 
     def get_browse_experiments_elements(self):
@@ -251,8 +251,10 @@ class IndexPage(Page):
     def render_table_data(
         page, page_size, sort_by, filter_expression, tags_updated, db_updated
     ):
-        if page is None or page_size is None:
+        page = page or 0
+        if not page_size:
             raise PreventUpdate
+        page = page or 0
         return get_dash_table_data(page, page_size, sort_by, filter_expression)
 
     @staticmethod
@@ -264,7 +266,7 @@ class IndexPage(Page):
         ],
     )
     def select_all(checked, data):
-        if not data:
+        if not data or checked is None:
             raise PreventUpdate
         if not checked:
             return []
