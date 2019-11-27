@@ -19,7 +19,7 @@ from mallennlp.dashboard.components import SidebarEntry, SidebarLayout
 from mallennlp.dashboard.page import Page
 from mallennlp.domain.sys_info import GpuInfo
 from mallennlp.exceptions import CudaUnavailableError
-from mallennlp.services.serialization import serializable
+from mallennlp.services.serialization import serializable, to_dict
 from mallennlp.services.url_parse import url_params
 
 
@@ -86,7 +86,7 @@ class SysInfoPage(Page):
                 )
             )
         return SidebarLayout(
-            "System info", OrderedDict(sidebar_entries), self.p.active, self.p.to_dict()
+            "System info", OrderedDict(sidebar_entries), self.p.active, to_dict(self.p)
         )
 
     @Page.callback(

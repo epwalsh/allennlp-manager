@@ -13,7 +13,7 @@ from mallennlp.dashboard.page import Page
 from mallennlp.domain.user import Permissions
 from mallennlp.services.url_parse import url_params
 from mallennlp.services.user import MIN_PASSWORD_LENGTH, UserService
-from mallennlp.services.serialization import serializable
+from mallennlp.services.serialization import serializable, to_dict
 
 
 @Page.register("/settings")
@@ -336,7 +336,7 @@ class SettingsPage(Page):
                 )
             )
         return SidebarLayout(
-            "Settings", OrderedDict(entries), self.p.active, self.p.to_dict()
+            "Settings", OrderedDict(entries), self.p.active, to_dict(self.p)
         )
 
     def get_notifications(self):

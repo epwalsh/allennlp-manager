@@ -20,7 +20,7 @@ from mallennlp.dashboard.page import Page
 from mallennlp.dashboard.components import SidebarEntry, SidebarLayout
 from mallennlp.domain.user import Permissions
 from mallennlp.services.cache import cache
-from mallennlp.services.serialization import serializable
+from mallennlp.services.serialization import serializable, to_dict
 from mallennlp.services.experiment import ExperimentService
 from mallennlp.services.url_parse import url_params
 
@@ -201,7 +201,7 @@ class IndexPage(Page):
                 ),
             ]
         )
-        return SidebarLayout("Home", entries, self.p.active, self.p.to_dict())
+        return SidebarLayout("Home", entries, self.p.active, to_dict(self.p))
 
     def get_notifications(self):
         return [

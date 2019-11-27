@@ -12,7 +12,7 @@ from flask_login import login_user, current_user
 from mallennlp.dashboard.components import SidebarEntry, SidebarLayout
 from mallennlp.dashboard.page import Page
 from mallennlp.services.user import UserService
-from mallennlp.services.serialization import serializable
+from mallennlp.services.serialization import serializable, to_dict
 from mallennlp.services.url_parse import url_params
 
 
@@ -72,7 +72,7 @@ class LoginPage(Page):
                 [("sign-in", SidebarEntry("Sign in", self.get_sign_in_elements()))]
             ),
             self.p.active,
-            self.p.to_dict(),
+            to_dict(self.p),
         )
 
     def get_notifications(self):
