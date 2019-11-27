@@ -15,6 +15,25 @@ from mallennlp.services.url_parse import url_params
 T = TypeVar("T", bound="Page")
 
 
+RegistrationHookType = Callable[
+    [Type[T], str, List[Output], List[Input], List[State]], None
+]
+"""
+A callable that accepts the following parameters:
+
+PageClass : ``Type[T]``
+    The class of the page.
+method_name : ``str``
+    The method name of the callback.
+outputs : ``List[Output]``
+    Outputs of the callback.
+inputs : ``List[Input]``
+    Inputs of the callback.
+states : ``List[States]``
+    States of the callback.
+"""
+
+
 PreHookType = Callable[[Type[T], str, str, Tuple[Any, ...]], None]
 """
 A callable that accepts the following parameters:
@@ -62,6 +81,40 @@ callback_args : ``Tuple[Any, ...]``
 error : ``Exception``
     The exception that was raised during the callback invocation.
 """
+
+IgnoreHookType = Callable[[Type[T], str, str, Tuple[Any, ...]], None]
+"""
+A callable that accepts the following parameters:
+
+PageClass : ``Type[T]``
+    The class of the page.
+method_name : ``str``
+    The method name of the callback.
+callback_id : ``str``
+    A unique ID assigns to the invocation of the callback.
+callback_args : ``Tuple[Any, ...]``
+    The arguments of the callback invocation.
+"""
+
+
+def log_registration(
+    PageClass: Type[T],
+    method_name: str,
+    outputs: List[Output],
+    inputs: List[Input],
+    states: List[State],
+):
+    PageClass.logger.debug(
+        "callback %s.%s registered (%s, %s) -> %s",
+        PageClass.__name__,
+        method_name,
+        inputs,
+        states,
+        outputs,
+    )
+
+
+DEFAULT_REGISTRATION_HOOKS: Tuple[RegistrationHookType, ...] = (log_registration,)
 
 
 def log_received(
@@ -121,6 +174,17 @@ def log_err(
 
 
 DEFAULT_ERR_HOOKS: Tuple[ErrHookType, ...] = (log_err,)
+
+
+def log_ignore(
+    PageClass: Type[T], method_name: str, callback_id: str, args: Tuple[Any, ...]
+):
+    PageClass.logger.debug(
+        "callback %s.%s[%s] ignored", PageClass.__name__, method_name, callback_id
+    )
+
+
+DEFAULT_IGNORE_HOOKS: Tuple[IgnoreHookType, ...] = (log_ignore,)
 
 
 class Page(Registrable):
@@ -212,9 +276,11 @@ class Page(Registrable):
         inputs: List[Input] = None,
         states: List[State] = None,
         mutating: bool = True,
+        registration_hooks: Iterable[RegistrationHookType] = DEFAULT_REGISTRATION_HOOKS,
         pre_hooks: Iterable[PreHookType] = DEFAULT_PRE_HOOKS,
         post_hooks: Iterable[PostHookType] = DEFAULT_POST_HOOKS,
         err_hooks: Iterable[ErrHookType] = DEFAULT_ERR_HOOKS,
+        ignore_hooks: Iterable[IgnoreHookType] = DEFAULT_IGNORE_HOOKS,
         permissions: Optional[int] = None,
     ):
         """
@@ -239,14 +305,20 @@ class Page(Registrable):
             Only relevant to an instance method callback. If ``True``, the ``Page``'s
             session state will be updated after the callback method returns.
 
+        registration_hooks : ``Iterable[RegistrationHookType]``, default = DEFAULT_REGISTRATION_HOOKS
+            Functions to run right when the callback is registered.
+
         pre_hooks : ``Iterable[PreHookType]``, default = DEFAULT_PRE_HOOKS
-            Functions to run right before a callback executes.
+            Functions to run right before the callback executes.
 
         post_hooks : ``Iterable[PostHookType]``, default = DEFAULT_POST_HOOKS
-            Functions to run right after a callback successfully executes.
+            Functions to run right after the callback successfully executes.
 
         err_hooks : ``Iterable[ErrHookType]``, default = DEFAULT_ERR_HOOKS
-            Functions to run after a callback fails.
+            Functions to run after the callback fails.
+
+        ignore_hooks : ``Iterable[IgnoreHookType]``, default = DEFAULT_IGNORE_HOOKS
+            Functions to run when the callback raises ``PreventUpdate``.
 
         permissions : ``Optional[int]``, default = None
             Required permission level of the user in the active session in order
@@ -264,9 +336,11 @@ class Page(Registrable):
             method.is_callback = True
             method.is_mutating = mutating
             method.callback_parameters = (outputs, inputs, states)
+            method.registration_hooks = registration_hooks
             method.pre_hooks = pre_hooks
             method.post_hooks = post_hooks
             method.err_hooks = err_hooks
+            method.ignore_hooks = ignore_hooks
             method.permissions = permissions
             return method
 

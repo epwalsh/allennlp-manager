@@ -7,7 +7,14 @@ from dash.dependencies import Output, State
 from dash.exceptions import PreventUpdate
 import dash_bootstrap_components as dbc
 
-from mallennlp.dashboard.page import Page, PreHookType, PostHookType, ErrHookType
+from mallennlp.dashboard.page import (
+    Page,
+    RegistrationHookType,
+    PreHookType,
+    PostHookType,
+    ErrHookType,
+    IgnoreHookType,
+)
 
 
 def uuid():
@@ -75,6 +82,18 @@ def dispatch_err_hooks(
         hook(PageClass, method_name, callback_id, args, e)
 
 
+def dispatch_ignore_hooks(
+    PageClass: Type[Page],
+    method: Callable[..., Any],
+    method_name: str,
+    callback_id: str,
+    args: Tuple[Any, ...],
+):
+    hooks: Iterable[IgnoreHookType] = getattr(method, "ignore_hooks", None) or []
+    for hook in hooks:
+        hook(PageClass, method_name, callback_id, args)
+
+
 def make_static_callback(
     PageClass: Type[Page], method: Callable[..., Any], method_name: str, n_outputs: int
 ):
@@ -93,6 +112,7 @@ def make_static_callback(
                 PageClass, method, method_name, callback_id, args, elapsed_time, result
             )
         except PreventUpdate:
+            dispatch_ignore_hooks(PageClass, method, method_name, callback_id, args)
             raise
         except Exception as e:
             dispatch_err_hooks(PageClass, method, method_name, callback_id, args, e)
@@ -124,6 +144,7 @@ def make_class_callback(
                 PageClass, method, method_name, callback_id, args, elapsed_time, result
             )
         except PreventUpdate:
+            dispatch_ignore_hooks(PageClass, method, method_name, callback_id, args)
             raise
         except Exception as e:
             dispatch_err_hooks(PageClass, method, method_name, callback_id, args, e)
@@ -157,6 +178,7 @@ def make_non_mutating_callback(
                 PageClass, method, method_name, callback_id, args, elapsed_time, result
             )
         except PreventUpdate:
+            dispatch_ignore_hooks(PageClass, method, method_name, callback_id, args)
             raise
         except Exception as e:
             dispatch_err_hooks(PageClass, method, method_name, callback_id, args, e)
@@ -194,6 +216,7 @@ def make_mutating_callback(
                 PageClass, method, method_name, callback_id, args, elapsed_time, result
             )
         except PreventUpdate:
+            dispatch_ignore_hooks(PageClass, method, method_name, callback_id, args)
             raise
         except Exception as e:
             dispatch_err_hooks(PageClass, method, method_name, callback_id, args, e)
@@ -224,14 +247,11 @@ def register_callbacks(dash: Dash, PageClass: Type[Page], method: Callable[..., 
     outputs, inputs, states = method.callback_parameters  # type: ignore
     n_outputs = len(outputs)
     method_name = method.__name__
-    Page.logger.debug(
-        "registering callback %s.%s (%s, %s) -> %s",
-        PageClass.__name__,
-        method_name,
-        inputs,
-        states,
-        outputs,
-    )
+    registration_hooks: Iterable[RegistrationHookType] = getattr(
+        method, "registration_hooks", None
+    ) or []
+    for hook in registration_hooks:
+        hook(PageClass, method_name, outputs, inputs, states)
     if isinstance(inspect.getattr_static(PageClass, method_name), staticmethod):
         # Callback is staticmethod.
         callback = make_static_callback(PageClass, method, method_name, n_outputs)
