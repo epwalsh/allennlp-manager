@@ -1,4 +1,3 @@
-import urllib.parse
 from collections import OrderedDict
 from pathlib import Path
 from typing import Optional, List
