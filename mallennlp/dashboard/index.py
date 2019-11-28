@@ -184,19 +184,21 @@ class IndexPage(Page):
                 (
                     "browse-experiments",
                     SidebarEntry(
-                        "Browse experiments", self.get_browse_experiments_elements()
+                        "Browse experiments",
+                        lambda: self.get_browse_experiments_elements(),
                     ),
                 ),
                 (
                     "run-experiment",
                     SidebarEntry(
-                        "Run an experiment", self.get_run_experiment_elements()
+                        "Run an experiment", lambda: self.get_run_experiment_elements()
                     ),
                 ),
                 (
                     "upload-experiment",
                     SidebarEntry(
-                        "Upload an experiment", self.get_upload_experiment_elements()
+                        "Upload an experiment",
+                        lambda: self.get_upload_experiment_elements(),
                     ),
                 ),
             ]

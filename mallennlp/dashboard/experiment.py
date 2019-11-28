@@ -51,24 +51,24 @@ class ExperimentPage(Page):
         self.path = ExperimentService.get_canonical_path(Path(self.p.path))
         self.es = ExperimentService(self.path)
 
-    def get_overview_elements(self):
+    def get_experiment_header_elements(self):
         status = ec.get_status(self.es)
         elements = [
-            html.H5(ec.get_path_breadcrumbs(self.path)),
-            html.Span(
-                id="experiment-status-badge",
-                children=[html.Strong("Status:"), ec.get_status_badge(status)],
-            ),
+            html.H5([*ec.get_path_breadcrumbs(self.path), ec.get_status_badge(status)]),
             html.Div(id="experiment-tags", children=ec.display_tags(self.es)),
             ec.edit_tags_modal("experiment"),
-            html.Hr(),
-            html.Div(id="experiment-metrics", children=ec.display_metrics(self.es)),
         ]
         if status not in (Status.FINISHED, Status.FAILED):
             # If experiment is not finished or failed, then we should periodically update.
             elements.append(
                 dcc.Interval(id="experiment-update-interval", interval=1000 * 30)
             )
+        return elements
+
+    def get_overview_elements(self):
+        elements = [
+            html.Div(id="experiment-metrics", children=ec.display_metrics(self.es))
+        ]
         return elements
 
     def get_epochs_elements(self):
@@ -80,16 +80,60 @@ class ExperimentPage(Page):
     def get_download_elements(self):
         return ["Coming soon"]
 
+    def wrap_elements(self, elements):
+        return [
+            dbc.Row(
+                dbc.Col(
+                    self.get_experiment_header_elements(),
+                    className="dash-padded-element experiment-header-element",
+                )
+            ),
+            dbc.Row(
+                dbc.Col(
+                    elements,
+                    className="dash-padded-element experiment-main-content-element",
+                )
+            ),
+        ]
+
     def get_elements(self):
         # Update database entry.
         self.es.update_db_entry()
         # Create sidebar entries.
         entries = OrderedDict(
             [
-                ("overview", SidebarEntry("Overview", self.get_overview_elements())),
-                ("epochs", SidebarEntry("Epochs", self.get_epochs_elements())),
-                ("metrics", SidebarEntry("Metrics", self.get_metrics_elements())),
-                ("download", SidebarEntry("Download", self.get_download_elements())),
+                (
+                    "overview",
+                    SidebarEntry(
+                        "Overview",
+                        lambda: self.wrap_elements(self.get_overview_elements()),
+                        className="",
+                    ),
+                ),
+                (
+                    "epochs",
+                    SidebarEntry(
+                        "Epochs",
+                        lambda: self.wrap_elements(self.get_epochs_elements()),
+                        className="",
+                    ),
+                ),
+                (
+                    "metrics",
+                    SidebarEntry(
+                        "Metrics",
+                        lambda: self.wrap_elements(self.get_metrics_elements()),
+                        className="",
+                    ),
+                ),
+                (
+                    "download",
+                    SidebarEntry(
+                        "Download",
+                        lambda: self.wrap_elements(self.get_download_elements()),
+                        className="",
+                    ),
+                ),
             ]
         )
         return SidebarLayout("Experiment", entries, self.p.active, to_dict(self.p))

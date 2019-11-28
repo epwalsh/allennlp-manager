@@ -1,5 +1,5 @@
 import urllib.parse
-from typing import Any, Dict, NamedTuple, List, Optional
+from typing import Any, Dict, NamedTuple, List, Optional, Union, Callable
 
 import dash_bootstrap_components as dbc
 import dash_html_components as html
@@ -9,8 +9,9 @@ from mallennlp.exceptions import InvalidPageParametersError
 
 class SidebarEntry(NamedTuple):
     heading: str
-    contents: List[Any]
+    contents: Union[List[Any], Callable[[], List[Any]]]
     section_heading: Optional[str] = None
+    className: str = "dash-padded-element dash-element-no-hover"
 
 
 def SidebarItem(heading, location, is_active):
@@ -56,14 +57,16 @@ def SidebarLayout(
         )
         if param_string:
             param_string = param_string + "&"
+    active = entries[active_item]
+    contents = active.contents() if callable(active.contents) else active.contents
     return [
         dbc.Row(
             [
                 dbc.Col(Sidebar(header, entries, active_item, param_string), md=3),
                 dbc.Col(
-                    entries[active_item].contents,
+                    contents,
                     md=9,
-                    className="dash-padded-element dash-element-no-hover",
+                    className=active.className,
                     id=f"__{header}-{active_item}-sidebar-entry-contents",
                 ),
             ]

@@ -319,19 +319,22 @@ class SettingsPage(Page):
                 "profile",
                 SidebarEntry(
                     "Profile",
-                    self.get_profile_elements(),
+                    lambda: self.get_profile_elements(),
                     "Personal settings" if is_admin else None,
                 ),
             ),
-            ("account", SidebarEntry("Account", self.get_account_elements())),
-            ("security", SidebarEntry("Security", self.get_security_elements())),
+            ("account", SidebarEntry("Account", lambda: self.get_account_elements())),
+            (
+                "security",
+                SidebarEntry("Security", lambda: self.get_security_elements()),
+            ),
         ]
         if is_admin:
             entries.append(
                 (
                     "users",
                     SidebarEntry(
-                        "Users", self.get_users_elements(), "Project settings"
+                        "Users", lambda: self.get_users_elements(), "Project settings"
                     ),
                 )
             )

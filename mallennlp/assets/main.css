@@ -59,6 +59,24 @@ p {
     padding-bottom: 10px;
 }
 
+.experiment-header-element {
+    box-shadow: 0 4px 4px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
+    /* background-color: #EEE; */
+    border-color: #FFF;
+    border-width: 1px;
+    border-style: solid;
+    border-radius: 4px 4px 0 0;
+}
+
+.experiment-main-content-element {
+    box-shadow: 0 4px 4px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
+    border-color: #FFF;
+    border-width: 1px;
+    border-style: solid;
+    border-radius: 0 0 4px 4px;
+    background-color: #FFF;
+}
+
 .dash-breadcrumb-left-chevron {
     margin-right: 10px;
 }

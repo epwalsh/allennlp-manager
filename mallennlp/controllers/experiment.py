@@ -244,10 +244,7 @@ def display_tags(es: ExperimentService):
         tooltips.append(
             dbc.Tooltip("Edit tags", target="experiment-edit-tags-modal-open")
         )
-    return [
-        html.Span([html.Strong("Tags:", style={"margin-right": "5px"})] + tag_badges),
-        html.Div(children=tooltips),
-    ]
+    return [html.Span(tag_badges), html.Div(children=tooltips)]
 
 
 METRIC_GENERAL_DISPLAY_FIELDS = OrderedDict(
