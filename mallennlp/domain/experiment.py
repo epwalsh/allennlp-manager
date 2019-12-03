@@ -2,8 +2,9 @@ from enum import Enum
 from pathlib import Path
 from typing import Optional, Any, Dict, List, Generic, TypeVar
 
-import attr
 from allennlp.common.params import Params
+
+from mallennlp.domain.dataclass import dataclass
 
 
 T = TypeVar("T")
@@ -35,7 +36,7 @@ class Status(Enum):
     FAILED = "FAILED"
 
 
-@attr.s(auto_attribs=True, slots=True)
+@dataclass
 class Epoch:
     metrics: FileData[Dict[str, Any]]
     """
@@ -43,12 +44,12 @@ class Epoch:
     """
 
 
-@attr.s(auto_attribs=True, slots=True)
+@dataclass
 class Meta:
     tags: List[str]
 
 
-@attr.s(auto_attribs=True, slots=True)
+@dataclass
 class Experiment:
     path: Path
     """

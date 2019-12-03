@@ -4,9 +4,10 @@ from pathlib import Path
 from typing import Optional, List
 
 import attr
+from mallennlp.domain.dataclass import dataclass
 
 
-@attr.s(slots=True, auto_attribs=True)
+@dataclass
 class ProjectConfig:
     _path: Path
     """
@@ -29,7 +30,7 @@ class ProjectConfig:
     """
 
 
-@attr.s(slots=True, auto_attribs=True)
+@dataclass
 class ServerConfig:
     _path: Path
     """

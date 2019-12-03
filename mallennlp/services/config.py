@@ -6,10 +6,11 @@ import attr
 import toml
 
 from mallennlp.domain.config import ProjectConfig, ServerConfig
+from mallennlp.domain.dataclass import dataclass
 from mallennlp.exceptions import NotInProjectError
 
 
-@attr.s(slots=True, auto_attribs=True)
+@dataclass
 class Config:
     CONFIG_PATH: ClassVar[str] = "Project.toml"
 

@@ -4,6 +4,8 @@ from typing import Optional
 import attr
 from flask_login import UserMixin, AnonymousUserMixin
 
+from mallennlp.domain.dataclass import dataclass
+
 
 @enum.unique
 class Permissions(enum.IntEnum):
@@ -13,7 +15,7 @@ class Permissions(enum.IntEnum):
     ADMIN = 3
 
 
-@attr.s(auto_attribs=True)
+@dataclass
 class User(UserMixin):
     id: int
     alt_id: int

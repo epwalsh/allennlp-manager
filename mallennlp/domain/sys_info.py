@@ -1,9 +1,9 @@
 from typing import Optional, List
 
-import attr
+from mallennlp.domain.dataclass import dataclass
 
 
-@attr.s(auto_attribs=True, kw_only=True)
+@dataclass
 class GpuInfo:
     id: int
     """
@@ -25,8 +25,6 @@ class GpuInfo:
     Memory capacity (in MiB by default).
     """
 
-    mem_units: str = "MiB"
-
     utilization: int
     """
     Percent GPU utilization.
@@ -37,15 +35,17 @@ class GpuInfo:
     Device temperature in celcius.
     """
 
-    temp_units: str = "°C"
-
     fan: int
     """
     Percent fan utilization.
     """
 
+    mem_units: str = "MiB"
 
-@attr.s(auto_attribs=True)
+    temp_units: str = "°C"
+
+
+@dataclass
 class SysInfo:
     platform: str
     driver_version: Optional[str] = None
