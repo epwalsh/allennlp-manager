@@ -19,7 +19,7 @@ from mallennlp.exceptions import InvalidPageParametersError, NotPermittedError
 from mallennlp.services import db, cache
 from mallennlp.services.config import Config
 from mallennlp.services.user import UserService
-from mallennlp.services.url_parse import from_url
+from mallennlp.services.serde import from_url
 
 
 def init_dash(flask_app: Flask, config: Config):

@@ -1,7 +1,9 @@
-from typing import Dict, List, Any, Union, TypeVar, Type
+import json
+import urllib.parse as urlparse
+from typing import Dict, Any, List, Type, TypeVar, Union, Optional, Callable
 
 import attr
-import urllib.parse as urlparse
+import cattr
 
 from mallennlp.exceptions import InvalidPageParametersError
 
@@ -9,7 +11,33 @@ from mallennlp.exceptions import InvalidPageParametersError
 T = TypeVar("T")
 
 
-class ParamParser:
+class _JsonSerializer(json.JSONEncoder):
+    """
+    Adds a serializable default representation for `attr` classes.
+    """
+
+    def default(self, o):
+        if attr.has(o):
+            return attr.asdict(o, recurse=False, retain_collection_types=False)
+        return json.JSONEncoder.default(self, o)
+
+
+def serialize(o: T) -> str:
+    """
+    Encode a serializable object into a str.
+    """
+    return _JsonSerializer().encode(o)
+
+
+def deserialize(cls: Type[T], s: str) -> T:
+    """
+    Decode a serializable object from a str.
+    """
+    unstructured = json.loads(s)
+    return cattr.structure(unstructured, cls)
+
+
+class _ParamParser:
     ALLOWED_TYPES = {
         str,
         Union[str, type(None)],
@@ -122,13 +150,27 @@ class ParamParser:
         return self.params_cls(**init_params)
 
 
+def to_url(o: T, filter: Optional[Callable[[attr.Attribute, Any], bool]] = None) -> str:
+    """
+    Encode structured data into URL params.
+    """
+    unstructured = attr.asdict(o, filter=filter)
+    return urlparse.urlencode(unstructured, doseq=True)
+
+
 def from_url(cls: Type[T], url: str, ignore_unknown: bool = True) -> T:
+    """
+    Decode structured data from URL params.
+    """
     raw_params: Dict[str, List[str]] = urlparse.parse_qs(urlparse.urlparse(url).query)
-    parser = ParamParser(cls, ignore_unknown=ignore_unknown)
+    parser = _ParamParser(cls, ignore_unknown=ignore_unknown)
     return parser.parse(raw_params)
 
 
-def url_params(cls):
+def serde(cls):
+    """
+    Class decorator for creating serializable classes.
+    """
     if not attr.has(cls):
         cls = attr.s(auto_attribs=True, slots=True)(cls)
     return cls

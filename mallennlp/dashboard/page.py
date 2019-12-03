@@ -8,8 +8,7 @@ from flask_login import current_user
 from registrable import Registrable
 
 from mallennlp.exceptions import NotPermittedError
-from mallennlp.services.serialization import serializable, serialize, deserialize
-from mallennlp.services.url_parse import url_params
+from mallennlp.services.serde import serde, serialize, deserialize
 
 
 T = TypeVar("T", bound="Page")
@@ -206,7 +205,7 @@ class Page(Registrable):
 
     logger: Logger
 
-    @serializable
+    @serde
     class SessionState:
         """
         If the page needs to be stateful within a session, the state class should be defined here.
@@ -215,8 +214,7 @@ class Page(Registrable):
 
         pass
 
-    @url_params
-    @serializable
+    @serde
     class Params:
         """
         If the page needs parameters from the URL they should be defined here.

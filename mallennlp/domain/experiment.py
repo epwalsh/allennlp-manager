@@ -5,8 +5,6 @@ from typing import Optional, Any, Dict, List, Generic, TypeVar
 import attr
 from allennlp.common.params import Params
 
-from mallennlp.services.serialization import serializable
-
 
 T = TypeVar("T")
 
@@ -37,7 +35,7 @@ class Status(Enum):
     FAILED = "FAILED"
 
 
-@attr.s(auto_attribs=True)
+@attr.s(auto_attribs=True, slots=True)
 class Epoch:
     metrics: FileData[Dict[str, Any]]
     """
@@ -45,12 +43,12 @@ class Epoch:
     """
 
 
-@serializable
+@attr.s(auto_attribs=True, slots=True)
 class Meta:
     tags: List[str]
 
 
-@attr.s(auto_attribs=True)
+@attr.s(auto_attribs=True, slots=True)
 class Experiment:
     path: Path
     """

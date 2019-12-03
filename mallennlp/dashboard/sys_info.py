@@ -19,8 +19,7 @@ from mallennlp.dashboard.components import SidebarEntry, SidebarLayout
 from mallennlp.dashboard.page import Page
 from mallennlp.domain.sys_info import GpuInfo
 from mallennlp.exceptions import CudaUnavailableError
-from mallennlp.services.serialization import serializable, to_dict
-from mallennlp.services.url_parse import url_params
+from mallennlp.services.serde import serde
 
 
 MAX_DEVICE_HISTORY = 20
@@ -32,7 +31,7 @@ def empty_device_history():
 
 @Page.register("/sys-info")
 class SysInfoPage(Page):
-    @serializable
+    @serde
     class SessionState:
         device_id: int = attr.ib(default=-1)
         device_info: Optional[Dict[str, Any]] = None
@@ -40,8 +39,7 @@ class SysInfoPage(Page):
             default=attr.Factory(empty_device_history)
         )
 
-    @url_params
-    @serializable
+    @serde
     class Params:
         active: str = "platform"
 
@@ -68,7 +66,7 @@ class SysInfoPage(Page):
             ("gpu", SidebarEntry("GPU info", lambda: self.get_gpu_elements(info))),
         ]
         return SidebarLayout(
-            "System info", OrderedDict(sidebar_entries), self.p.active, to_dict(self.p)
+            "System info", OrderedDict(sidebar_entries), self.p.active, self.p
         )
 
     @Page.callback(

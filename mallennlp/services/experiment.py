@@ -7,7 +7,7 @@ from allennlp.common.params import Params
 
 from mallennlp.domain.experiment import Experiment, Epoch, Meta, FileData, Status
 from mallennlp.services.db import Tables, get_db_from_app
-from mallennlp.services.serialization import serialize
+from mallennlp.services.serde import serialize
 
 
 def with_db_update(method):

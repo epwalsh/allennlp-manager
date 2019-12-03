@@ -12,16 +12,14 @@ from flask_login import login_user, current_user
 from mallennlp.dashboard.components import SidebarEntry, SidebarLayout
 from mallennlp.dashboard.page import Page
 from mallennlp.services.user import UserService
-from mallennlp.services.serialization import serializable, to_dict
-from mallennlp.services.url_parse import url_params
+from mallennlp.services.serde import serde
 
 
 @Page.register("/login")
 class LoginPage(Page):
     permissions = 0
 
-    @url_params
-    @serializable
+    @serde
     class Params:
         next_pathname: str = attr.ib(
             default="/", converter=lambda p: "/" if p == "/login" else p  # type: ignore
@@ -72,7 +70,7 @@ class LoginPage(Page):
                 [("sign-in", SidebarEntry("Sign in", self.get_sign_in_elements()))]
             ),
             self.p.active,
-            to_dict(self.p),
+            self.p,
         )
 
     def get_notifications(self):

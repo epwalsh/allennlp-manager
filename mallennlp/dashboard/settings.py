@@ -11,15 +11,13 @@ from flask_login import current_user, logout_user
 from mallennlp.dashboard.components import SidebarEntry, SidebarLayout
 from mallennlp.dashboard.page import Page
 from mallennlp.domain.user import Permissions
-from mallennlp.services.url_parse import url_params
 from mallennlp.services.user import MIN_PASSWORD_LENGTH, UserService
-from mallennlp.services.serialization import serializable, to_dict
+from mallennlp.services.serde import serde
 
 
 @Page.register("/settings")
 class SettingsPage(Page):
-    @url_params
-    @serializable
+    @serde
     class Params:
         active: str = "profile"
 
@@ -338,9 +336,7 @@ class SettingsPage(Page):
                     ),
                 )
             )
-        return SidebarLayout(
-            "Settings", OrderedDict(entries), self.p.active, to_dict(self.p)
-        )
+        return SidebarLayout("Settings", OrderedDict(entries), self.p.active, self.p)
 
     def get_notifications(self):
         return [

@@ -1,22 +1,35 @@
-from typing import List, Optional, Any
+from typing import List, Optional
 
 import pytest
 
 from mallennlp.exceptions import InvalidPageParametersError
-from mallennlp.services.url_parse import url_params, from_url
-from mallennlp.services.serialization import serializable, serialize, deserialize
+from mallennlp.services.serde import serde, serialize, deserialize, from_url
 
 
-def test_invalid_type_raises():
-    with pytest.raises(TypeError):
+@serde
+class Inner:
+    x: str
+    y: str
 
-        @url_params
-        class BadParams:
-            x: Any
+
+@serde
+class Outer:
+    a: int
+    b: Inner
+    c: List[Inner]
+
+
+def test_encode_and_decode():
+    o = Outer(1, Inner(x="1", y="2"), [Inner("3", "4")])
+    assert o.a == 1
+    assert o.b.x == "1"
+    assert o.b.y == "2"
+    s = serialize(o)  # type: ignore
+    assert deserialize(Outer, s) == o  # type: ignore
 
 
 def test_ignore_unknown_flag():
-    @url_params
+    @serde
     class StrictParams:
         a: Optional[int] = None
 
@@ -24,7 +37,7 @@ def test_ignore_unknown_flag():
         from_url(StrictParams, "?foo=1", ignore_unknown=False)
     assert "unexpected parameter foo" in str(e.value)
 
-    @url_params
+    @serde
     class NonStrictParams:
         a: Optional[int] = None
 
@@ -32,7 +45,7 @@ def test_ignore_unknown_flag():
 
 
 def test_str_param():
-    @url_params
+    @serde
     class Params:
         p: str
 
@@ -43,7 +56,7 @@ def test_str_param():
 
 
 def test_optional_str_param():
-    @url_params
+    @serde
     class Params:
         p: Optional[str] = None
 
@@ -54,7 +67,7 @@ def test_optional_str_param():
 
 
 def test_list_of_str_param():
-    @url_params
+    @serde
     class Params:
         p: List[str]
 
@@ -65,7 +78,7 @@ def test_list_of_str_param():
 
 
 def test_optional_list_of_str_param():
-    @url_params
+    @serde
     class Params:
         p: Optional[List[str]] = None
 
@@ -76,7 +89,7 @@ def test_optional_list_of_str_param():
 
 
 def test_int_param():
-    @url_params
+    @serde
     class Params:
         p: int
 
@@ -87,7 +100,7 @@ def test_int_param():
 
 
 def test_optional_int_param():
-    @url_params
+    @serde
     class Params:
         p: Optional[int] = None
 
@@ -99,7 +112,7 @@ def test_optional_int_param():
 
 
 def test_list_of_int_param():
-    @url_params
+    @serde
     class Params:
         p: List[int]
 
@@ -110,7 +123,7 @@ def test_list_of_int_param():
 
 
 def test_optional_list_of_int_param():
-    @url_params
+    @serde
     class Params:
         p: Optional[List[int]] = None
 
@@ -121,7 +134,7 @@ def test_optional_list_of_int_param():
 
 
 def test_float_param():
-    @url_params
+    @serde
     class Params:
         p: float
 
@@ -132,7 +145,7 @@ def test_float_param():
 
 
 def test_optional_float_param():
-    @url_params
+    @serde
     class Params:
         p: Optional[float] = None
 
@@ -144,7 +157,7 @@ def test_optional_float_param():
 
 
 def test_list_of_float_param():
-    @url_params
+    @serde
     class Params:
         p: List[float]
 
@@ -155,7 +168,7 @@ def test_list_of_float_param():
 
 
 def test_optional_list_of_float_param():
-    @url_params
+    @serde
     class Params:
         p: Optional[List[float]] = None
 
@@ -166,7 +179,7 @@ def test_optional_list_of_float_param():
 
 
 def test_bool_param():
-    @url_params
+    @serde
     class Params:
         p: bool
 
@@ -177,7 +190,7 @@ def test_bool_param():
 
 
 def test_optional_bool_param():
-    @url_params
+    @serde
     class Params:
         p: Optional[bool] = None
 
@@ -190,8 +203,7 @@ def test_optional_bool_param():
 
 
 def test_from_url_and_serialize():
-    @url_params
-    @serializable
+    @serde
     class Params:
         a: int
 

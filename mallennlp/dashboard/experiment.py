@@ -18,14 +18,12 @@ from mallennlp.domain.user import Permissions
 from mallennlp.exceptions import InvalidPageParametersError
 from mallennlp.services.cache import cache
 from mallennlp.services.experiment import ExperimentService
-from mallennlp.services.serialization import serializable, to_dict
-from mallennlp.services.url_parse import url_params
+from mallennlp.services.serde import serde
 
 
 @Page.register("/experiment")
 class ExperimentPage(Page):
-    @url_params
-    @serializable
+    @serde
     class Params:
         path: str = attr.ib()
         active: str = "overview"
@@ -136,7 +134,7 @@ class ExperimentPage(Page):
                 ),
             ]
         )
-        return SidebarLayout("Experiment", entries, self.p.active, to_dict(self.p))
+        return SidebarLayout("Experiment", entries, self.p.active, self.p)
 
     def get_notifications(self):
         return [

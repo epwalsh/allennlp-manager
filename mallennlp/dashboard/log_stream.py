@@ -11,18 +11,16 @@ from mallennlp.controllers.log_stream import format_log_line
 from mallennlp.dashboard.page import Page
 from mallennlp.exceptions import InvalidPageParametersError
 from mallennlp.services.log_stream import LogStreamService
-from mallennlp.services.serialization import serializable
-from mallennlp.services.url_parse import url_params
+from mallennlp.services.serde import serde
 
 
 @Page.register("/log-stream")
 class LogStream(Page):
-    @serializable
+    @serde
     class SessionState:
         stream: LogStreamService
 
-    @url_params
-    @serializable
+    @serde
     class Params:
         path: str = attr.ib()
         live: bool = False

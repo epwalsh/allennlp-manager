@@ -3,16 +3,16 @@ from typing import List, Optional
 
 import attr
 
-from mallennlp.services.serialization import serializable
+from mallennlp.services.serde import serde
 
 
-@serializable
+@serde
 class Line:
     content: str
     number: int
 
 
-@serializable
+@serde
 class LogStreamService:
     path: str
     """

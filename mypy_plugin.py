@@ -8,7 +8,7 @@ def serializable_class_maker_callback(ctx: ClassDefContext):
 
 class CustomPlugin(Plugin):
     def get_class_decorator_hook(self, fullname: str):
-        if fullname == "mallennlp.services.serialization.serializable":
+        if fullname == "mallennlp.services.serde.serde":
             # Ensures classes decorated with `@serializable` are treated as the
             # the `attr.s` class.
             # TODO: make mypy aware of the methods we add to the class.

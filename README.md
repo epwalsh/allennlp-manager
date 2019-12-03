@@ -94,25 +94,23 @@ You can put the `hello_world` module in the root of your project directory, or j
 
 ```python
 from mallennlp.dashboard.page import Page
-from mallennlp.services.serialization import serializable
-from mallennlp.services.url_parse import url_params
+from mallennlp.services.serde import serde
 
 @Page.register("/hello-world")
 class HelloWorld(Page):
 
-    @serializable
+    @serde
     class SessionState:
         name: str = "World!"
 
-    @url_params
-    @serializable
+    @serde
     class Params:
         initial_message: str = "Hello, World!"
 
     # ... snip ...
 ```
 
-Both `SessionState` and `Params` need to be serializable, which is ensured by the `@serializable` decorator. The decorator is really just a wrapper around [`attr.s`](https://www.attrs.org/en/stable/index.html) while adding some additional helper methods. The `@from_url` decorator adds a classmethod to the `Params` object that parses the attributes from a URL string.
+Both `SessionState` and `Params` need to be serializable, which is ensured by the `@serde` decorator. The decorator is really just a wrapper around [`attr.s`](https://www.attrs.org/en/stable/index.html).
 
 Your page then becomes interactive when you implement a callback method for any input components that were created in `Page.get_elements`. Page callbacks are defined by decorating a `Page` method with `@Page.callback`. Under the hood, callbacks are just [Dash callbacks](https://dash.plot.ly/getting-started-part-2) with some magic behind the scenes that makes the function into an instance method of your page.
 
@@ -131,8 +129,7 @@ import dash_bootstrap_components as dbc
 import dash_html_components as html
 
 from mallennlp.dashboard.page import Page
-from mallennlp.services.serialization import serializable
-from mallennlp.services.url_parse import from_url
+from mallennlp.services.serde import serde
 
 
 @Page.register("/hello-world")
@@ -140,12 +137,11 @@ class HelloWorld(Page):
     requires_login = True
     navlink_name = "Hello, World!"
 
-    @serializable
+    @serde
     class SessionState:
         name: str = "World!"
 
-    @from_url
-    @serializable
+    @serde
     class Params:
         initial_message: str = "Hello, World!"
 
@@ -166,7 +162,7 @@ class HelloWorld(Page):
         [],
         [Input("hello-name-save", "n_clicks")],
         [State("hello-name-input", "value")],
-        mutating=True,  # callback changes the session state.
+        mutating=True,  # callback mutates the state.
     )
     def save_name(self, n_clicks, value):
         if not n_clicks or not value:
@@ -176,7 +172,7 @@ class HelloWorld(Page):
     @Page.callback(
         [Output("hello-name-output", "children")],
         [Input("hello-name-trigger-output", "n_clicks")],
-        mutating=False,  # callback doesn't change the session state.
+        mutating=False,  # callback doesn't mutate state.
     )
     def render_hello_output(self, n_clicks):
         if not n_clicks:

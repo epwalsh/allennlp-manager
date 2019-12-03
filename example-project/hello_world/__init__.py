@@ -4,8 +4,7 @@ import dash_bootstrap_components as dbc
 import dash_html_components as html
 
 from mallennlp.dashboard.page import Page
-from mallennlp.services.serialization import serializable
-from mallennlp.services.url_parse import url_params
+from mallennlp.services.serde import serde
 
 
 @Page.register("/hello-world")
@@ -13,12 +12,11 @@ class HelloWorld(Page):
     requires_login = True
     navlink_name = "Hello, World!"
 
-    @serializable
+    @serde
     class SessionState:
         name: str = "World!"
 
-    @url_params
-    @serializable
+    @serde
     class Params:
         initial_message: str = "Hello, World!"
 

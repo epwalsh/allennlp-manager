@@ -20,9 +20,8 @@ from mallennlp.dashboard.page import Page
 from mallennlp.dashboard.components import SidebarEntry, SidebarLayout
 from mallennlp.domain.user import Permissions
 from mallennlp.services.cache import cache
-from mallennlp.services.serialization import serializable, to_dict
+from mallennlp.services.serde import serde
 from mallennlp.services.experiment import ExperimentService
-from mallennlp.services.url_parse import url_params
 
 
 class UpdateActionsOut(NamedTuple):
@@ -35,15 +34,14 @@ class UpdateActionsOut(NamedTuple):
 
 @Page.register("/")
 class IndexPage(Page):
-    @serializable
+    @serde
     class SessionState:
         selected: Optional[List[Dict[str, Any]]] = None
         """
         Keep track of selected row(s).
         """
 
-    @url_params
-    @serializable
+    @serde
     class Params:
         filter_query: Optional[str] = None
         active: str = "browse-experiments"
@@ -203,7 +201,7 @@ class IndexPage(Page):
                 ),
             ]
         )
-        return SidebarLayout("Home", entries, self.p.active, to_dict(self.p))
+        return SidebarLayout("Home", entries, self.p.active, self.p)
 
     def get_notifications(self):
         return [

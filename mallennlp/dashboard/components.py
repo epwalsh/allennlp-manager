@@ -1,10 +1,10 @@
-import urllib.parse
 from typing import Any, Dict, NamedTuple, List, Optional, Union, Callable
 
 import dash_bootstrap_components as dbc
 import dash_html_components as html
 
 from mallennlp.exceptions import InvalidPageParametersError
+from mallennlp.services.serde import to_url
 
 
 class SidebarEntry(NamedTuple):
@@ -46,14 +46,13 @@ def SidebarLayout(
     header: str,
     entries: Dict[str, SidebarEntry],
     active_item: str,
-    other_params: Dict[str, Any] = None,
+    other_params: Optional[Any] = None,
 ):
     if active_item not in entries:
         raise InvalidPageParametersError("Bad sidebar option")
     if other_params:
-        param_string = urllib.parse.urlencode(
-            {k: v for k, v in other_params.items() if k != "active" and v is not None},
-            doseq=True,
+        param_string = to_url(
+            other_params, filter=lambda a, v: a.name != "active" and v is not None
         )
         if param_string:
             param_string = param_string + "&"
