@@ -64,18 +64,14 @@ class ExperimentPage(Page):
         return elements
 
     def get_overview_elements(self):
-        elements = [
-            html.Div(id="experiment-metrics", children=ec.display_metrics(self.es))
+        return [
+            html.Div(id="experiment-overview", children=ec.display_metrics(self.es))
         ]
-        return elements
-
-    def get_epochs_elements(self):
-        return ["Coming soon"]
 
     def get_metrics_elements(self):
         return ["Coming soon"]
 
-    def get_download_elements(self):
+    def get_browse_files_elements(self):
         return ["Coming soon"]
 
     def wrap_elements(self, elements):
@@ -109,14 +105,6 @@ class ExperimentPage(Page):
                     ),
                 ),
                 (
-                    "epochs",
-                    SidebarEntry(
-                        "Epochs",
-                        lambda: self.wrap_elements(self.get_epochs_elements()),
-                        className="",
-                    ),
-                ),
-                (
                     "metrics",
                     SidebarEntry(
                         "Metrics",
@@ -125,10 +113,10 @@ class ExperimentPage(Page):
                     ),
                 ),
                 (
-                    "download",
+                    "browse_files",
                     SidebarEntry(
-                        "Download",
-                        lambda: self.wrap_elements(self.get_download_elements()),
+                        "Browse files",
+                        lambda: self.wrap_elements(self.get_browse_files_elements()),
                         className="",
                     ),
                 ),
@@ -161,11 +149,11 @@ class ExperimentPage(Page):
         return ec.get_status_badge(status)
 
     @Page.callback(
-        [Output("experiment-metrics", "children")],
+        [Output("experiment-epoch-metrics", "children")],
         [Input("experiment-update-interval", "n_intervals")],
         mutating=False,
     )
-    def update_metrics(self, _):
+    def update_epoch_metrics(self, _):
         return ec.display_metrics(self.es)
 
     @Page.callback(

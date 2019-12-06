@@ -1,7 +1,7 @@
 from collections import OrderedDict
 import urllib.parse
 from pathlib import Path
-from typing import Any, List, Dict, Tuple, Set
+from typing import Any, List, Dict, Tuple, Set, Optional
 
 import dash_bootstrap_components as dbc
 import dash_core_components as dcc
@@ -247,41 +247,31 @@ def display_tags(es: ExperimentService):
     return [html.Span(tag_badges), html.Div(children=tooltips)]
 
 
-METRIC_GENERAL_DISPLAY_FIELDS = OrderedDict(
-    training_epochs="**Epochs:** `%d`", training_duration="**Training duration:** `%s`"
-)
-
 METRIC_EPOCH_DISPLAY_FIELDS = OrderedDict(
+    training_epochs="**Epochs:** `%d`",
+    training_duration="**Training duration:** `%s`",
     best_epoch="**Best epoch:** `%d`",
-    training_loss="**Training loss:** `%f`",
-    best_validation_loss="**Validation loss:** `%f`",
+    training_loss="**Best epoch training loss:** `%f`",
+    best_validation_loss="**Best epoch validation loss:** `%f`",
 )
 
 
-def display_metrics(es: ExperimentService):
-    metrics = es.get_metrics()
+def display_metrics(es: ExperimentService, epoch: Optional[int] = None):
+    metrics = es.get_metrics(epoch)
     if metrics is None:
         return dcc.Markdown("**No metrics to display**")
     fields: List[str] = []
-    for field_name, formatter in METRIC_GENERAL_DISPLAY_FIELDS.items():
-        field_value = metrics.get(field_name)
-        if field_value is not None:
-            fields.append(formatter % field_value)
-    fields.append("---")
     for field_name, formatter in METRIC_EPOCH_DISPLAY_FIELDS.items():
         field_value = metrics.get(field_name)
         if field_value is not None:
             fields.append(formatter % field_value)
     for other_field_name in metrics:
-        if (
-            other_field_name in METRIC_GENERAL_DISPLAY_FIELDS
-            or other_field_name in METRIC_EPOCH_DISPLAY_FIELDS
-        ):
+        if other_field_name in METRIC_EPOCH_DISPLAY_FIELDS:
             continue
         if other_field_name.startswith("best_validation_"):
             field_value = metrics[other_field_name]
             fields.append(
-                f"**Validation {other_field_name[16:].replace('_', ' ')}:** `{field_value}`"
+                f"**Best epoch validation {other_field_name[16:].replace('_', ' ')}:** `{field_value}`"
             )
     return dcc.Markdown("\n\n".join(fields))
 

@@ -107,8 +107,12 @@ class ExperimentService:
         with open(self.e.meta.path, "w") as f:
             f.write(serialize(meta))  # type: ignore
 
-    def get_metrics(self) -> Optional[Dict[str, Any]]:
-        fd = self.e.metrics
+    def get_metrics(self, epoch: Optional[int] = None) -> Optional[Dict[str, Any]]:
+        if epoch is None:
+            fd = self.e.metrics
+        else:
+            epoch_metric_path = self.e.path / (self.EPOCH_METRICS_FNAME % epoch)
+            fd = FileData(epoch_metric_path)
         if fd.should_read():
             with open(fd.path) as f:
                 fd.data = json.load(f)
