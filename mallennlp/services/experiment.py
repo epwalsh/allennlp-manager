@@ -118,6 +118,19 @@ class ExperimentService:
                 fd.data = json.load(f)
         return fd.data
 
+    def get_metric_names(self) -> List[str]:
+        metrics = self.get_metrics()
+        if not metrics:
+            return []
+        return sorted(
+            (
+                k.replace("validation_", "", 1)
+                for k in metrics
+                if k.startswith("validation_")
+            ),
+            key=lambda k: k == "loss",
+        )
+
     def get_stdout(self) -> Optional[str]:
         fd = self.e.stdout
         if fd.should_read():

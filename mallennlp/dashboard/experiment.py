@@ -57,10 +57,12 @@ class ExperimentPage(Page):
             ec.edit_tags_modal("experiment"),
         ]
         if status not in (Status.FINISHED, Status.FAILED):
-            # If experiment is not finished or failed, then we should periodically update.
-            elements.append(
-                dcc.Interval(id="experiment-update-interval", interval=1000 * 30)
-            )
+            interval = 1000 * 30
+        else:
+            interval = 1000 * 300
+        elements.append(
+            dcc.Interval(id="experiment-update-interval", interval=interval)
+        )
         return elements
 
     def get_overview_elements(self):
@@ -69,7 +71,21 @@ class ExperimentPage(Page):
         ]
 
     def get_metrics_elements(self):
-        return ["Coming soon"]
+        epochs = self.es.get_epochs()
+        if not epochs:
+            return [html.Strong("No metrics to display")]
+        return [
+            dcc.Dropdown(
+                id="experiment-metric-plot-dropdown",
+                options=[{"label": m, "value": m} for m in self.es.get_metric_names()],
+                value="loss",
+            ),
+            dcc.Graph(
+                id="experiment-metric-plot",
+                config={"displayModeBar": False},
+                figure=ec.get_metric_plot_figure(self.es, "loss"),
+            ),
+        ]
 
     def get_browse_files_elements(self):
         return ["Coming soon"]
@@ -136,6 +152,19 @@ class ExperimentPage(Page):
                 icon="success",
             )
         ]
+
+    @Page.callback(
+        [Output("experiment-metric-plot", "figure")],
+        [
+            Input("experiment-metric-plot-dropdown", "value"),
+            Input("experiment-update-interval", "n_intervals"),
+        ],
+        mutating=False,
+    )
+    def update_metric_plot_figure(self, metric_name, n_intervals):
+        if not metric_name and not n_intervals:
+            raise PreventUpdate
+        return ec.get_metric_plot_figure(self.es, metric_name)
 
     @Page.callback(
         [Output("experiment-status-badge", "children")],

@@ -298,3 +298,67 @@ def get_path_breadcrumbs(path: Path):
         )
     parts.extend([path.parts[-1], html.I("/", className="path-divider")])
     return parts
+
+
+def get_metric_plot_figure(es: ExperimentService, metric_name: str):
+    epochs = es.get_epochs()
+
+    training_metric_name = f"training_{metric_name}"
+    validation_metric_name = f"validation_{metric_name}"
+    x_vals = list(range(len(epochs)))
+
+    training_metrics: List[float] = []
+    validation_metrics: List[float] = []
+    for epoch in epochs:
+        metrics = epoch.metrics.data
+        if metrics is None:
+            continue
+        t = metrics.get(training_metric_name)
+        if t:
+            training_metrics.append(t)
+        v = metrics.get(validation_metric_name)
+        if v:
+            validation_metrics.append(v)
+
+    data: List[Dict[str, Any]] = []
+    if len(training_metrics) == len(epochs):
+        data.append(
+            {
+                "name": training_metric_name,
+                "x": x_vals,
+                "y": training_metrics,
+                "mode": "lines+markers",
+                "hoverinfo": "text",
+                "text": [
+                    f"epoch {i} {training_metric_name}: {m:.4f}"
+                    for i, m in enumerate(training_metrics)
+                ],
+            }
+        )
+    if len(validation_metrics) == len(epochs):
+        data.append(
+            {
+                "name": validation_metric_name,
+                "x": x_vals,
+                "y": validation_metrics,
+                "mode": "lines+markers",
+                "hoverinfo": "text",
+                "text": [
+                    f"epoch {i} {validation_metric_name}: {m:.4f}"
+                    for i, m in enumerate(validation_metrics)
+                ],
+            }
+        )
+    return {
+        "data": data,
+        "layout": {
+            "clickmode": "event+select",
+            "xaxis": {
+                "range": [0, len(epochs) - 0.5],
+                "tickvals": list(range(len(epochs))),
+                "ticktext": [str(i) for i in range(0, len(epochs))],
+            },
+            "margin": {"l": 40, "b": 30, "t": 20, "pad": 2},
+            "uirevision": True,
+        },
+    }
