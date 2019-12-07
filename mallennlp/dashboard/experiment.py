@@ -1,5 +1,6 @@
 from collections import OrderedDict
 from pathlib import Path
+import urllib.parse as urlparse
 from typing import Optional, List
 
 import attr
@@ -66,28 +67,44 @@ class ExperimentPage(Page):
         return elements
 
     def get_overview_elements(self):
-        return [
-            html.Div(id="experiment-overview", children=ec.display_metrics(self.es))
+        out = [
+            html.Div(id="experiment-overview", children=ec.display_metrics(self.es)),
+            html.Strong("Logs: "),
+            dcc.Link(
+                "STDOUT",
+                href="/log-stream?"
+                + urlparse.urlencode({"path": self.path / self.es.STDOUT_FNAME}),
+            ),
+            ", ",
+            dcc.Link(
+                "STDERR",
+                href="/log-stream?"
+                + urlparse.urlencode({"path": self.path / self.es.STDERR_FNAME}),
+            ),
         ]
-
-    def get_metrics_elements(self):
         epochs = self.es.get_epochs()
-        if not epochs:
-            return [html.Strong("No metrics to display")]
-        return [
-            dcc.Dropdown(
-                id="experiment-metric-plot-dropdown",
-                options=[{"label": m, "value": m} for m in self.es.get_metric_names()],
-                value="loss",
-            ),
-            dcc.Graph(
-                id="experiment-metric-plot",
-                config={"displayModeBar": False},
-                figure=ec.get_metric_plot_figure(self.es, "loss"),
-            ),
-        ]
+        if epochs:
+            out.extend(
+                [
+                    html.Br(),
+                    html.Br(),
+                    dcc.Dropdown(
+                        id="experiment-metric-plot-dropdown",
+                        options=[
+                            {"label": m, "value": m} for m in self.es.get_metric_names()
+                        ],
+                        value="loss",
+                    ),
+                    dcc.Graph(
+                        id="experiment-metric-plot",
+                        config={"displayModeBar": False},
+                        figure=ec.get_metric_plot_figure(self.es, "loss"),
+                    ),
+                ]
+            )
+        return out
 
-    def get_browse_files_elements(self):
+    def get_settings_elements(self):
         return ["Coming soon"]
 
     def wrap_elements(self, elements):
@@ -121,18 +138,10 @@ class ExperimentPage(Page):
                     ),
                 ),
                 (
-                    "metrics",
+                    "settings",
                     SidebarEntry(
-                        "Metrics",
-                        lambda: self.wrap_elements(self.get_metrics_elements()),
-                        className="",
-                    ),
-                ),
-                (
-                    "browse_files",
-                    SidebarEntry(
-                        "Browse files",
-                        lambda: self.wrap_elements(self.get_browse_files_elements()),
+                        "Settings",
+                        lambda: self.wrap_elements(self.get_settings_elements()),
                         className="",
                     ),
                 ),
